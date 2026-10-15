@@ -1,0 +1,101 @@
+"""CSV per-case evaluation results exporter for EvalForge20."""
+
+import csv
+import io
+import json
+from pathlib import Path
+
+from app.domain.results import CaseResult
+from app.runner.config import EvaluationRunRecord
+
+
+def generate_csv_report(
+    record: EvaluationRunRecord,
+    case_results: list[CaseResult],
+) -> str:
+    """Generate a tabular CSV export of per-case evaluation results with metric scores."""
+    # Discover all distinct metric IDs across case results
+    metric_ids = sorted(
+        {m.metric_id for c in case_results for m in c.metrics}
+    )
+
+    base_headers = [
+        "case_id",
+        "run_id",
+        "model_identifier",
+        "input",
+        "expected_output",
+        "actual_output",
+        "passed",
+        "latency_ms",
+        "total_tokens",
+        "error_category",
+        "error_message",
+    ]
+
+    metric_headers: list[str] = []
+    for m_id in metric_ids:
+        metric_headers.append(f"{m_id}_score")
+        metric_headers.append(f"{m_id}_passed")
+
+    all_headers = base_headers + metric_headers
+
+    output = io.StringIO()
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(all_headers)
+
+    for c in case_results:
+        # Format complex payload types to string
+        inp_str = json.dumps(c.input, ensure_ascii=False) if isinstance(c.input, (dict, list)) else str(c.input or "")
+        exp_str = (
+            json.dumps(c.expected_output, ensure_ascii=False)
+            if isinstance(c.expected_output, (dict, list))
+            else str(c.expected_output or "")
+        )
+        act_str = (
+            json.dumps(c.actual_output, ensure_ascii=False)
+            if isinstance(c.actual_output, (dict, list))
+            else str(c.actual_output or "")
+        )
+
+        tokens = c.token_usage.get("total_tokens") if c.token_usage else ""
+
+        # Map metric values by metric_id
+        metric_map = {m.metric_id: m for m in c.metrics}
+
+        row = [
+            c.case_id,
+            c.run_id,
+            record.config.target.model_identifier,
+            inp_str,
+            exp_str,
+            act_str,
+            c.passed,
+            round(c.latency_ms, 2) if c.latency_ms is not None else "",
+            tokens,
+            c.error_category or "",
+            c.error_message or "",
+        ]
+
+        for m_id in metric_ids:
+            if m_id in metric_map:
+                m_res = metric_map[m_id]
+                score_str = f"{m_res.score:.4f}" if m_res.score is not None else ""
+                row.append(score_str)
+                row.append(m_res.passed if m_res.passed is not None else "")
+            else:
+                row.append("")
+                row.append("")
+
+        writer.writerow(row)
+
+    return output.getvalue()
+
+
+def export_csv_report_to_file(path: Path | str, csv_content: str) -> Path:
+    """Write CSV report string to file on disk."""
+    dest = Path(path)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with dest.open("w", encoding="utf-8", newline="") as f:
+        f.write(csv_content)
+    return dest

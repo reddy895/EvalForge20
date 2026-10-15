@@ -44,50 +44,53 @@ class MockProvider(BaseProvider):
         return [self.model_identifier, "mock-chat-v1", "mock-agent-v1"]
 
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
-        start_time = time.perf_counter()
+        async def _run() -> ProviderResponse:
+            start_time = time.perf_counter()
 
-        # Simulate latency
-        if self.simulated_latency_ms > 0:
-            await asyncio.sleep(self.simulated_latency_ms / 1000.0)
+            # Simulate latency
+            if self.simulated_latency_ms > 0:
+                await asyncio.sleep(self.simulated_latency_ms / 1000.0)
 
-        prompt = request.prompt
+            prompt = request.prompt
 
-        # Check for configured simulated failures
-        for fail_key, err in self.fail_on_prompts.items():
-            if fail_key in prompt:
-                latency = round((time.perf_counter() - start_time) * 1000.0, 2)
-                if isinstance(err, NormalizedErrorCategory):
+            # Check for configured simulated failures
+            for fail_key, err in self.fail_on_prompts.items():
+                if fail_key in prompt:
+                    latency = round((time.perf_counter() - start_time) * 1000.0, 2)
+                    if isinstance(err, NormalizedErrorCategory):
+                        return ProviderResponse(
+                            output_text=None,
+                            latency_ms=latency,
+                            error_category=err.value,
+                            error_message=f"Simulated {err.value} error for prompt '{fail_key}'",
+                            is_success=False,
+                        )
+                    cat, msg = classify_exception(err if isinstance(err, Exception) else RuntimeError(str(err)))
                     return ProviderResponse(
                         output_text=None,
                         latency_ms=latency,
-                        error_category=err.value,
-                        error_message=f"Simulated {err.value} error for prompt '{fail_key}'",
+                        error_category=cat.value,
+                        error_message=msg,
                         is_success=False,
                     )
-                cat, msg = classify_exception(err if isinstance(err, Exception) else RuntimeError(str(err)))
-                return ProviderResponse(
-                    output_text=None,
-                    latency_ms=latency,
-                    error_category=cat.value,
-                    error_message=msg,
-                    is_success=False,
-                )
 
-        # Match canned responses
-        output_text = self.default_response
-        for key, resp in self.canned_responses.items():
-            if key in prompt:
-                output_text = resp
-                break
+            # Match canned responses
+            output_text = self.default_response
+            for key, resp in self.canned_responses.items():
+                if key in prompt:
+                    output_text = resp
+                    break
 
-        elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
-        return ProviderResponse(
-            output_text=output_text,
-            latency_ms=elapsed_ms,
-            token_usage=self.simulated_tokens,
-            raw_response={"mock_model": self.model_identifier, "simulated": True},
-            is_success=True,
-        )
+            elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+            return ProviderResponse(
+                output_text=output_text,
+                latency_ms=elapsed_ms,
+                token_usage=self.simulated_tokens,
+                raw_response={"mock_model": self.model_identifier, "simulated": True},
+                is_success=True,
+            )
+
+        return await self.execute_with_guard(request, _run)
 
 
 provider_registry.register("mock", MockProvider)

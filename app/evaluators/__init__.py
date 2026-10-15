@@ -2,6 +2,7 @@
 
 # Import built-in evaluators to trigger automatic registration
 from app.agents import evaluator as agent_evaluators
+from app.evaluators import llm_judge
 from app.evaluators.code import (
     classification,
     completeness,
@@ -23,6 +24,7 @@ __all__ = [
     "exact_match",
     "json_schema",
     "json_validity",
+    "llm_judge",
     "normalized_match",
     "rag_metrics",
     "registry",
@@ -30,3 +32,4 @@ __all__ = [
     "task_assertions",
     "token_f1",
 ]
+

@@ -9,7 +9,11 @@ from app.domain.results import MetricResult
 from app.evaluators.llm_judge.models import JudgeEvaluationOutput, JudgeRubric
 from app.evaluators.llm_judge.rubrics import (
     ANSWER_RELEVANCE_RUBRIC,
+    CONTEXT_FAITHFULNESS_RUBRIC,
+    EXPLANATION_QUALITY_RUBRIC,
+    FACTUAL_CORRECTNESS_RUBRIC,
 )
+from app.evaluators.registry import MetricCategory, MetricDefinition, registry
 from app.providers.ollama import OllamaProvider
 
 
@@ -196,3 +200,78 @@ class LocalOllamaJudgeEvaluator(EvaluatorContract):
             },
             is_model_based=True,
         )
+
+
+class OllamaJudgeRelevanceEvaluator(LocalOllamaJudgeEvaluator):
+    """Evaluates answer relevance using local Ollama model."""
+
+    def __init__(self, judge_model: str | None = None) -> None:
+        super().__init__(rubric=ANSWER_RELEVANCE_RUBRIC, judge_model=judge_model)
+
+
+class OllamaJudgeCorrectnessEvaluator(LocalOllamaJudgeEvaluator):
+    """Evaluates factual correctness using local Ollama model."""
+
+    def __init__(self, judge_model: str | None = None) -> None:
+        super().__init__(rubric=FACTUAL_CORRECTNESS_RUBRIC, judge_model=judge_model)
+
+
+class OllamaJudgeFaithfulnessEvaluator(LocalOllamaJudgeEvaluator):
+    """Evaluates context faithfulness / groundedness using local Ollama model."""
+
+    def __init__(self, judge_model: str | None = None) -> None:
+        super().__init__(rubric=CONTEXT_FAITHFULNESS_RUBRIC, judge_model=judge_model)
+
+
+class OllamaJudgeExplanationEvaluator(LocalOllamaJudgeEvaluator):
+    """Evaluates explanation and reasoning quality using local Ollama model."""
+
+    def __init__(self, judge_model: str | None = None) -> None:
+        super().__init__(rubric=EXPLANATION_QUALITY_RUBRIC, judge_model=judge_model)
+
+
+# Register model-based local judges
+registry.register(
+    OllamaJudgeRelevanceEvaluator,
+    MetricDefinition(
+        metric_id="ollama_judge_answer_relevance",
+        metric_name="Ollama Judge: Answer Relevance",
+        description="Local Ollama rubric-guided judge evaluating how directly and helpfully the response answers the prompt.",
+        category=MetricCategory.MODEL_BASED,
+        requires_expected_output=False,
+    ),
+)
+
+registry.register(
+    OllamaJudgeCorrectnessEvaluator,
+    MetricDefinition(
+        metric_id="ollama_judge_factual_correctness",
+        metric_name="Ollama Judge: Factual Correctness",
+        description="Local Ollama rubric-guided judge evaluating factual correctness against reference ground truth.",
+        category=MetricCategory.MODEL_BASED,
+        requires_expected_output=True,
+    ),
+)
+
+registry.register(
+    OllamaJudgeFaithfulnessEvaluator,
+    MetricDefinition(
+        metric_id="ollama_judge_context_faithfulness",
+        metric_name="Ollama Judge: Context Faithfulness",
+        description="Local Ollama rubric-guided judge evaluating groundedness and faithfulness to supplied context.",
+        category=MetricCategory.MODEL_BASED,
+        requires_expected_output=False,
+    ),
+)
+
+registry.register(
+    OllamaJudgeExplanationEvaluator,
+    MetricDefinition(
+        metric_id="ollama_judge_explanation_quality",
+        metric_name="Ollama Judge: Explanation Quality",
+        description="Local Ollama rubric-guided judge evaluating logical coherence and reasoning clarity.",
+        category=MetricCategory.MODEL_BASED,
+        requires_expected_output=False,
+    ),
+)
+

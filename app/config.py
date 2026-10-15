@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, SecretStr
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,7 +21,10 @@ class Settings(BaseSettings):
     # Core environment
     env: Literal["development", "testing", "production"] = "development"
     debug: bool = False
-    database_url: str = "sqlite:///./data/evalforge20.db"
+    database_url: str = Field(
+        default="sqlite:///./data/evalforge20.db",
+        validation_alias=AliasChoices("EVALFORGE20_DATABASE_URL", "DATABASE_URL"),
+    )
     log_level: str = "INFO"
     log_prompts: bool = False
     data_dir: Path = Field(default=Path("./data"))
@@ -32,8 +35,26 @@ class Settings(BaseSettings):
     max_output_bytes: int = Field(default=524288, ge=1024)  # 512 KB
 
     # Local Ollama Provider settings
-    ollama_base_url: str = "http://localhost:11434"
-    ollama_timeout_seconds: float = Field(default=120.0, gt=0.0)
+    ollama_base_url: str = Field(
+        default="http://localhost:11434",
+        validation_alias=AliasChoices("EVALFORGE20_OLLAMA_BASE_URL", "OLLAMA_BASE_URL"),
+    )
+    ollama_model: str = Field(
+        default="qwen2.5:3b",
+        validation_alias=AliasChoices("EVALFORGE20_OLLAMA_MODEL", "OLLAMA_MODEL"),
+    )
+    ollama_timeout_seconds: float = Field(
+        default=120.0,
+        gt=0.0,
+        validation_alias=AliasChoices("EVALFORGE20_OLLAMA_TIMEOUT_SECONDS", "OLLAMA_TIMEOUT_SECONDS"),
+    )
+    ollama_temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+    ollama_context_length: int = Field(default=4096, ge=512)
+
+    # Local LLM-as-Judge settings
+    default_judge_model: str = Field(default="qwen2.5:3b")
+    enable_local_judge: bool = Field(default=True)
+
 
     # Optional LangSmith settings (supports LANGSMITH_ environment variables directly)
     langsmith_tracing: bool = Field(default=False, validation_alias="LANGSMITH_TRACING")

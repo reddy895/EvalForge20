@@ -1,0 +1,23 @@
+[
+  {
+    "id": "qa-001",
+    "question": "What is the capital of Japan?",
+    "expected_output": "Tokyo",
+    "category": "geography",
+    "tags": ["capitals", "asia"]
+  },
+  {
+    "id": "qa-002",
+    "question": "Who developed the theory of general relativity?",
+    "expected_output": "Albert Einstein",
+    "category": "science",
+    "tags": ["physics", "history"]
+  },
+  {
+    "id": "qa-003",
+    "question": "What is the largest ocean on Earth?",
+    "expected_output": "Pacific Ocean",
+    "category": "geography",
+    "tags": ["oceans"]
+  }
+]

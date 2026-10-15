@@ -3,13 +3,16 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import PlainTextResponse
 from sqlalchemy.orm import Session
 
 from app.api.schemas import CreateEvaluationRequest, RunSummaryResponse
 from app.application.evaluation_service import EvaluationService
 from app.datasets.validator import validate_dataset
 from app.domain.results import CaseResult
+from app.reporting.csv_exporter import generate_csv_report
 from app.reporting.json_exporter import generate_json_report
+from app.reporting.markdown_exporter import generate_markdown_report
 from app.runner.config import EvaluationRunConfig
 from app.storage.database import get_db
 
@@ -82,11 +85,22 @@ async def create_evaluation_endpoint(
 async def list_evaluations_endpoint(
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    status: str | None = Query(default=None, description="Filter by execution status"),
+    model_identifier: str | None = Query(default=None, description="Filter by target model"),
+    min_pass_rate: float | None = Query(
+        default=None, ge=0.0, le=1.0, description="Filter by minimum pass rate"
+    ),
     db: Session = Depends(get_db),
 ) -> list[RunSummaryResponse]:
-    """Retrieve paginated list of evaluation runs."""
+    """Retrieve paginated list of evaluation runs with optional filters."""
     service = EvaluationService(db)
-    runs = service.list_runs(limit=limit, offset=offset)
+    runs = service.list_runs(
+        limit=limit,
+        offset=offset,
+        status=status,
+        model_identifier=model_identifier,
+        min_pass_rate=min_pass_rate,
+    )
 
     summaries = []
     for r in runs:
@@ -106,6 +120,7 @@ async def list_evaluations_endpoint(
             )
         )
     return summaries
+
 
 
 @eval_router.get(
@@ -158,10 +173,14 @@ async def get_case_results_endpoint(
 
 @eval_router.get(
     "/v1/reports/{run_id}",
-    summary="Generate and export JSON report for an evaluation run",
+    summary="Generate and export evaluation report in JSON, Markdown, or CSV format",
 )
 async def get_report_endpoint(
     run_id: str,
+    format: str = Query(
+        default="json",
+        description="Desired export format ('json', 'markdown'/'md', or 'csv')",
+    ),
     redact_inputs: bool = Query(
         default=False, description="Redact raw inputs/prompts in exported report"
     ),
@@ -169,8 +188,8 @@ async def get_report_endpoint(
         default=False, description="Redact raw model outputs in exported report"
     ),
     db: Session = Depends(get_db),
-) -> dict[str, Any]:
-    """Return complete structured evaluation report JSON matching Section 14."""
+) -> Any:
+    """Return complete evaluation report in requested format (JSON, Markdown, or CSV)."""
     service = EvaluationService(db)
     record = service.get_run(run_id)
     if not record:
@@ -187,10 +206,24 @@ async def get_report_endpoint(
             detail=f"Run '{run_id}' has no aggregate metrics computed yet",
         )
 
-    return generate_json_report(
-        record,
-        case_results,
-        aggregates,
-        redact_inputs=redact_inputs,
-        redact_outputs=redact_outputs,
-    )
+    fmt = format.strip().lower()
+    if fmt == "json":
+        return generate_json_report(
+            record,
+            case_results,
+            aggregates,
+            redact_inputs=redact_inputs,
+            redact_outputs=redact_outputs,
+        )
+    elif fmt in ("markdown", "md"):
+        content = generate_markdown_report(record, case_results, aggregates)
+        return PlainTextResponse(content, media_type="text/markdown")
+    elif fmt == "csv":
+        content = generate_csv_report(record, case_results)
+        return PlainTextResponse(content, media_type="text/csv")
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported report format '{format}'. Supported formats: ['json', 'markdown', 'csv']",
+        )
+

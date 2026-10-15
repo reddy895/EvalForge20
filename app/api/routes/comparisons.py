@@ -10,6 +10,10 @@ from app.comparisons.comparator import (
     RegressionThresholds,
     compare_evaluation_runs,
 )
+from app.comparisons.multi_comparator import (
+    MultiRunComparisonMatrix,
+    compare_multiple_runs,
+)
 from app.storage.database import get_db
 
 comparisons_router = APIRouter(prefix="/v1", tags=["Comparisons"])
@@ -77,3 +81,45 @@ async def compare_runs_endpoint(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         ) from exc
+
+
+class CompareMatrixRequest(BaseModel):
+    """Payload to compare multiple evaluation runs across models."""
+
+    run_ids: list[str] = Field(
+        ..., min_length=2, description="List of run IDs to benchmark together"
+    )
+
+
+@comparisons_router.post(
+    "/compare/matrix",
+    response_model=MultiRunComparisonMatrix,
+    summary="Compare two or more evaluation runs across models, metrics, and case disagreements",
+)
+async def compare_matrix_endpoint(
+    req: CompareMatrixRequest,
+    db: Session = Depends(get_db),
+) -> MultiRunComparisonMatrix:
+    """Generate multi-run comparison matrix across models, latencies, and accuracy."""
+    service = EvaluationService(db)
+    runs = []
+    cases_by_run = {}
+
+    for r_id in req.run_ids:
+        r = service.get_run(r_id)
+        if not r:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Evaluation run '{r_id}' not found",
+            )
+        runs.append(r)
+        cases_by_run[r_id] = service.get_run_results(r_id)
+
+    try:
+        return compare_multiple_runs(runs=runs, cases_by_run=cases_by_run)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+

@@ -3,11 +3,14 @@
 # Import built-in evaluators to trigger automatic registration
 from app.agents import evaluator as agent_evaluators
 from app.evaluators.code import (
+    classification,
+    completeness,
     exact_match,
     json_schema,
     json_validity,
     normalized_match,
     task_assertions,
+    token_f1,
 )
 from app.evaluators.composite import scorer
 from app.evaluators.registry import registry
@@ -15,6 +18,8 @@ from app.rag import metrics as rag_metrics
 
 __all__ = [
     "agent_evaluators",
+    "classification",
+    "completeness",
     "exact_match",
     "json_schema",
     "json_validity",
@@ -23,4 +28,5 @@ __all__ = [
     "registry",
     "scorer",
     "task_assertions",
+    "token_f1",
 ]

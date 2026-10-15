@@ -2,6 +2,7 @@
 
 import time
 from typing import Any
+
 import httpx
 
 from app.config import get_settings
@@ -48,6 +49,7 @@ class OllamaProvider(BaseProvider):
 
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
         """Send prompt to Ollama /api/generate endpoint."""
+
         async def _call_ollama() -> ProviderResponse:
             start_time = time.perf_counter()
 

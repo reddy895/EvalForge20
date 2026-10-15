@@ -1,6 +1,7 @@
 """Provider registry for looking up and instantiating provider adapters."""
 
 from typing import Any
+
 from app.domain.errors import ProviderError
 from app.providers.base import BaseProvider
 

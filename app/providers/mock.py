@@ -65,7 +65,9 @@ class MockProvider(BaseProvider):
                             error_message=f"Simulated {err.value} error for prompt '{fail_key}'",
                             is_success=False,
                         )
-                    cat, msg = classify_exception(err if isinstance(err, Exception) else RuntimeError(str(err)))
+                    cat, msg = classify_exception(
+                        err if isinstance(err, Exception) else RuntimeError(str(err))
+                    )
                     return ProviderResponse(
                         output_text=None,
                         latency_ms=latency,

@@ -3,9 +3,11 @@
 import asyncio
 import time
 from abc import abstractmethod
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 import httpx
+
 from app.config import get_settings
 from app.domain.contracts import ProviderContract, ProviderRequest, ProviderResponse
 from app.domain.errors import NormalizedErrorCategory, classify_exception

@@ -147,48 +147,114 @@ EvalForge20 does not assume that one model is universally best. Results depend o
 
 > **Implementation note:** Features listed above describe the intended project capabilities. Mark features as available only after their implementation and tests are complete.
 
+
 ## Architecture
 
-EvalForge20 uses a modular architecture in which the CLI and HTTP API share the same application services. The evaluation runner communicates with provider adapters, collects outputs and traces, calculates metrics, persists results, and generates reports.
+EvalForge20 transforms an evaluation dataset into measurable evidence about AI model and agent performance. Developers submit evaluation tasks through the CLI or API, the evaluation engine executes them against selected AI systems, and the results are stored, compared, and exported as reports.
 
 ```mermaid
 flowchart TD
-    DEV["Developer / CI"] --> CLI["Command-Line Interface"]
-    DEV --> API["FastAPI"]
+    USER(["Developer / CI Pipeline"])
 
-    CLI --> APP["Application Service"]
-    API --> APP
+    subgraph INPUT["1. INPUT LAYER"]
+        CLI["Command-Line Interface"]
+        API["FastAPI REST API"]
+        DATA["Evaluation Dataset<br/>JSONL / Test Cases"]
+        CONFIG["Evaluation Configuration<br/>Model + Metrics + Settings"]
+    end
 
-    APP --> DATA["Dataset Registry"]
-    APP --> RUN["Evaluation Runner"]
-    APP --> COMPARE["Run Comparison Engine"]
+    subgraph CORE["2. EVALUATION ENGINE"]
+        VALIDATE["Dataset Validation"]
+        RUNNER["Evaluation Runner"]
+        COLLECT["Output & Trace Collector"]
+    end
 
-    DATA --> VALIDATE["Dataset Validation"]
-    VALIDATE --> VERSION["Dataset Versioning"]
+    subgraph AI["3. AI EXECUTION LAYER"]
+        ADAPTER["Provider Adapter Interface"]
+        OLLAMA["Ollama<br/>Local Models"]
+        CLOUD["Cloud Model APIs<br/>Optional"]
+        AGENT["AI Agent Runtime<br/>Tools + Multi-step Tasks"]
+    end
 
-    RUN --> ADAPTER["Provider / Agent Adapter Interface"]
+    subgraph ANALYSIS["4. ANALYSIS ENGINE"]
+        METRICS["Deterministic Metrics<br/>Accuracy + Pass Rate"]
+        PERFORMANCE["Performance Metrics<br/>Latency + Errors + Tokens"]
+        JUDGE["Optional LLM-as-Judge"]
+        AGGREGATE["Score Aggregation<br/>Per-case + Overall Results"]
+    end
 
-    ADAPTER --> OLLAMA["Ollama Adapter"]
-    ADAPTER --> LOCAL["Other Local Providers"]
-    ADAPTER --> CLOUD["Optional Cloud Providers"]
-    ADAPTER --> AGENT["Agent Runtime Adapter"]
+    subgraph STORAGE["5. STORAGE & INSIGHTS"]
+        DB[("SQLite Database")]
+        HISTORY["Experiment History"]
+        COMPARE["Model & Agent Comparison"]
+        REGRESSION["Regression Detection"]
+        REPORT["JSON Reports"]
+    end
 
-    RUN --> COLLECTOR["Output and Trace Collector"]
+    USER --> CLI
+    USER --> API
 
-    COLLECTOR --> METRICS["Deterministic Metrics"]
-    COLLECTOR --> JUDGE["Optional LLM-as-Judge"]
+    CLI --> DATA
+    API --> DATA
+    CLI --> CONFIG
+    API --> CONFIG
 
-    METRICS --> SCORE["Metric Aggregation"]
-    JUDGE --> SCORE
+    DATA --> VALIDATE
+    CONFIG --> VALIDATE
+    VALIDATE --> RUNNER
 
-    DATA --> DB[("SQLite Database")]
-    SCORE --> DB
-    APP --> DB
+    RUNNER --> ADAPTER
+    ADAPTER --> OLLAMA
+    ADAPTER --> CLOUD
+    ADAPTER --> AGENT
 
-    DB --> COMPARE
-    COMPARE --> REPORT["JSON Reports / API Responses"]
-    REPORT --> FUTURE["Future Web Dashboard"]
+    OLLAMA --> COLLECT
+    CLOUD --> COLLECT
+    AGENT --> COLLECT
+
+    COLLECT --> METRICS
+    COLLECT --> PERFORMANCE
+    COLLECT -.-> JUDGE
+
+    METRICS --> AGGREGATE
+    PERFORMANCE --> AGGREGATE
+    JUDGE -.-> AGGREGATE
+
+    VALIDATE --> DB
+    RUNNER --> DB
+    COLLECT --> DB
+    AGGREGATE --> DB
+
+    DB --> HISTORY
+    HISTORY --> COMPARE
+    COMPARE --> REGRESSION
+    HISTORY --> REPORT
+    REGRESSION --> REPORT
+
+    classDef input fill:#DCEBFF,stroke:#3973AC,color:#172B4D
+    classDef engine fill:#E8DFFF,stroke:#7952B3,color:#30204D
+    classDef ai fill:#D9F5E5,stroke:#258653,color:#123D28
+    classDef analysis fill:#FFF0CC,stroke:#B8860B,color:#513B00
+    classDef storage fill:#FFE1DC,stroke:#C34F43,color:#5B211B
+
+    class USER,CLI,API,DATA,CONFIG input
+    class VALIDATE,RUNNER,COLLECT engine
+    class ADAPTER,OLLAMA,CLOUD,AGENT ai
+    class METRICS,PERFORMANCE,JUDGE,AGGREGATE analysis
+    class DB,HISTORY,COMPARE,REGRESSION,REPORT storage
 ```
+
+### How It Works
+
+1. **Input:** A developer supplies a dataset and evaluation configuration through the CLI or REST API.
+2. **Validation:** EvalForge20 checks the dataset and configuration before starting the run.
+3. **Execution:** The evaluation runner sends test cases to a selected local model, cloud provider, or AI agent adapter.
+4. **Analysis:** The system calculates applicable accuracy, reliability, and performance metrics. An LLM judge is optional.
+5. **Storage:** Run metadata, case results, and available traces are persisted for later inspection.
+6. **Comparison:** Developers compare runs, identify regressions, and export reports to support model-selection decisions.
+
+**The outcome:** Evidence showing how each evaluated AI system performs on the developer's own tasks—not merely a generic leaderboard ranking.
+
 
 ### Evaluation Lifecycle
 

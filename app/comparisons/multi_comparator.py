@@ -79,10 +79,15 @@ def compare_multiple_runs(
 
     headers: list[RunSummaryHeader] = []
     for r in runs:
-        total = r.metrics.total_cases if r.metrics else 0
-        passed = r.metrics.passed_cases if r.metrics else 0
-        pass_rate = round(passed / total, 4) if total > 0 else 0.0
-        err_rate = round(r.metrics.error_count / total, 4) if (r.metrics and total > 0) else 0.0
+        total = r.metrics.total_cases if r.metrics else r.total_cases
+        pass_rate = round(r.metrics.pass_rate, 4) if (r.metrics and r.metrics.pass_rate is not None) else 0.0
+        passed = int(round(pass_rate * total))
+        err_count = (
+            sum(r.metrics.error_distribution.values())
+            if (r.metrics and r.metrics.error_distribution)
+            else r.failed_cases
+        )
+        err_rate = round(err_count / total, 4) if total > 0 else 0.0
 
         headers.append(
             RunSummaryHeader(
@@ -104,8 +109,8 @@ def compare_multiple_runs(
     # Collect all unique metric IDs evaluated across runs
     all_metrics: dict[str, str] = {}
     for r in runs:
-        if r.metrics and r.metrics.metric_scores:
-            for m_id in r.metrics.metric_scores:
+        if r.metrics and r.metrics.metric_averages:
+            for m_id in r.metrics.metric_averages:
                 all_metrics[m_id] = m_id.replace("_", " ").title()
 
     metric_rows: list[MetricComparisonRow] = []
@@ -114,7 +119,7 @@ def compare_multiple_runs(
         valid_nums: list[tuple[str, float]] = []
 
         for r in runs:
-            val = r.metrics.metric_scores.get(m_id) if r.metrics else None
+            val = r.metrics.metric_averages.get(m_id) if r.metrics else None
             values[r.run_id] = val
             if val is not None:
                 valid_nums.append((r.run_id, val))

@@ -131,6 +131,7 @@ class EvaluationRepository:
             evaluators=[EvaluatorConfiguration(**e) for e in evaluators_list],
         )
 
+        aggregates = self.get_run_aggregates(m.run_id)
         return EvaluationRunRecord(
             run_id=m.run_id,
             name=m.name,
@@ -142,6 +143,7 @@ class EvaluationRepository:
             started_at=m.started_at,
             completed_at=m.completed_at,
             error_message=m.error_message,
+            metrics=aggregates,
         )
 
     def get_run_aggregates(self, run_id: str) -> AggregateMetrics | None:
@@ -194,18 +196,37 @@ class EvaluationRepository:
             )
         return results
 
-    def list_runs(self, limit: int = 50, offset: int = 0) -> list[EvaluationRunRecord]:
-        """List historical evaluation runs ordered by started_at desc."""
-        stmt = (
-            select(EvaluationRunModel)
-            .order_by(desc(EvaluationRunModel.started_at))
-            .limit(limit)
-            .offset(offset)
-        )
+    def list_runs(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        status: EvaluationRunStatus | str | None = None,
+        model_identifier: str | None = None,
+        min_pass_rate: float | None = None,
+    ) -> list[EvaluationRunRecord]:
+        """List historical evaluation runs with optional status, model, and pass rate filters."""
+        stmt = select(EvaluationRunModel).order_by(desc(EvaluationRunModel.started_at))
+        if status is not None:
+            status_val = status.value if hasattr(status, "value") else str(status)
+            stmt = stmt.where(EvaluationRunModel.status == status_val)
+
         models = self.session.scalars(stmt).all()
         records: list[EvaluationRunRecord] = []
         for m in models:
             rec = self.get_run(m.run_id)
-            if rec:
-                records.append(rec)
-        return records
+            if not rec:
+                continue
+
+            if model_identifier and rec.config.target.model_identifier != model_identifier:
+                continue
+
+            if min_pass_rate is not None:
+                if not rec.metrics or rec.metrics.pass_rate is None:
+                    continue
+                if rec.metrics.pass_rate < min_pass_rate:
+                    continue
+
+            records.append(rec)
+
+        return records[offset : offset + limit]
+

@@ -3,11 +3,13 @@
 import uuid
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.config import get_settings
 from app.domain.models import EvaluationCase, EvaluatorConfiguration, TargetConfiguration
+from app.domain.results import AggregateMetrics
 from app.domain.state import EvaluationRunStatus
 
 
@@ -31,6 +33,24 @@ class EvaluationRunConfig(BaseModel):
         default_factory=lambda: get_settings().default_timeout_seconds, gt=0.0
     )
 
+    @property
+    def model_identifier(self) -> str:
+        return self.target.model_identifier
+
+    @property
+    def provider(self) -> str:
+        return self.target.provider_name
+
+    @property
+    def dataset_name(self) -> str:
+        if self.dataset_path:
+            return Path(self.dataset_path).name
+        return "in_memory_dataset"
+
+    @property
+    def options(self) -> dict[str, Any]:
+        return self.target.extra_params
+
 
 class EvaluationRunRecord(BaseModel):
     """Runtime snapshot of an evaluation run including lifecycle state."""
@@ -47,3 +67,5 @@ class EvaluationRunRecord(BaseModel):
     started_at: datetime | None = None
     completed_at: datetime | None = None
     error_message: str | None = None
+    metrics: AggregateMetrics | None = None
+

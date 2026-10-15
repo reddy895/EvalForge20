@@ -9,6 +9,7 @@ from app.datasets.hasher import compute_cases_hash
 from app.datasets.loader import DatasetLoader
 from app.domain.models import EvaluationCase
 from app.domain.results import AggregateMetrics, CaseResult
+from app.domain.state import EvaluationRunStatus
 from app.runner.config import EvaluationRunConfig, EvaluationRunRecord
 from app.runner.engine import EvaluationRunner
 from app.storage.repositories import EvaluationRepository
@@ -89,6 +90,20 @@ class EvaluationService:
         """Retrieve aggregate metrics for a run."""
         return self.repo.get_run_aggregates(run_id)
 
-    def list_runs(self, limit: int = 50, offset: int = 0) -> list[EvaluationRunRecord]:
-        """List historical runs."""
-        return self.repo.list_runs(limit=limit, offset=offset)
+    def list_runs(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        status: EvaluationRunStatus | str | None = None,
+        model_identifier: str | None = None,
+        min_pass_rate: float | None = None,
+    ) -> list[EvaluationRunRecord]:
+        """List historical runs with optional status, model, and pass rate filters."""
+        return self.repo.list_runs(
+            limit=limit,
+            offset=offset,
+            status=status,
+            model_identifier=model_identifier,
+            min_pass_rate=min_pass_rate,
+        )
+

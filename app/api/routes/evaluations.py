@@ -162,6 +162,12 @@ async def get_case_results_endpoint(
 )
 async def get_report_endpoint(
     run_id: str,
+    redact_inputs: bool = Query(
+        default=False, description="Redact raw inputs/prompts in exported report"
+    ),
+    redact_outputs: bool = Query(
+        default=False, description="Redact raw model outputs in exported report"
+    ),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     """Return complete structured evaluation report JSON matching Section 14."""
@@ -181,4 +187,10 @@ async def get_report_endpoint(
             detail=f"Run '{run_id}' has no aggregate metrics computed yet",
         )
 
-    return generate_json_report(record, case_results, aggregates)
+    return generate_json_report(
+        record,
+        case_results,
+        aggregates,
+        redact_inputs=redact_inputs,
+        redact_outputs=redact_outputs,
+    )

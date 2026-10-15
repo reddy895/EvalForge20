@@ -15,8 +15,10 @@ def generate_json_report(
     case_results: list[CaseResult],
     aggregates: AggregateMetrics,
     integration_refs: dict[str, Any] | None = None,
+    redact_inputs: bool = False,
+    redact_outputs: bool = False,
 ) -> dict[str, Any]:
-    """Generate a documented, reproducible JSON report following EvalForge20 specification."""
+    """Generate a documented, reproducible JSON report following EvalForge20 specification with optional redaction."""
     duration_s: float | None = None
     if record.started_at and record.completed_at:
         duration_s = round((record.completed_at - record.started_at).total_seconds(), 2)
@@ -39,14 +41,16 @@ def generate_json_report(
             f"{skipped_metrics} metric evaluations were skipped due to missing reference outputs or schemas."
         )
 
-    # Format per-case results
+    # Format per-case results with optional data redaction
     cases_payload = []
     for c in case_results:
+        inp = "[REDACTED_PROMPT]" if redact_inputs else c.input
+        out = "[REDACTED_OUTPUT]" if redact_outputs else c.actual_output
         cases_payload.append(
             {
                 "case_id": c.case_id,
-                "input": c.input,
-                "actual_output": c.actual_output,
+                "input": inp,
+                "actual_output": out,
                 "expected_output": c.expected_output,
                 "latency_ms": c.latency_ms,
                 "token_usage": c.token_usage,

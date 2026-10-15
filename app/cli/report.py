@@ -18,6 +18,12 @@ def export_report_command(
     run_id: str = typer.Argument(..., help="Evaluation run ID to export"),
     format: str = typer.Option("json", "--format", "-f", help="Export format (json)"),
     output: Path | None = typer.Option(None, "--output", "-o", help="Target output file path"),
+    redact_inputs: bool = typer.Option(
+        False, "--redact-inputs", help="Redact raw inputs/prompts in exported report"
+    ),
+    redact_outputs: bool = typer.Option(
+        False, "--redact-outputs", help="Redact raw model outputs in exported report"
+    ),
 ) -> None:
     """Export structured JSON report for an evaluation run."""
     if format.lower() != "json":
@@ -42,7 +48,13 @@ def export_report_command(
             console.print(f"[bold red]No aggregate metrics found for run '{run_id}'.[/]")
             raise typer.Exit(code=1)
 
-    report_data = generate_json_report(record, case_results, aggregates)
+    report_data = generate_json_report(
+        record,
+        case_results,
+        aggregates,
+        redact_inputs=redact_inputs,
+        redact_outputs=redact_outputs,
+    )
     dest_path = output or Path(f"reports/{run_id}.json")
     saved_path = export_report_to_file(dest_path, report_data)
 

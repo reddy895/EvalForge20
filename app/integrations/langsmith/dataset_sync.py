@@ -52,7 +52,9 @@ def sync_dataset_to_langsmith(
 
         for c in cases:
             inputs_list.append({"input": c.input})
-            outputs_list.append({"expected_output": c.expected_output} if c.expected_output is not None else {})
+            outputs_list.append(
+                {"expected_output": c.expected_output} if c.expected_output is not None else {}
+            )
             metadata_list.append(
                 {
                     "case_id": c.id,

@@ -1,6 +1,7 @@
 """LangSmith client creation and connectivity verification."""
 
 from typing import Any
+
 import httpx
 
 from app.config import get_settings

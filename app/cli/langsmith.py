@@ -1,6 +1,8 @@
 """CLI commands for managing LangSmith integration."""
 
 import asyncio
+from pathlib import Path
+
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -36,7 +38,9 @@ def status_command() -> None:
 
 @langsmith_cli.command(name="sync-dataset")
 def sync_dataset_command(
-    path: Path = typer.Argument(..., help="Path to JSONL dataset to upload to LangSmith", exists=True),
+    path: Path = typer.Argument(
+        ..., help="Path to JSONL dataset to upload to LangSmith", exists=True
+    ),
     name: str | None = typer.Option(None, "--name", "-n", help="Dataset name in LangSmith"),
 ) -> None:
     """Upload and synchronize an EvalForge20 dataset with LangSmith."""
@@ -52,7 +56,7 @@ def sync_dataset_command(
     ds_name = name or path.stem
     try:
         res = sync_dataset_to_langsmith(report.cases, dataset_name=ds_name)
-        console.print(f"[bold green]✔ Successfully synchronized dataset to LangSmith![/]")
+        console.print("[bold green]✔ Successfully synchronized dataset to LangSmith![/]")
         console.print(f"  LangSmith Dataset ID: [cyan]{res['dataset_id']}[/]")
         console.print(f"  Examples Synced: [magenta]{res['synced_examples']}[/]")
     except Exception as exc:
@@ -87,7 +91,7 @@ def sync_run_command(
 
     res = sync_run_to_langsmith(record, case_results, aggregates)
     if res.get("status") == "success":
-        console.print(f"[bold green]✔ Successfully published run to LangSmith![/]")
+        console.print("[bold green]✔ Successfully published run to LangSmith![/]")
         console.print(f"  LangSmith Run ID: [cyan]{res['langsmith_run_id']}[/]")
         console.print(f"  Project: [magenta]{res['project_name']}[/]")
     elif res.get("status") == "skipped":

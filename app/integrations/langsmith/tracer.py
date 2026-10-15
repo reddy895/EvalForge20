@@ -46,7 +46,9 @@ async def trace_evaluation_run(
         ) as rt:
             yield {"run_id": run_id, "traced": True, "trace_tree": rt}
     except Exception as exc:
-        logger.warning("LangSmith tracing encountered error: %s (local execution continues unaffected)", exc)
+        logger.warning(
+            "LangSmith tracing encountered error: %s (local execution continues unaffected)", exc
+        )
         yield {"run_id": run_id, "traced": False, "error": str(exc)}
 
 

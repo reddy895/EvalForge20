@@ -15,7 +15,9 @@ class LangSmithStatus(BaseModel):
     endpoint: str = Field(...)
     project: str = Field(...)
     auto_sync_datasets: bool = Field(...)
-    connection_status: str = Field(..., description="disabled, not_configured, reachable, or unreachable")
+    connection_status: str = Field(
+        ..., description="disabled, not_configured, reachable, or unreachable"
+    )
     error_message: str | None = Field(default=None)
 
 

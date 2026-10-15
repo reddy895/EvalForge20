@@ -1,0 +1,2 @@
+# Optional integrations for EvalForge20
+langsmith>=0.1.0

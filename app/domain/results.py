@@ -36,6 +36,16 @@ class CaseResult(BaseModel):
     error_message: str | None = Field(default=None)
     trace: dict[str, Any] | None = Field(default=None)
 
+    @property
+    def passed(self) -> bool:
+        """Convenience property determining whether the case passed all evaluators."""
+        if self.error_category or self.error_message:
+            return False
+        if not self.metrics:
+            return True
+        return all(m.passed is True for m in self.metrics if m.passed is not None)
+
+
 
 class AggregateMetrics(BaseModel):
     """Dataset-level aggregated performance summary."""

@@ -90,14 +90,32 @@ class OllamaProvider(BaseProvider):
         async def _call_ollama() -> ProviderResponse:
             start_time = time.perf_counter()
 
+            # Context window & sampling options
+            settings = get_settings()
+            num_ctx = (
+                request.extra_params.get("num_ctx")
+                or request.extra_params.get("context_length")
+                or settings.ollama_context_length
+            )
+            temp = (
+                request.temperature
+                if request.temperature is not None
+                else settings.ollama_temperature
+            )
+
             options_payload: dict[str, Any] = {
-                "temperature": request.temperature,
+                "temperature": temp,
+                "num_ctx": num_ctx,
             }
             if request.max_tokens:
                 options_payload["num_predict"] = request.max_tokens
             if request.stop_sequences:
                 options_payload["stop"] = request.stop_sequences
+            for param in ("top_k", "top_p", "repeat_penalty", "seed"):
+                if param in request.extra_params:
+                    options_payload[param] = request.extra_params[param]
             options_payload.update(request.extra_params.get("options", {}))
+
 
             payload: dict[str, Any] = {
                 "model": self.model_identifier,

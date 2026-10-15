@@ -733,6 +733,24 @@ Choose and add a license before publishing the project.
 
 Add the appropriate `LICENSE` file and update this section to reflect the license actually selected.
 
+## Documentation Index
+
+Detailed guides are available in the `docs/` directory:
+
+- [Architecture & Design](docs/ARCHITECTURE.md)
+- [Dataset Format Specification](docs/DATASET_FORMAT.md)
+- [Metrics Reference](docs/METRICS.md)
+- [Evaluators Guide](docs/EVALUATORS.md)
+- [RAG Evaluation](docs/RAG_EVALUATION.md)
+- [AI Agent Evaluation](docs/AGENT_EVALUATION.md)
+- [LangSmith Integration](docs/LANGSMITH.md)
+- [REST API Reference](docs/API.md)
+- [Configuration Reference](docs/CONFIGURATION.md)
+- [Testing & Quality Assurance](docs/TESTING.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
+
 ## Project Status and Disclaimer
 
 EvalForge20 aims to make AI evaluation more transparent, reproducible, and accessible. Results depend on dataset quality, metric definitions, model configurations, and execution conditions.
@@ -740,4 +758,4 @@ EvalForge20 aims to make AI evaluation more transparent, reproducible, and acces
 Benchmark scores do not guarantee real-world performance, safety, or factual correctness. Comparisons should be interpreted within the context of the workload and evaluation methodology.
 
 **EvalForge20 is built around one principle: better AI decisions require transparent measurements and reproducible evidence.**
-# EvalForge20
+

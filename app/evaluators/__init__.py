@@ -8,6 +8,7 @@ from app.evaluators.code import (
     normalized_match,
     task_assertions,
 )
+from app.evaluators.composite import scorer
 from app.evaluators.registry import registry
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     "json_validity",
     "normalized_match",
     "registry",
+    "scorer",
     "task_assertions",
 ]

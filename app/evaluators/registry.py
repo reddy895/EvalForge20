@@ -78,6 +78,10 @@ class EvaluatorRegistry:
         """Check if a metric_id is currently registered."""
         return metric_id in self._evaluators
 
+    def list_metric_ids(self) -> list[str]:
+        """Return all registered metric IDs."""
+        return sorted(self._evaluators.keys())
+
 
 # Global registry singleton instance
 registry = EvaluatorRegistry()

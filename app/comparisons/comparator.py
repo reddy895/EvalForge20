@@ -36,13 +36,18 @@ class RegressionThresholds(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     max_allowed_pass_rate_drop: float = Field(
-        default=0.05, ge=0.0, le=1.0, description="Max acceptable drop in pass rate (e.g. 0.05 = 5%)"
+        default=0.05,
+        ge=0.0,
+        le=1.0,
+        description="Max acceptable drop in pass rate (e.g. 0.05 = 5%)",
     )
     max_allowed_latency_increase_ms: float | None = Field(
         default=250.0, ge=0.0, description="Max acceptable increase in mean latency in ms"
     )
     max_allowed_regressed_cases: int = Field(
-        default=0, ge=0, description="Maximum number of individual cases allowed to flip from pass to fail"
+        default=0,
+        ge=0,
+        description="Maximum number of individual cases allowed to flip from pass to fail",
     )
 
 
@@ -82,7 +87,9 @@ def validate_run_compatibility(
         )
 
 
-def calculate_metric_delta(base_val: float | None, cand_val: float | None) -> tuple[float | None, float | None]:
+def calculate_metric_delta(
+    base_val: float | None, cand_val: float | None
+) -> tuple[float | None, float | None]:
     """Calculate absolute delta and percentage change."""
     if base_val is None or cand_val is None:
         return None, None
@@ -137,11 +144,15 @@ def compare_evaluation_runs(
     allow_different_datasets: bool = False,
 ) -> ComparisonResult:
     """Compare candidate run against baseline run, calculate deltas, and evaluate regression thresholds."""
-    validate_run_compatibility(baseline, candidate, allow_different_datasets=allow_different_datasets)
+    validate_run_compatibility(
+        baseline, candidate, allow_different_datasets=allow_different_datasets
+    )
 
     # 1. Metric deltas
     deltas: dict[str, MetricDelta] = {}
-    all_metrics = set(baseline_aggs.metric_averages.keys()) | set(candidate_aggs.metric_averages.keys())
+    all_metrics = set(baseline_aggs.metric_averages.keys()) | set(
+        candidate_aggs.metric_averages.keys()
+    )
 
     for mid in sorted(all_metrics):
         bv = baseline_aggs.metric_averages.get(mid)
@@ -159,7 +170,9 @@ def compare_evaluation_runs(
     pr_delta, _ = calculate_metric_delta(baseline_aggs.pass_rate, candidate_aggs.pass_rate)
 
     # Latency delta
-    lat_delta, _ = calculate_metric_delta(baseline_aggs.mean_latency_ms, candidate_aggs.mean_latency_ms)
+    lat_delta, _ = calculate_metric_delta(
+        baseline_aggs.mean_latency_ms, candidate_aggs.mean_latency_ms
+    )
 
     # 2. Case flips
     base_case_map = {c.case_id: c for c in baseline_cases}

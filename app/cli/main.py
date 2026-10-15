@@ -56,10 +56,18 @@ def evaluate_command(
 @cli_app.command(name="compare")
 def compare_command(
     baseline_run_id: str = typer.Argument(..., help="Baseline run ID"),
-    candidate_run_id: str = typer.Argument(..., help="Candidate run ID to compare against baseline"),
-    max_drop: float = typer.Option(0.05, "--max-drop", help="Max allowed drop in pass rate (e.g. 0.05)"),
-    max_latency_increase: float = typer.Option(250.0, "--max-latency-increase", help="Max latency increase in ms"),
-    allow_different_datasets: bool = typer.Option(False, "--allow-different-datasets", help="Allow comparison across different datasets"),
+    candidate_run_id: str = typer.Argument(
+        ..., help="Candidate run ID to compare against baseline"
+    ),
+    max_drop: float = typer.Option(
+        0.05, "--max-drop", help="Max allowed drop in pass rate (e.g. 0.05)"
+    ),
+    max_latency_increase: float = typer.Option(
+        250.0, "--max-latency-increase", help="Max latency increase in ms"
+    ),
+    allow_different_datasets: bool = typer.Option(
+        False, "--allow-different-datasets", help="Allow comparison across different datasets"
+    ),
 ) -> None:
     """Compare candidate evaluation run against baseline benchmark and check regressions."""
     from rich.console import Console
@@ -115,7 +123,9 @@ def compare_command(
         raise typer.Exit(code=1) from exc
 
     status_color = "green" if cmp.passed_regression_gate else "red"
-    console.print(f"\n[bold {status_color}]Quality Gate: [{'PASSED' if cmp.passed_regression_gate else 'FAILED'}][/]")
+    console.print(
+        f"\n[bold {status_color}]Quality Gate: [{'PASSED' if cmp.passed_regression_gate else 'FAILED'}][/]"
+    )
     console.print(cmp.summary)
 
     if cmp.threshold_violations:

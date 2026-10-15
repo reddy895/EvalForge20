@@ -19,6 +19,7 @@ class OllamaProvider(BaseProvider):
         model_identifier: str = "qwen2.5:3b",
         base_url: str | None = None,
         timeout_seconds: float | None = None,
+        **kwargs: Any,
     ):
         settings = get_settings()
         self.base_url = (base_url or settings.ollama_base_url).rstrip("/")

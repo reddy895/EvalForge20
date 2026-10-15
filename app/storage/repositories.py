@@ -3,18 +3,16 @@
 import json
 from datetime import datetime
 from typing import Any
+
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
-from app.domain.dataset import Dataset, DatasetStats, DatasetVersion
-from app.domain.models import EvaluationCase, EvaluatorConfiguration, TargetConfiguration
+from app.domain.models import EvaluatorConfiguration, TargetConfiguration
 from app.domain.results import AggregateMetrics, CaseResult, MetricResult
 from app.domain.state import EvaluationRunStatus
 from app.runner.config import EvaluationRunConfig, EvaluationRunRecord
 from app.storage.models import (
     CaseResultModel,
-    DatasetModel,
-    DatasetVersionModel,
     EvaluationRunModel,
     MetricResultModel,
 )
@@ -87,7 +85,9 @@ class EvaluationRepository:
             run_id=res.run_id,
             input_json=_dumps(res.input),
             actual_output_json=_dumps(res.actual_output) if res.actual_output is not None else None,
-            expected_output_json=_dumps(res.expected_output) if res.expected_output is not None else None,
+            expected_output_json=_dumps(res.expected_output)
+            if res.expected_output is not None
+            else None,
             latency_ms=res.latency_ms,
             token_usage_json=_dumps(res.token_usage) if res.token_usage else None,
             error_category=res.error_category,
@@ -146,7 +146,9 @@ class EvaluationRepository:
 
     def get_run_aggregates(self, run_id: str) -> AggregateMetrics | None:
         """Retrieve aggregate metrics for a run."""
-        stmt = select(EvaluationRunModel.aggregate_metrics_json).where(EvaluationRunModel.run_id == run_id)
+        stmt = select(EvaluationRunModel.aggregate_metrics_json).where(
+            EvaluationRunModel.run_id == run_id
+        )
         raw = self.session.scalar(stmt)
         if not raw:
             return None
@@ -154,7 +156,11 @@ class EvaluationRepository:
 
     def get_case_results(self, run_id: str) -> list[CaseResult]:
         """Retrieve all case results and their metrics for a given run."""
-        stmt = select(CaseResultModel).where(CaseResultModel.run_id == run_id).order_by(CaseResultModel.id)
+        stmt = (
+            select(CaseResultModel)
+            .where(CaseResultModel.run_id == run_id)
+            .order_by(CaseResultModel.id)
+        )
         case_models = self.session.scalars(stmt).all()
 
         results: list[CaseResult] = []
@@ -190,7 +196,12 @@ class EvaluationRepository:
 
     def list_runs(self, limit: int = 50, offset: int = 0) -> list[EvaluationRunRecord]:
         """List historical evaluation runs ordered by started_at desc."""
-        stmt = select(EvaluationRunModel).order_by(desc(EvaluationRunModel.started_at)).limit(limit).offset(offset)
+        stmt = (
+            select(EvaluationRunModel)
+            .order_by(desc(EvaluationRunModel.started_at))
+            .limit(limit)
+            .offset(offset)
+        )
         models = self.session.scalars(stmt).all()
         records: list[EvaluationRunRecord] = []
         for m in models:

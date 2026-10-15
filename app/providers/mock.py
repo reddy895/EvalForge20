@@ -23,6 +23,7 @@ class MockProvider(BaseProvider):
         fail_on_prompts: dict[str, Any] | None = None,
         is_healthy: bool = True,
         timeout_seconds: float = 60.0,
+        **kwargs: Any,
     ):
         super().__init__(provider_name="mock", timeout_seconds=timeout_seconds)
         self.model_identifier = model_identifier

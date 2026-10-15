@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime
 from pathlib import Path
+
 from sqlalchemy.orm import Session
 
 from app.datasets.hasher import compute_cases_hash
@@ -38,7 +39,9 @@ class EvaluationService:
                 raise ValueError(f"Dataset validation failed: {report.format_errors()}")
             cases = report.cases
         else:
-            raise ValueError("No dataset cases or dataset path provided in evaluation configuration.")
+            raise ValueError(
+                "No dataset cases or dataset path provided in evaluation configuration."
+            )
 
         content_hash = compute_cases_hash(cases)
         # Update config with computed hash

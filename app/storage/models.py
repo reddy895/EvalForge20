@@ -1,7 +1,7 @@
 """SQLAlchemy ORM models for evaluation runs, cases, metrics, datasets, and comparisons."""
 
 from datetime import UTC, datetime
-from typing import Any
+
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -26,9 +26,13 @@ class DatasetModel(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     metadata_json: Mapped[str] = mapped_column(Text, default="{}")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
     latest_version: Mapped[int] = mapped_column(Integer, default=1)
 
@@ -43,12 +47,16 @@ class DatasetVersionModel(Base):
     __tablename__ = "dataset_versions"
 
     version_id: Mapped[str] = mapped_column(String(100), primary_key=True)
-    dataset_id: Mapped[str] = mapped_column(String(100), ForeignKey("datasets.id", ondelete="CASCADE"), index=True)
+    dataset_id: Mapped[str] = mapped_column(
+        String(100), ForeignKey("datasets.id", ondelete="CASCADE"), index=True
+    )
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     cases_json: Mapped[str] = mapped_column(Text, nullable=False)  # Serialized list of cases
     stats_json: Mapped[str] = mapped_column(Text, default="{}")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
 
     dataset: Mapped["DatasetModel"] = relationship("DatasetModel", back_populates="versions")
 
@@ -76,9 +84,7 @@ class EvaluationRunModel(Base):
         "CaseResultModel", back_populates="run", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (
-        Index("idx_runs_started_at", "started_at"),
-    )
+    __table_args__ = (Index("idx_runs_started_at", "started_at"),)
 
 
 class CaseResultModel(Base):
@@ -100,7 +106,9 @@ class CaseResultModel(Base):
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     trace_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    run: Mapped["EvaluationRunModel"] = relationship("EvaluationRunModel", back_populates="case_results")
+    run: Mapped["EvaluationRunModel"] = relationship(
+        "EvaluationRunModel", back_populates="case_results"
+    )
     metric_results: Mapped[list["MetricResultModel"]] = relationship(
         "MetricResultModel", back_populates="case_result", cascade="all, delete-orphan"
     )
@@ -124,7 +132,9 @@ class MetricResultModel(Base):
     details_json: Mapped[str] = mapped_column(Text, default="{}")
     is_model_based: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    case_result: Mapped["CaseResultModel"] = relationship("CaseResultModel", back_populates="metric_results")
+    case_result: Mapped["CaseResultModel"] = relationship(
+        "CaseResultModel", back_populates="metric_results"
+    )
 
 
 class RunComparisonModel(Base):
@@ -137,4 +147,6 @@ class RunComparisonModel(Base):
     candidate_run_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     delta_metrics_json: Mapped[str] = mapped_column(Text, nullable=False)
     regressions_json: Mapped[str] = mapped_column(Text, default="[]")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )

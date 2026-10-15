@@ -1,14 +1,15 @@
 """Initial EvalForge20 schema.
 
 Revision ID: 001_initial_schema
-Revises: 
+Revises:
 Create Date: 2026-10-15 12:00:00.000000
 
 """
+
 from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision: str = "001_initial_schema"
 down_revision: str | None = None
@@ -33,7 +34,12 @@ def upgrade() -> None:
     op.create_table(
         "dataset_versions",
         sa.Column("version_id", sa.String(length=100), primary_key=True),
-        sa.Column("dataset_id", sa.String(length=100), sa.ForeignKey("datasets.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "dataset_id",
+            sa.String(length=100),
+            sa.ForeignKey("datasets.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("version_number", sa.Integer(), nullable=False),
         sa.Column("content_hash", sa.String(length=64), nullable=False),
         sa.Column("cases_json", sa.Text(), nullable=False),
@@ -68,7 +74,12 @@ def upgrade() -> None:
         "case_results",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
         sa.Column("case_id", sa.String(length=100), nullable=False),
-        sa.Column("run_id", sa.String(length=100), sa.ForeignKey("evaluation_runs.run_id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "run_id",
+            sa.String(length=100),
+            sa.ForeignKey("evaluation_runs.run_id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("input_json", sa.Text(), nullable=False),
         sa.Column("actual_output_json", sa.Text(), nullable=True),
         sa.Column("expected_output_json", sa.Text(), nullable=True),
@@ -85,7 +96,12 @@ def upgrade() -> None:
     op.create_table(
         "metric_results",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
-        sa.Column("case_result_id", sa.Integer(), sa.ForeignKey("case_results.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "case_result_id",
+            sa.Integer(),
+            sa.ForeignKey("case_results.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("run_id", sa.String(length=100), nullable=False),
         sa.Column("metric_id", sa.String(length=100), nullable=False),
         sa.Column("metric_name", sa.String(length=255), nullable=False),

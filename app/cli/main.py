@@ -7,6 +7,7 @@ import typer
 from app import __version__
 from app.cli.datasets import dataset_cli
 from app.cli.langsmith import langsmith_cli
+from app.cli.models import models_cli
 from app.cli.providers import provider_cli
 from app.cli.report import report_cli
 from app.cli.runs import run_evaluation_cli, runs_cli
@@ -18,7 +19,9 @@ cli_app = typer.Typer(
 )
 
 # Register sub-commands
+cli_app.add_typer(models_cli, name="models")
 cli_app.add_typer(dataset_cli, name="dataset")
+cli_app.add_typer(dataset_cli, name="datasets")
 cli_app.add_typer(provider_cli, name="provider")
 cli_app.add_typer(runs_cli, name="runs")
 cli_app.add_typer(report_cli, name="report")

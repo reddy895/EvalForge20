@@ -4,11 +4,29 @@ import time
 from typing import Any
 
 import httpx
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.config import get_settings
 from app.domain.contracts import ProviderRequest, ProviderResponse
 from app.providers.base import BaseProvider
 from app.providers.registry import provider_registry
+
+
+class OllamaModelDetails(BaseModel):
+    """Detailed metadata for a locally installed Ollama model."""
+
+    model_config = ConfigDict(frozen=True)
+
+    name: str = Field(..., description="Model tag name, e.g. 'qwen2.5:3b'")
+    size_bytes: int = Field(default=0, description="Size on disk in bytes")
+    parameter_size: str | None = Field(
+        default=None, description="Reported parameter size, e.g. '3.1B'"
+    )
+    quantization_level: str | None = Field(
+        default=None, description="Quantization format, e.g. 'Q4_K_M'"
+    )
+    family: str | None = Field(default=None, description="Model family, e.g. 'qwen2'")
+    modified_at: str | None = Field(default=None, description="ISO timestamp of last update")
 
 
 class OllamaProvider(BaseProvider):
@@ -37,13 +55,31 @@ class OllamaProvider(BaseProvider):
             return False
 
     async def list_models(self) -> list[str]:
-        """Fetch list of models currently available in local Ollama instance."""
+        """Fetch list of model tag names currently available in local Ollama instance."""
+        details = await self.list_detailed_models()
+        return [m.name for m in details]
+
+    async def list_detailed_models(self) -> list[OllamaModelDetails]:
+        """Fetch detailed model specifications from local Ollama daemon."""
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 resp = await client.get(f"{self.base_url}/api/tags")
                 if resp.status_code == 200:
                     data = resp.json()
-                    return [m["name"] for m in data.get("models", [])]
+                    results: list[OllamaModelDetails] = []
+                    for item in data.get("models", []):
+                        details_meta = item.get("details", {})
+                        results.append(
+                            OllamaModelDetails(
+                                name=item.get("name", "unknown"),
+                                size_bytes=int(item.get("size", 0)),
+                                parameter_size=details_meta.get("parameter_size"),
+                                quantization_level=details_meta.get("quantization_level"),
+                                family=details_meta.get("family"),
+                                modified_at=item.get("modified_at"),
+                            )
+                        )
+                    return results
         except Exception:
             pass
         return []

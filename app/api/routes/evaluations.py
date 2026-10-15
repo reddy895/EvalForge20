@@ -138,9 +138,11 @@ async def get_evaluation_endpoint(
 )
 async def get_case_results_endpoint(
     run_id: str,
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ) -> list[CaseResult]:
-    """Retrieve case-level outputs, scores, and execution metadata."""
+    """Retrieve paginated case-level outputs, scores, and execution metadata."""
     service = EvaluationService(db)
     record = service.get_run(run_id)
     if not record:
@@ -149,7 +151,8 @@ async def get_case_results_endpoint(
             detail=f"Evaluation run '{run_id}' not found",
         )
 
-    return service.get_run_results(run_id)
+    all_results = service.get_run_results(run_id)
+    return all_results[offset : offset + limit]
 
 
 @eval_router.get(

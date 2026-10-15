@@ -96,3 +96,8 @@ async def diagnose_ollama(
             error_message=f"Unexpected error probing Ollama: {exc}",
             setup_instructions=get_ollama_setup_instructions(base_url),
         )
+
+
+# Convenient alias
+check_ollama_status = diagnose_ollama
+

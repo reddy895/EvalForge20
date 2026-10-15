@@ -1,11 +1,11 @@
 """Normalized error categories, domain exceptions, and classification logic."""
 
 import asyncio
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
-class NormalizedErrorCategory(str, Enum):
+class NormalizedErrorCategory(StrEnum):
     """Standardized error categories across all providers and evaluators."""
 
     TIMEOUT = "timeout"

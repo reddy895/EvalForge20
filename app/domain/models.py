@@ -1,12 +1,12 @@
 """Core domain entities and configuration models for EvalForge20."""
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class TargetType(str, Enum):
+class TargetType(StrEnum):
     """Supported target system types."""
 
     LLM = "llm"
@@ -23,9 +23,13 @@ class TargetConfiguration(BaseModel):
 
     target_name: str = Field(..., min_length=1, description="Unique human-readable target name")
     target_type: TargetType = Field(default=TargetType.MOCK, description="Type of target system")
-    provider_name: str = Field(default="mock", description="Provider adapter name (e.g. ollama, mock)")
+    provider_name: str = Field(
+        default="mock", description="Provider adapter name (e.g. ollama, mock)"
+    )
     model_identifier: str = Field(default="mock-model-v1", description="Model identifier")
-    base_url: str | None = Field(default=None, description="Custom base URL for the provider endpoint")
+    base_url: str | None = Field(
+        default=None, description="Custom base URL for the provider endpoint"
+    )
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
     max_tokens: int | None = Field(default=None, gt=0)
     timeout_seconds: float = Field(default=60.0, gt=0.0)

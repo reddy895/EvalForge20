@@ -1,6 +1,6 @@
 """Dataset and dataset-version domain models."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -32,7 +32,7 @@ class DatasetVersion(BaseModel):
     content_hash: str = Field(..., description="SHA-256 hash of dataset cases")
     cases: list[EvaluationCase] = Field(default_factory=list)
     stats: DatasetStats = Field(default_factory=DatasetStats)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class Dataset(BaseModel):
@@ -44,6 +44,6 @@ class Dataset(BaseModel):
     name: str = Field(..., min_length=1, description="Human readable dataset name")
     description: str | None = Field(default=None)
     metadata: dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     latest_version: int = Field(default=1, ge=1)

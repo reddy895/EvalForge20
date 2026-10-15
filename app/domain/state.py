@@ -1,9 +1,9 @@
 """Lifecycle states and transition rules for evaluation runs."""
 
-from enum import Enum
+from enum import StrEnum
 
 
-class EvaluationRunStatus(str, Enum):
+class EvaluationRunStatus(StrEnum):
     """Lifecycle statuses for an evaluation run."""
 
     PENDING = "pending"

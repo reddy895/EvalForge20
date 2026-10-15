@@ -1,10 +1,10 @@
-"""Dataset schema, line-specific validation errors, and report generation."""
+"""Dataset schema, line-specific validation errors, duplicate-ID detection, and report generation."""
 
+import json
 from pathlib import Path
 from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.datasets.parser import JSONLParseError, iter_jsonl_lines
 from app.domain.dataset import DatasetStats
 from app.domain.models import EvaluationCase
 
@@ -151,14 +151,75 @@ def validate_case_payload(
     return case, []
 
 
-def parse_and_validate_lines(
-    lines: list[str],
-) -> tuple[list[EvaluationCase], list[DatasetValidationIssue], int]:
-    """Parse raw lines and collect line-specific issues without stopping early."""
-    import json
+def compute_dataset_stats(cases: list[EvaluationCase]) -> DatasetStats:
+    """Compute aggregate categorical and feature distribution statistics."""
+    categories: dict[str, int] = {}
+    tags: dict[str, int] = {}
+    with_expected = 0
+    with_context = 0
+    with_tools = 0
+
+    for case in cases:
+        if case.expected_output is not None:
+            with_expected += 1
+        if case.context:
+            with_context += 1
+        if case.tools:
+            with_tools += 1
+
+        if case.category:
+            categories[case.category] = categories.get(case.category, 0) + 1
+
+        for tag in case.tags:
+            tags[tag] = tags.get(tag, 0) + 1
+
+    return DatasetStats(
+        total_cases=len(cases),
+        cases_with_expected_output=with_expected,
+        categories_distribution=categories,
+        tags_distribution=tags,
+        has_context_count=with_context,
+        has_tools_count=with_tools,
+    )
+
+
+def validate_dataset(source: str | Path) -> DatasetValidationReport:
+    """Parse a JSONL dataset file or content string, validating schema, types, and duplicate IDs."""
+    if isinstance(source, Path):
+        if not source.exists():
+            return DatasetValidationReport(
+                is_valid=False,
+                issues=[
+                    DatasetValidationIssue(
+                        line_number=1,
+                        case_id=None,
+                        error_type="FILE_NOT_FOUND",
+                        message=f"Dataset file not found: {source}",
+                    )
+                ],
+            )
+        lines = source.read_text(encoding="utf-8").splitlines()
+    elif "\n" in source or "{" in source:
+        lines = source.splitlines()
+    else:
+        path = Path(source)
+        if not path.exists():
+            return DatasetValidationReport(
+                is_valid=False,
+                issues=[
+                    DatasetValidationIssue(
+                        line_number=1,
+                        case_id=None,
+                        error_type="FILE_NOT_FOUND",
+                        message=f"Dataset file not found: {path}",
+                    )
+                ],
+            )
+        lines = path.read_text(encoding="utf-8").splitlines()
 
     all_issues: list[DatasetValidationIssue] = []
     valid_cases: list[EvaluationCase] = []
+    seen_ids: dict[str, int] = {}  # case_id -> line_number
     total_non_empty = 0
 
     for line_number, line in enumerate(lines, start=1):
@@ -193,7 +254,43 @@ def parse_and_validate_lines(
         case, issues = validate_case_payload(line_number, payload)
         if issues:
             all_issues.extend(issues)
-        elif case is not None:
-            valid_cases.append(case)
+            continue
 
-    return valid_cases, all_issues, total_non_empty
+        if case is not None:
+            # Duplicate ID detection
+            if case.id in seen_ids:
+                first_line = seen_ids[case.id]
+                all_issues.append(
+                    DatasetValidationIssue(
+                        line_number=line_number,
+                        case_id=case.id,
+                        error_type="DUPLICATE_ID",
+                        message=f"Duplicate case identifier '{case.id}' (first declared on line {first_line})",
+                    )
+                )
+            else:
+                seen_ids[case.id] = line_number
+                valid_cases.append(case)
+
+    is_valid = len(all_issues) == 0 and total_non_empty > 0
+    stats = compute_dataset_stats(valid_cases) if is_valid else DatasetStats(total_cases=len(valid_cases))
+
+    if total_non_empty == 0 and not all_issues:
+        all_issues.append(
+            DatasetValidationIssue(
+                line_number=1,
+                case_id=None,
+                error_type="EMPTY_DATASET",
+                message="Dataset contains 0 valid test cases",
+            )
+        )
+        is_valid = False
+
+    return DatasetValidationReport(
+        is_valid=is_valid,
+        total_lines_read=total_non_empty,
+        valid_cases_count=len(valid_cases),
+        issues=all_issues,
+        cases=valid_cases if is_valid else [],
+        stats=stats,
+    )

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from app.domain.results import CaseResult
 from app.runner.config import EvaluationRunRecord
+from app.security import validate_safe_path
 
 
 def generate_csv_report(
@@ -94,8 +95,9 @@ def generate_csv_report(
 
 def export_csv_report_to_file(path: Path | str, csv_content: str) -> Path:
     """Write CSV report string to file on disk."""
-    dest = Path(path)
+    dest = validate_safe_path(path)
     dest.parent.mkdir(parents=True, exist_ok=True)
     with dest.open("w", encoding="utf-8", newline="") as f:
         f.write(csv_content)
     return dest
+

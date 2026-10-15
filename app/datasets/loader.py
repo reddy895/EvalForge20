@@ -11,6 +11,7 @@ from app.datasets.validator import (
 )
 from app.domain.errors import DatasetValidationError
 from app.domain.models import EvaluationCase
+from app.security import validate_safe_path
 
 
 class DatasetLoader:
@@ -38,7 +39,7 @@ class DatasetLoader:
     @classmethod
     def validate_path(cls, path: Path | str, format: str | None = None) -> DatasetValidationReport:
         """Validate dataset file and return validation report."""
-        target_path = Path(path)
+        target_path = validate_safe_path(path)
         fmt = (format or cls.detect_format(target_path)).lower()
 
         if fmt == "jsonl":

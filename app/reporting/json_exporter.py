@@ -6,6 +6,7 @@ from typing import Any
 
 from app.domain.results import AggregateMetrics, CaseResult
 from app.runner.config import EvaluationRunRecord
+from app.security import validate_safe_path
 
 REPORT_SCHEMA_VERSION = "1.0.0"
 
@@ -92,8 +93,9 @@ def generate_json_report(
 
 def export_report_to_file(path: Path | str, report_data: dict[str, Any]) -> Path:
     """Serialize JSON report to disk."""
-    dest = Path(path)
+    dest = validate_safe_path(path)
     dest.parent.mkdir(parents=True, exist_ok=True)
     with dest.open("w", encoding="utf-8") as f:
         json.dump(report_data, f, indent=2, ensure_ascii=False)
     return dest
+

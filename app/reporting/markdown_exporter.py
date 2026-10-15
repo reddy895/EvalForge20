@@ -4,6 +4,7 @@ from pathlib import Path
 
 from app.domain.results import AggregateMetrics, CaseResult
 from app.runner.config import EvaluationRunRecord
+from app.security import validate_safe_path
 
 
 def generate_markdown_report(
@@ -138,8 +139,9 @@ def generate_markdown_report(
 
 def export_markdown_report_to_file(path: Path | str, markdown_content: str) -> Path:
     """Write markdown report string to file on disk."""
-    dest = Path(path)
+    dest = validate_safe_path(path)
     dest.parent.mkdir(parents=True, exist_ok=True)
     with dest.open("w", encoding="utf-8") as f:
         f.write(markdown_content)
     return dest
+

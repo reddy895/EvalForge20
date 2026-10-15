@@ -2,6 +2,7 @@
 
 import json
 from typing import Any
+
 import jsonschema
 
 from app.domain.contracts import EvaluatorContract, EvaluatorInput

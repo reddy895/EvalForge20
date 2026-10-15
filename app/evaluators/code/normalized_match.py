@@ -25,11 +25,6 @@ def normalize_text(
     if lowercase:
         s = s.lower()
 
-    if strip_punctuation:
-        # Remove ASCII punctuation
-        translator = str.maketrans("", "", string.punctuation)
-        s = s.translate(translator)
-
     if collapse_whitespace:
         s = re.sub(r"\s+", " ", s).strip()
 
@@ -39,8 +34,15 @@ def normalize_text(
             val = float(s)
             if val.is_integer():
                 s = str(int(val))
+            else:
+                s = str(val)
         except ValueError:
             pass
+
+    if strip_punctuation:
+        # Remove ASCII punctuation
+        translator = str.maketrans("", "", string.punctuation)
+        s = s.translate(translator)
 
     return s
 
@@ -104,7 +106,9 @@ class NormalizedMatchEvaluator(EvaluatorContract):
             metric_name=self.metric_name,
             score=1.0 if is_match else 0.0,
             passed=is_match,
-            reason="Normalized output matches reference" if is_match else "Normalized output differs from reference",
+            reason="Normalized output matches reference"
+            if is_match
+            else "Normalized output differs from reference",
             details={
                 "normalized_actual": norm_actual,
                 "normalized_expected": norm_expected,

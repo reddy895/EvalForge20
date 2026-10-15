@@ -52,28 +52,52 @@ class TaskAssertionEvaluator(EvaluatorContract):
 
             if assert_type == "contains_all":
                 items = val if isinstance(val, list) else [str(val)]
-                missing = [item for item in items if (item if case_sensitive else item.lower()) not in check_text]
+                missing = [
+                    item
+                    for item in items
+                    if (item if case_sensitive else item.lower()) not in check_text
+                ]
                 passed = len(missing) == 0
-                message = f"Contains all required tokens ({items})" if passed else f"Missing required tokens: {missing}"
+                message = (
+                    f"Contains all required tokens ({items})"
+                    if passed
+                    else f"Missing required tokens: {missing}"
+                )
 
             elif assert_type == "contains_any":
                 items = val if isinstance(val, list) else [str(val)]
-                found = [item for item in items if (item if case_sensitive else item.lower()) in check_text]
+                found = [
+                    item
+                    for item in items
+                    if (item if case_sensitive else item.lower()) in check_text
+                ]
                 passed = len(found) > 0
                 message = f"Found matching tokens: {found}" if passed else f"None of {items} found"
 
             elif assert_type == "not_contains":
                 items = val if isinstance(val, list) else [str(val)]
-                forbidden = [item for item in items if (item if case_sensitive else item.lower()) in check_text]
+                forbidden = [
+                    item
+                    for item in items
+                    if (item if case_sensitive else item.lower()) in check_text
+                ]
                 passed = len(forbidden) == 0
-                message = f"No prohibited tokens present" if passed else f"Contained prohibited tokens: {forbidden}"
+                message = (
+                    "No prohibited tokens present"
+                    if passed
+                    else f"Contained prohibited tokens: {forbidden}"
+                )
 
             elif assert_type == "regex_match":
                 pattern = str(val)
                 flags = 0 if case_sensitive else re.IGNORECASE
                 try:
                     passed = bool(re.search(pattern, text, flags=flags))
-                    message = f"Regex pattern '{pattern}' matched" if passed else f"Regex pattern '{pattern}' did not match"
+                    message = (
+                        f"Regex pattern '{pattern}' matched"
+                        if passed
+                        else f"Regex pattern '{pattern}' did not match"
+                    )
                 except re.error as exc:
                     passed = False
                     message = f"Invalid regex pattern: {exc}"
@@ -81,12 +105,20 @@ class TaskAssertionEvaluator(EvaluatorContract):
             elif assert_type == "min_length":
                 min_len = int(val)
                 passed = len(text) >= min_len
-                message = f"Length {len(text)} >= {min_len}" if passed else f"Length {len(text)} < {min_len}"
+                message = (
+                    f"Length {len(text)} >= {min_len}"
+                    if passed
+                    else f"Length {len(text)} < {min_len}"
+                )
 
             elif assert_type == "max_length":
                 max_len = int(val)
                 passed = len(text) <= max_len
-                message = f"Length {len(text)} <= {max_len}" if passed else f"Length {len(text)} > {max_len}"
+                message = (
+                    f"Length {len(text)} <= {max_len}"
+                    if passed
+                    else f"Length {len(text)} > {max_len}"
+                )
 
             elif assert_type == "starts_with":
                 prefix = str(val) if case_sensitive else str(val).lower()
@@ -105,7 +137,9 @@ class TaskAssertionEvaluator(EvaluatorContract):
             if passed:
                 passed_count += 1
 
-            results.append({"name": name, "type": assert_type, "passed": passed, "message": message})
+            results.append(
+                {"name": name, "type": assert_type, "passed": passed, "message": message}
+            )
 
         total = len(assertions)
         all_passed = passed_count == total
@@ -116,7 +150,9 @@ class TaskAssertionEvaluator(EvaluatorContract):
             metric_name=self.metric_name,
             score=round(score, 4),
             passed=all_passed,
-            reason=f"Passed {passed_count}/{total} task assertions" if all_passed else f"Failed {total - passed_count}/{total} task assertions",
+            reason=f"Passed {passed_count}/{total} task assertions"
+            if all_passed
+            else f"Failed {total - passed_count}/{total} task assertions",
             details={"assertion_results": results, "total": total, "passed": passed_count},
             is_model_based=False,
         )

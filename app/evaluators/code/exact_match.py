@@ -48,7 +48,9 @@ class ExactMatchEvaluator(EvaluatorContract):
             metric_name=self.metric_name,
             score=1.0 if is_match else 0.0,
             passed=is_match,
-            reason="Output matches expected reference exactly" if is_match else "Output does not match reference",
+            reason="Output matches expected reference exactly"
+            if is_match
+            else "Output does not match reference",
             details={"actual": str(actual), "expected": str(expected)},
             is_model_based=False,
         )

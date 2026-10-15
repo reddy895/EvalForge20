@@ -2,7 +2,6 @@
 
 import math
 import statistics
-from typing import Any
 
 from app.domain.results import AggregateMetrics, CaseResult
 

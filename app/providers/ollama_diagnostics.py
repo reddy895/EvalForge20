@@ -13,10 +13,18 @@ class OllamaDiagnosticReport(BaseModel):
 
     is_reachable: bool = Field(..., description="Whether the Ollama HTTP server is responsive")
     base_url: str = Field(..., description="Target Ollama endpoint URL")
-    installed_models: list[str] = Field(default_factory=list, description="Models currently available locally")
-    status_code: int | None = Field(default=None, description="HTTP response code from health probe")
-    error_message: str | None = Field(default=None, description="Connection error details if unreachable")
-    setup_instructions: list[str] = Field(default_factory=list, description="Actionable setup steps")
+    installed_models: list[str] = Field(
+        default_factory=list, description="Models currently available locally"
+    )
+    status_code: int | None = Field(
+        default=None, description="HTTP response code from health probe"
+    )
+    error_message: str | None = Field(
+        default=None, description="Connection error details if unreachable"
+    )
+    setup_instructions: list[str] = Field(
+        default_factory=list, description="Actionable setup steps"
+    )
 
 
 def get_ollama_setup_instructions(base_url: str = "http://localhost:11434") -> list[str]:

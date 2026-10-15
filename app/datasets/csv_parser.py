@@ -5,7 +5,12 @@ import io
 from pathlib import Path
 from typing import Any
 
-from app.datasets.validator import DatasetValidationReport, ValidationErrorDetail
+from app.datasets.validator import (
+    DatasetValidationIssue,
+    DatasetValidationReport,
+    compute_dataset_stats,
+)
+from app.domain.dataset import DatasetStats
 from app.domain.models import EvaluationCase
 
 # Candidate column names in order of preference
@@ -37,7 +42,7 @@ def parse_csv_content(content: str, source_name: str = "<csv_string>") -> Datase
     """Parse CSV text content into validated EvaluationCase list with line-level error reporting."""
     reader = csv.reader(io.StringIO(content))
     cases: list[EvaluationCase] = []
-    errors: list[ValidationErrorDetail] = []
+    issues: list[DatasetValidationIssue] = []
     seen_ids: dict[str, int] = {}
     total_lines = 0
 
@@ -46,22 +51,24 @@ def parse_csv_content(content: str, source_name: str = "<csv_string>") -> Datase
     except Exception as exc:
         return DatasetValidationReport(
             is_valid=False,
-            total_cases=0,
+            total_lines_read=0,
             valid_cases_count=0,
-            invalid_cases_count=1,
-            errors=[
-                ValidationErrorDetail(line_number=1, message=f"CSV read error: {exc}", raw_line="")
+            issues=[
+                DatasetValidationIssue(
+                    line_number=1, error_type="MALFORMED_CSV", message=f"CSV read error: {exc}"
+                )
             ],
         )
 
     if raw_headers is None:
         return DatasetValidationReport(
             is_valid=False,
-            total_cases=0,
+            total_lines_read=0,
             valid_cases_count=0,
-            invalid_cases_count=1,
-            errors=[
-                ValidationErrorDetail(line_number=1, message="Empty CSV dataset file", raw_line="")
+            issues=[
+                DatasetValidationIssue(
+                    line_number=1, error_type="EMPTY_DATASET", message="Empty CSV dataset file"
+                )
             ],
         )
 
@@ -75,30 +82,29 @@ def parse_csv_content(content: str, source_name: str = "<csv_string>") -> Datase
     if not input_col:
         return DatasetValidationReport(
             is_valid=False,
-            total_cases=0,
+            total_lines_read=0,
             valid_cases_count=0,
-            invalid_cases_count=1,
-            errors=[
-                ValidationErrorDetail(
+            issues=[
+                DatasetValidationIssue(
                     line_number=1,
+                    error_type="MISSING_FIELD",
                     message=f"Missing required input column in CSV headers {headers}. Expected one of {INPUT_CANDIDATES}",
-                    raw_line=",".join(headers),
                 )
             ],
         )
 
     for line_num, row in enumerate(reader, start=2):
-        total_lines += 1
-        raw_row_str = ",".join(row)
         if not row or all(not cell.strip() for cell in row):
             continue
 
+        total_lines += 1
+
         if len(row) != len(headers):
-            errors.append(
-                ValidationErrorDetail(
+            issues.append(
+                DatasetValidationIssue(
                     line_number=line_num,
+                    error_type="INVALID_ROW",
                     message=f"Row has {len(row)} values, but header specifies {len(headers)} columns",
-                    raw_line=raw_row_str,
                 )
             )
             continue
@@ -106,26 +112,26 @@ def parse_csv_content(content: str, source_name: str = "<csv_string>") -> Datase
         row_dict = dict(zip(headers, row, strict=False))
         inp = row_dict.get(input_col, "").strip()
         if not inp:
-            errors.append(
-                ValidationErrorDetail(
+            issues.append(
+                DatasetValidationIssue(
                     line_number=line_num,
+                    error_type="MISSING_FIELD",
                     message=f"Input column '{input_col}' cannot be empty",
-                    raw_line=raw_row_str,
                 )
             )
             continue
 
-        # ID resolution or auto-generation
         case_id = row_dict.get(id_col, "").strip() if id_col else ""
         if not case_id:
             case_id = f"row_{line_num - 1}"
 
         if case_id in seen_ids:
-            errors.append(
-                ValidationErrorDetail(
+            issues.append(
+                DatasetValidationIssue(
                     line_number=line_num,
+                    case_id=case_id,
+                    error_type="DUPLICATE_ID",
                     message=f"Duplicate case id '{case_id}' (first seen at line {seen_ids[case_id]})",
-                    raw_line=raw_row_str,
                 )
             )
             continue
@@ -139,7 +145,6 @@ def parse_csv_content(content: str, source_name: str = "<csv_string>") -> Datase
         if ctx:
             meta["context"] = ctx
 
-        # Remaining non-standard columns put into metadata
         standard_cols = {input_col, output_col, id_col, category_col, context_col}
         for k, v in row_dict.items():
             if k not in standard_cols and v.strip():
@@ -154,14 +159,15 @@ def parse_csv_content(content: str, source_name: str = "<csv_string>") -> Datase
         )
         cases.append(case)
 
-    is_valid = len(errors) == 0
+    is_valid = len(issues) == 0 and total_lines > 0
+    stats = compute_dataset_stats(cases) if is_valid else DatasetStats(total_cases=len(cases))
     return DatasetValidationReport(
         is_valid=is_valid,
-        total_cases=total_lines,
+        total_lines_read=total_lines,
         valid_cases_count=len(cases),
-        invalid_cases_count=len(errors),
-        cases=cases,
-        errors=errors,
+        issues=issues,
+        cases=cases if is_valid else [],
+        stats=stats,
     )
 
 
@@ -171,12 +177,13 @@ def parse_csv_file(path: Path | str) -> DatasetValidationReport:
     if not file_path.exists():
         return DatasetValidationReport(
             is_valid=False,
-            total_cases=0,
+            total_lines_read=0,
             valid_cases_count=0,
-            invalid_cases_count=1,
-            errors=[
-                ValidationErrorDetail(
-                    line_number=1, message=f"CSV file not found: {file_path}", raw_line=""
+            issues=[
+                DatasetValidationIssue(
+                    line_number=1,
+                    error_type="FILE_NOT_FOUND",
+                    message=f"CSV file not found: {file_path}",
                 )
             ],
         )

@@ -46,7 +46,9 @@ class Settings(BaseSettings):
     ollama_timeout_seconds: float = Field(
         default=120.0,
         gt=0.0,
-        validation_alias=AliasChoices("EVALFORGE20_OLLAMA_TIMEOUT_SECONDS", "OLLAMA_TIMEOUT_SECONDS"),
+        validation_alias=AliasChoices(
+            "EVALFORGE20_OLLAMA_TIMEOUT_SECONDS", "OLLAMA_TIMEOUT_SECONDS"
+        ),
     )
     ollama_temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     ollama_context_length: int = Field(default=4096, ge=512)
@@ -54,7 +56,6 @@ class Settings(BaseSettings):
     # Local LLM-as-Judge settings
     default_judge_model: str = Field(default="qwen2.5:3b")
     enable_local_judge: bool = Field(default=True)
-
 
     # Optional LangSmith settings (supports LANGSMITH_ environment variables directly)
     langsmith_tracing: bool = Field(default=False, validation_alias="LANGSMITH_TRACING")

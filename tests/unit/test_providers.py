@@ -180,7 +180,9 @@ async def test_ollama_list_detailed_models(monkeypatch: pytest.MonkeyPatch):
 @pytest.mark.asyncio
 async def test_ollama_missing_model_404(monkeypatch: pytest.MonkeyPatch):
     """Verify 404 response provides setup instructions to pull the model."""
-    provider = OllamaProvider(model_identifier="missing-model:latest", base_url="http://mock-ollama:11434")
+    provider = OllamaProvider(
+        model_identifier="missing-model:latest", base_url="http://mock-ollama:11434"
+    )
 
     async def mock_404(self, url, **kwargs):
         return httpx.Response(
@@ -227,4 +229,3 @@ async def test_ollama_inference_options_payload(monkeypatch: pytest.MonkeyPatch)
     assert opts.get("num_ctx") == 8192
     assert opts.get("top_k") == 40
     assert opts.get("seed") == 42
-

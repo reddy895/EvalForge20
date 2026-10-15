@@ -1,6 +1,7 @@
 """FastAPI main application entrypoint for EvalForge20."""
 
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -44,7 +45,9 @@ app.include_router(discovery_router)
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     """Format Pydantic request validation errors into a consistent structure."""
     errors = []
     for err in exc.errors():
@@ -57,7 +60,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             }
         )
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=422,
         content={
             "error": "RequestValidationError",
             "message": "Input request validation failed",

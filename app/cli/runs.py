@@ -2,6 +2,7 @@
 
 import asyncio
 from pathlib import Path
+
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -30,9 +31,7 @@ def run_evaluation_cli(
     session_factory = get_session_factory()
 
     metric_ids = [m.strip() for m in metrics.split(",") if m.strip()]
-    evaluators = [
-        EvaluatorConfiguration(evaluator_name=m, metric_id=m) for m in metric_ids
-    ]
+    evaluators = [EvaluatorConfiguration(evaluator_name=m, metric_id=m) for m in metric_ids]
 
     target_type = TargetType.OLLAMA if provider.lower() == "ollama" else TargetType.MOCK
     target_cfg = TargetConfiguration(
@@ -53,7 +52,9 @@ def run_evaluation_cli(
     )
 
     console.print(f"[bold blue]Starting evaluation run:[/] {config.run_id}")
-    console.print(f"[dim]Dataset:[/] {dataset} | [dim]Provider:[/] {provider} | [dim]Model:[/] {model}")
+    console.print(
+        f"[dim]Dataset:[/] {dataset} | [dim]Provider:[/] {provider} | [dim]Model:[/] {model}"
+    )
 
     with session_factory() as session:
         service = EvaluationService(session)
@@ -99,7 +100,9 @@ def list_runs_command(limit: int = 20) -> None:
 
     for r in runs:
         started = r.started_at.strftime("%Y-%m-%d %H:%M:%S") if r.started_at else "-"
-        table.add_row(r.run_id, r.name, r.status.value, f"{r.completed_cases}/{r.total_cases}", started)
+        table.add_row(
+            r.run_id, r.name, r.status.value, f"{r.completed_cases}/{r.total_cases}", started
+        )
 
     console.print(table)
 
@@ -121,7 +124,9 @@ def show_run_command(run_id: str) -> None:
         results = service.get_run_results(run_id)
 
     console.print(f"[bold blue]Run Details:[/] {record.run_id} ({record.name})")
-    console.print(f"Status: [{record.status.value}] | Total: {record.total_cases} | Completed: {record.completed_cases}")
+    console.print(
+        f"Status: [{record.status.value}] | Total: {record.total_cases} | Completed: {record.completed_cases}"
+    )
 
     if aggregates and aggregates.metric_averages:
         m_table = Table(title="Metric Scores")

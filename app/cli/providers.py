@@ -1,6 +1,7 @@
 """CLI commands for inspecting and checking model providers."""
 
 import asyncio
+
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -42,5 +43,7 @@ def check_provider_command(
             console.print(f"[dim]Available models:[/] {', '.join(models[:10])}")
         raise typer.Exit(code=0)
     else:
-        console.print(f"[bold red]✘ Provider '{provider_name}' is unreachable or failed health check.[/]")
+        console.print(
+            f"[bold red]✘ Provider '{provider_name}' is unreachable or failed health check.[/]"
+        )
         raise typer.Exit(code=1)

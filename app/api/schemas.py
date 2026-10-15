@@ -1,6 +1,5 @@
 """Request and response schemas for FastAPI endpoints."""
 
-from typing import Any
 from pydantic import BaseModel, Field
 
 from app.domain.models import EvaluatorConfiguration, TargetConfiguration
@@ -17,7 +16,9 @@ class CreateEvaluationRequest(BaseModel):
 
     name: str = Field(default="Evaluation Run", min_length=1)
     dataset_path: str | None = Field(default=None, description="Path to local JSONL dataset file")
-    dataset_content: str | None = Field(default=None, description="Raw JSONL dataset content if supplied directly")
+    dataset_content: str | None = Field(
+        default=None, description="Raw JSONL dataset content if supplied directly"
+    )
     target: TargetConfiguration
     evaluators: list[EvaluatorConfiguration] = Field(
         default_factory=lambda: [

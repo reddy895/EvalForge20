@@ -1,6 +1,7 @@
 """CLI command for exporting structured JSON evaluation reports."""
 
 from pathlib import Path
+
 import typer
 from rich.console import Console
 
@@ -20,7 +21,9 @@ def export_report_command(
 ) -> None:
     """Export structured JSON report for an evaluation run."""
     if format.lower() != "json":
-        console.print(f"[bold red]Unsupported report format:[/] {format}. Only 'json' is currently supported.")
+        console.print(
+            f"[bold red]Unsupported report format:[/] {format}. Only 'json' is currently supported."
+        )
         raise typer.Exit(code=1)
 
     init_db()

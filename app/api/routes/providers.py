@@ -1,6 +1,7 @@
 """Provider, evaluator, and metric discovery endpoints."""
 
 from typing import Any
+
 from fastapi import APIRouter
 
 from app.evaluators.registry import registry

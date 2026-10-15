@@ -21,5 +21,8 @@ def clean_environment(
 
     # Invalidate cached settings
     get_settings.cache_clear()
+    from app.storage.database import init_db
+
+    init_db()
     yield
     get_settings.cache_clear()

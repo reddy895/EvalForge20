@@ -76,7 +76,9 @@ class EvaluationService:
             error_message=record.error_message,
         )
 
+        record = record.model_copy(update={"metrics": aggregates})
         return record, results, aggregates
+
 
     def get_run(self, run_id: str) -> EvaluationRunRecord | None:
         """Retrieve historical run record."""

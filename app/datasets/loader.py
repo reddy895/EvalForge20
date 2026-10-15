@@ -31,6 +31,11 @@ class DatasetLoader:
         )
 
     @classmethod
+    def load(cls, path: Path | str, format: str | None = None) -> DatasetValidationReport:
+        """Load and validate dataset from file path, returning DatasetValidationReport."""
+        return cls.validate_path(path, format=format)
+
+    @classmethod
     def validate_path(cls, path: Path | str, format: str | None = None) -> DatasetValidationReport:
         """Validate dataset file and return validation report."""
         target_path = Path(path)

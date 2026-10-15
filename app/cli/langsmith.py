@@ -58,3 +58,40 @@ def sync_dataset_command(
     except Exception as exc:
         console.print(f"[bold red]✘ Synchronization failed:[/] {exc}")
         raise typer.Exit(code=1) from exc
+
+
+@langsmith_cli.command(name="sync-run")
+def sync_run_command(
+    run_id: str = typer.Argument(..., help="Evaluation run ID to publish to LangSmith"),
+) -> None:
+    """Publish an existing evaluation run and case scores to LangSmith."""
+    from app.application.evaluation_service import EvaluationService
+    from app.integrations.langsmith.experiments import sync_run_to_langsmith
+    from app.storage.database import get_session_factory, init_db
+
+    init_db()
+    session_factory = get_session_factory()
+
+    with session_factory() as session:
+        service = EvaluationService(session)
+        record = service.get_run(run_id)
+        if not record:
+            console.print(f"[bold red]Run '{run_id}' not found.[/]")
+            raise typer.Exit(code=1)
+
+        case_results = service.get_run_results(run_id)
+        aggregates = service.get_run_aggregates(run_id)
+        if not aggregates:
+            console.print(f"[bold red]Run '{run_id}' has no aggregate metrics.[/]")
+            raise typer.Exit(code=1)
+
+    res = sync_run_to_langsmith(record, case_results, aggregates)
+    if res.get("status") == "success":
+        console.print(f"[bold green]✔ Successfully published run to LangSmith![/]")
+        console.print(f"  LangSmith Run ID: [cyan]{res['langsmith_run_id']}[/]")
+        console.print(f"  Project: [magenta]{res['project_name']}[/]")
+    elif res.get("status") == "skipped":
+        console.print(f"[yellow]⚠ Skipped:[/] {res['reason']}")
+    else:
+        console.print(f"[bold red]✘ Publishing failed:[/] {res.get('error')}")
+        raise typer.Exit(code=1)

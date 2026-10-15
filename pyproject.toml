@@ -46,17 +46,18 @@ dev = [
 
 
 [project.scripts]
+evalforge = "evalforge.__main__:main"
 evalforge20 = "app.cli.main:cli_app"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["app*"]
+include = ["app*", "evalforge*"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
 exclude = ["LLM_Evaluation_Complete_Notes.md", "*.md"]
-src = ["app", "tests"]
+src = ["app", "evalforge", "tests"]
 
 [tool.ruff.lint]
 select = [

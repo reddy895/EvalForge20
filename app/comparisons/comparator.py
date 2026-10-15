@@ -1,4 +1,4 @@
-"""Run comparison engine validating compatibility and computing metric deltas."""
+"""Run comparison engine validating compatibility, computing metric deltas, and enforcing regression thresholds."""
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -30,6 +30,22 @@ class CaseRegression(BaseModel):
     reason: str
 
 
+class RegressionThresholds(BaseModel):
+    """Configurable thresholds determining whether run changes constitute a regression."""
+
+    model_config = ConfigDict(frozen=True)
+
+    max_allowed_pass_rate_drop: float = Field(
+        default=0.05, ge=0.0, le=1.0, description="Max acceptable drop in pass rate (e.g. 0.05 = 5%)"
+    )
+    max_allowed_latency_increase_ms: float | None = Field(
+        default=250.0, ge=0.0, description="Max acceptable increase in mean latency in ms"
+    )
+    max_allowed_regressed_cases: int = Field(
+        default=0, ge=0, description="Maximum number of individual cases allowed to flip from pass to fail"
+    )
+
+
 class ComparisonResult(BaseModel):
     """Complete structured comparison between two evaluation runs."""
 
@@ -45,6 +61,8 @@ class ComparisonResult(BaseModel):
     regressed_cases: list[CaseRegression] = Field(default_factory=list)
     improved_cases: list[CaseRegression] = Field(default_factory=list)
     regressions_detected: bool = False
+    threshold_violations: list[str] = Field(default_factory=list)
+    passed_regression_gate: bool = True
     summary: str = ""
 
 
@@ -73,6 +91,41 @@ def calculate_metric_delta(base_val: float | None, cand_val: float | None) -> tu
     return delta, pct
 
 
+def evaluate_regression_thresholds(
+    pass_rate_delta: float | None,
+    latency_delta_ms: float | None,
+    regressed_cases_count: int,
+    thresholds: RegressionThresholds,
+) -> tuple[bool, list[str]]:
+    """Check comparison results against configured quality gate thresholds."""
+    violations: list[str] = []
+
+    # Check pass rate drop
+    if pass_rate_delta is not None and pass_rate_delta < -thresholds.max_allowed_pass_rate_drop:
+        violations.append(
+            f"Pass rate dropped by {abs(pass_rate_delta):.2%}, exceeding allowed threshold of {thresholds.max_allowed_pass_rate_drop:.2%}"
+        )
+
+    # Check latency increase
+    if (
+        thresholds.max_allowed_latency_increase_ms is not None
+        and latency_delta_ms is not None
+        and latency_delta_ms > thresholds.max_allowed_latency_increase_ms
+    ):
+        violations.append(
+            f"Mean latency increased by {latency_delta_ms:.1f}ms, exceeding allowed threshold of {thresholds.max_allowed_latency_increase_ms:.1f}ms"
+        )
+
+    # Check case flip regressions
+    if regressed_cases_count > thresholds.max_allowed_regressed_cases:
+        violations.append(
+            f"{regressed_cases_count} individual cases regressed from pass to fail, exceeding allowed limit of {thresholds.max_allowed_regressed_cases}"
+        )
+
+    passed_gate = len(violations) == 0
+    return passed_gate, violations
+
+
 def compare_evaluation_runs(
     baseline: EvaluationRunRecord,
     baseline_cases: list[CaseResult],
@@ -80,9 +133,10 @@ def compare_evaluation_runs(
     candidate: EvaluationRunRecord,
     candidate_cases: list[CaseResult],
     candidate_aggs: AggregateMetrics,
+    thresholds: RegressionThresholds | None = None,
     allow_different_datasets: bool = False,
 ) -> ComparisonResult:
-    """Compare candidate run against baseline run and compute metric deltas."""
+    """Compare candidate run against baseline run, calculate deltas, and evaluate regression thresholds."""
     validate_run_compatibility(baseline, candidate, allow_different_datasets=allow_different_datasets)
 
     # 1. Metric deltas
@@ -147,9 +201,19 @@ def compare_evaluation_runs(
                 )
             )
 
+    # 3. Check quality gate thresholds
+    active_thresholds = thresholds or RegressionThresholds()
+    passed_gate, violations = evaluate_regression_thresholds(
+        pass_rate_delta=pr_delta,
+        latency_delta_ms=lat_delta,
+        regressed_cases_count=len(regressed),
+        thresholds=active_thresholds,
+    )
+
     summary = (
         f"Compared candidate '{candidate.name}' ({candidate.run_id}) vs baseline '{baseline.name}' ({baseline.run_id}): "
-        f"Pass rate delta: {pr_delta:+.2%} | Regressed cases: {len(regressed)} | Improved cases: {len(improved)}"
+        f"Pass rate delta: {pr_delta:+.2%} | Regressed cases: {len(regressed)} | Improved cases: {len(improved)} | "
+        f"Gate Status: {'PASSED' if passed_gate else 'FAILED'}"
         if pr_delta is not None
         else "Comparison computed."
     )
@@ -165,5 +229,7 @@ def compare_evaluation_runs(
         regressed_cases=regressed,
         improved_cases=improved,
         regressions_detected=len(regressed) > 0,
+        threshold_violations=violations,
+        passed_regression_gate=passed_gate,
         summary=summary,
     )

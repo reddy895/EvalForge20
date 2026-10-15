@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app import __version__
+from app.api.routes.comparisons import comparisons_router
 from app.api.routes.datasets import dataset_router
 from app.api.routes.evaluations import eval_router
 from app.api.routes.health import health_router
@@ -44,6 +45,7 @@ app.include_router(dataset_router)
 app.include_router(eval_router)
 app.include_router(discovery_router)
 app.include_router(integrations_router)
+app.include_router(comparisons_router)
 
 
 @app.exception_handler(RequestValidationError)

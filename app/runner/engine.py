@@ -112,8 +112,33 @@ class EvaluationRunner:
 
         # Run cases concurrently up to semaphore limit
         tasks = [asyncio.create_task(worker(c)) for c in cases]
-        completed_results = await asyncio.gather(*tasks, return_exceptions=False)
-        results.extend(completed_results)
+        try:
+            completed_results = await asyncio.gather(*tasks, return_exceptions=True)
+            for item in completed_results:
+                if isinstance(item, CaseResult):
+                    results.append(item)
+                elif isinstance(item, Exception):
+                    # Unhandled error in case worker
+                    results.append(
+                        CaseResult(
+                            case_id="error",
+                            run_id=self.config.run_id,
+                            input="unknown",
+                            error_category="execution_error",
+                            error_message=str(item),
+                        )
+                    )
+        except Exception as exc:
+            # Preserve whatever was already completed
+            for t in tasks:
+                if t.done() and not t.cancelled():
+                    res = t.result()
+                    if isinstance(res, CaseResult) and res not in results:
+                        results.append(res)
+            self._results = results
+            await self._update_status(EvaluationRunStatus.FAILED)
+            raise exc
+
         self._results = results
 
         # 4. Compute Aggregate Metrics

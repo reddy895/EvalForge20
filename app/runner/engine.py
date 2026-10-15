@@ -60,11 +60,13 @@ class EvaluationRunner:
         # 1. Resolve Provider
         provider = provider_instance
         if provider is None:
+            extra_opts = self.config.target.extra_params or {}
             provider = provider_registry.get(
                 self.config.target.provider_name,
                 model_identifier=self.config.target.model_identifier,
                 base_url=self.config.target.base_url,
                 timeout_seconds=self.config.timeout_seconds,
+                **extra_opts,
             )
 
         # 2. Resolve Evaluators

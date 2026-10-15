@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.config import get_settings
 from app.domain.contracts import ProviderRequest, ProviderResponse
+from app.domain.errors import NormalizedErrorCategory
 from app.providers.base import BaseProvider
 from app.providers.registry import provider_registry
 
@@ -116,7 +117,6 @@ class OllamaProvider(BaseProvider):
                     options_payload[param] = request.extra_params[param]
             options_payload.update(request.extra_params.get("options", {}))
 
-
             payload: dict[str, Any] = {
                 "model": self.model_identifier,
                 "prompt": request.prompt,
@@ -128,10 +128,35 @@ class OllamaProvider(BaseProvider):
             if request.response_format == "json":
                 payload["format"] = "json"
 
-            async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
-                resp = await client.post(f"{self.base_url}/api/generate", json=payload)
-                resp.raise_for_status()
-                data = resp.json()
+            try:
+                async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+                    resp = await client.post(f"{self.base_url}/api/generate", json=payload)
+                    if resp.status_code == 404:
+                        elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+                        return ProviderResponse(
+                            output_text=None,
+                            latency_ms=elapsed_ms,
+                            error_category=NormalizedErrorCategory.PROVIDER_UNAVAILABLE.value,
+                            error_message=(
+                                f"Model '{self.model_identifier}' is not installed in local Ollama. "
+                                f"Run 'ollama pull {self.model_identifier}' to download it."
+                            ),
+                            is_success=False,
+                        )
+                    resp.raise_for_status()
+                    data = resp.json()
+            except httpx.ConnectError:
+                elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+                return ProviderResponse(
+                    output_text=None,
+                    latency_ms=elapsed_ms,
+                    error_category=NormalizedErrorCategory.PROVIDER_UNAVAILABLE.value,
+                    error_message=(
+                        f"Cannot connect to ollama daemon at '{self.base_url}'. "
+                        "Ensure the server is running with 'ollama serve'."
+                    ),
+                    is_success=False,
+                )
 
             elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
             output_text = data.get("response", "")

@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 from app import __version__
+from app.api.routes.datasets import dataset_router
 from app.api.routes.health import health_router
 from app.domain.errors import EvalForgeError
 from app.logging import get_logger, setup_logging
@@ -35,6 +36,7 @@ app = FastAPI(
 
 # Register routes
 app.include_router(health_router)
+app.include_router(dataset_router)
 
 
 @app.exception_handler(EvalForgeError)

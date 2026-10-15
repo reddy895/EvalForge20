@@ -68,35 +68,43 @@ class LocalOllamaJudgeEvaluator(EvaluatorContract):
         return system_prompt, user_content
 
     def _extract_score_fallback(self, raw_text: str) -> JudgeEvaluationOutput:
-        """Attempt regex recovery if model wrapped JSON in markdown or emitted malformed text."""
-        # 1. Try finding JSON code block
-        json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw_text, re.DOTALL)
-        if json_match:
-            try:
-                parsed = json.loads(json_match.group(1))
-                return JudgeEvaluationOutput.model_validate(parsed)
-            except Exception:
-                pass
+        """Attempt robust regex recovery and JSON repair if model emitted malformed text."""
+        # 1. Clean markdown code fences
+        cleaned = re.sub(r"^```(?:json)?|```$", "", raw_text.strip(), flags=re.MULTILINE).strip()
 
-        # 2. Try raw curly brace search
-        brace_match = re.search(r"(\{.*\})", raw_text, re.DOTALL)
+        # 2. Repair common JSON errors (e.g. trailing commas)
+        repaired = re.sub(r",\s*([\]}])", r"\1", cleaned)
+        try:
+            parsed = json.loads(repaired)
+            return JudgeEvaluationOutput.model_validate(parsed)
+        except Exception:
+            pass
+
+        # 3. Try finding any JSON object in text
+        brace_match = re.search(r"(\{.*?\})", raw_text, re.DOTALL)
         if brace_match:
             try:
-                parsed = json.loads(brace_match.group(1))
+                candidate = re.sub(r",\s*([\]}])", r"\1", brace_match.group(1))
+                parsed = json.loads(candidate)
                 return JudgeEvaluationOutput.model_validate(parsed)
             except Exception:
                 pass
 
-        # 3. Regex search for score pattern (e.g. "score": 4)
-        score_match = re.search(r'"score"\s*:\s*([0-9]+(?:\.[0-9]+)?)', raw_text)
+        # 4. Regex search for score pattern (e.g. "score": 4 or "score": 4/5 or Score: 4)
+        score_match = re.search(
+            r'(?i)(?:"?score"?|rating)\s*[:=]\s*([0-9]+(?:\.[0-9]+)?)(?:/([0-9]+))?', raw_text
+        )
         if score_match:
             val = float(score_match.group(1))
             passed = val >= self.rubric.pass_threshold
+            # Extract explanation if available
+            exp_match = re.search(r'(?i)"?explanation"?\s*[:=]\s*"([^"]+)"', raw_text)
+            explanation = exp_match.group(1) if exp_match else raw_text[:200]
             return JudgeEvaluationOutput(
                 score=val,
                 passed=passed,
-                explanation=raw_text[:200],
-                confidence=0.5,
+                explanation=explanation,
+                confidence=0.6,
             )
 
         raise ValueError(f"Could not extract valid score from judge output: {raw_text[:150]}")

@@ -9,9 +9,11 @@ from app.config import get_settings
 
 # Patterns to redact from logs
 SENSITIVE_PATTERNS = [
-    re.compile(r"(?i)(api[_-]?key|secret|token|password|auth|bearer)\s*[:=]\s*['\"]?([a-zA-Z0-9_\-\.]{8,})['\"]?"),
-    re.compile(r"(?i)(sk-[a-zA-Z0-9_\-]{20,})"),
-    re.compile(r"(?i)(ls__[a-zA-Z0-9_\-]{20,})"),
+    re.compile(
+        r"(?i)\b(api[_-]?key|secret|token|password|bearer)\b\s*[:= ]\s*['\"]?([a-zA-Z0-9_\-\.]{8,})['\"]?"
+    ),
+    re.compile(r"(?i)\b(sk-[a-zA-Z0-9_\-]{8,})\b"),
+    re.compile(r"(?i)\b(ls__[a-zA-Z0-9_\-]{8,})\b"),
 ]
 
 
@@ -30,8 +32,11 @@ class SecretRedactionFilter(logging.Filter):
 
     @classmethod
     def redact_text(cls, text: str) -> str:
-        for pattern in SENSITIVE_PATTERNS:
-            text = pattern.sub(r"\1=[REDACTED]", text)
+        # First redact key-value pairs
+        text = SENSITIVE_PATTERNS[0].sub(r"\1=[REDACTED]", text)
+        # Then redact any remaining standalone token patterns
+        for pattern in SENSITIVE_PATTERNS[1:]:
+            text = pattern.sub(r"[REDACTED]", text)
         return text
 
     @classmethod

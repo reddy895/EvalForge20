@@ -1,7 +1,8 @@
 """Retry policy and classification of safe-to-retry errors."""
 
 import asyncio
-from typing import Awaitable, Callable, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import TypeVar
 
 from app.domain.contracts import ProviderResponse
 from app.domain.errors import NormalizedErrorCategory

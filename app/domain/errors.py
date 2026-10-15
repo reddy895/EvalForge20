@@ -88,6 +88,9 @@ def classify_exception(exc: Exception) -> tuple[NormalizedErrorCategory, str]:
     if isinstance(exc, asyncio.TimeoutError | TimeoutError):
         return NormalizedErrorCategory.TIMEOUT, f"Operation timed out: {exc!s}"
 
+    if isinstance(exc, ConnectionError):
+        return NormalizedErrorCategory.PROVIDER_UNAVAILABLE, str(exc)
+
     if isinstance(exc, ProviderError):
         return exc.category, exc.message
 

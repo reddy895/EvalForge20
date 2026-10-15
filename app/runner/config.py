@@ -1,8 +1,9 @@
 """Configuration models for evaluation runs."""
 
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.config import get_settings
@@ -22,9 +23,13 @@ class EvaluationRunConfig(BaseModel):
     dataset_version_hash: str | None = Field(default=None)
     target: TargetConfiguration
     evaluators: list[EvaluatorConfiguration] = Field(default_factory=list)
-    max_concurrency: int = Field(default_factory=lambda: get_settings().max_concurrency, ge=1, le=50)
+    max_concurrency: int = Field(
+        default_factory=lambda: get_settings().max_concurrency, ge=1, le=50
+    )
     max_retries: int = Field(default=2, ge=0, le=5)
-    timeout_seconds: float = Field(default_factory=lambda: get_settings().default_timeout_seconds, gt=0.0)
+    timeout_seconds: float = Field(
+        default_factory=lambda: get_settings().default_timeout_seconds, gt=0.0
+    )
 
 
 class EvaluationRunRecord(BaseModel):

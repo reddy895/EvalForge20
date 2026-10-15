@@ -1,8 +1,6 @@
 """Unit tests for domain models, validation, and lifecycle transitions."""
 
 import pytest
-from pydantic import ValidationError
-
 from app.domain.contracts import ProviderRequest, ProviderResponse
 from app.domain.errors import (
     NormalizedErrorCategory,
@@ -15,6 +13,7 @@ from app.domain.state import (
     is_terminal_status,
     validate_status_transition,
 )
+from pydantic import ValidationError
 
 
 def test_target_configuration_validation():

@@ -2,7 +2,6 @@
 
 import httpx
 import pytest
-
 from app.domain.contracts import ProviderRequest
 from app.domain.errors import NormalizedErrorCategory, ProviderError
 from app.providers.mock import MockProvider

@@ -2,12 +2,11 @@
 
 from pathlib import Path
 
-from typer.testing import CliRunner
-
 from app.cli.main import cli_app
 from app.datasets.hasher import compute_cases_hash
 from app.datasets.validator import validate_dataset
 from app.domain.models import EvaluationCase
+from typer.testing import CliRunner
 
 runner = CliRunner()
 

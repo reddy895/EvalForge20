@@ -1,7 +1,6 @@
 """Unit tests for deterministic code evaluators, registry, and score aggregation."""
 
 import pytest
-
 from app.domain.contracts import EvaluatorInput
 from app.domain.errors import EvaluatorError
 from app.domain.models import EvaluationCase

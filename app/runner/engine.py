@@ -1,9 +1,11 @@
 """Evaluation runner engine orchestrating bounded concurrency and execution lifecycle."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
-from typing import Any, Awaitable, Callable
 
+import app.evaluators  # noqa: F401 - triggers automatic evaluator registration
+import app.providers  # noqa: F401 - triggers automatic provider registration
 from app.domain.contracts import EvaluatorContract
 from app.domain.models import EvaluationCase
 from app.domain.results import AggregateMetrics, CaseResult
@@ -14,7 +16,6 @@ from app.providers.base import BaseProvider
 from app.providers.registry import provider_registry
 from app.runner.config import EvaluationRunConfig, EvaluationRunRecord
 from app.runner.executor import execute_case
-from app.runner.retry import execute_with_retry
 
 
 class EvaluationRunner:
@@ -89,19 +90,23 @@ class EvaluationRunner:
                 )
 
             async with semaphore:
-                # Execute with retry for safe errors
-                async def _attempt_case() -> Any:
-                    return await execute_case(
-                        case=case,
-                        provider=provider,
-                        target_config=self.config.target,
-                        evaluator_configs=self.config.evaluators,
-                        evaluators_map=evaluators_map,
+                if self._is_cancelled:
+                    return CaseResult(
+                        case_id=case.id,
                         run_id=self.config.run_id,
+                        input=case.input,
+                        expected_output=case.expected_output,
+                        error_category="cancelled",
+                        error_message="Evaluation run was cancelled",
                     )
 
-                res: CaseResult = await execute_with_retry(
-                    _attempt_case,
+                res = await execute_case(
+                    case=case,
+                    provider=provider,
+                    target_config=self.config.target,
+                    evaluator_configs=self.config.evaluators,
+                    evaluators_map=evaluators_map,
+                    run_id=self.config.run_id,
                     max_retries=self.config.max_retries,
                 )
 

@@ -1,10 +1,15 @@
-"""Per-case execution and evaluation logic."""
-
 import json
-from app.domain.contracts import EvaluatorContract, EvaluatorInput, ProviderRequest
+
+from app.domain.contracts import (
+    EvaluatorContract,
+    EvaluatorInput,
+    ProviderRequest,
+    ProviderResponse,
+)
 from app.domain.models import EvaluationCase, EvaluatorConfiguration, TargetConfiguration
 from app.domain.results import CaseResult, MetricResult
 from app.providers.base import BaseProvider
+from app.runner.retry import execute_with_retry
 
 
 async def execute_case(
@@ -14,6 +19,7 @@ async def execute_case(
     evaluator_configs: list[EvaluatorConfiguration],
     evaluators_map: dict[str, EvaluatorContract],
     run_id: str,
+    max_retries: int = 2,
 ) -> CaseResult:
     """Execute a single test case against the target provider and evaluate its outputs."""
     # 1. Format provider prompt
@@ -31,8 +37,11 @@ async def execute_case(
         extra_params=target_config.extra_params,
     )
 
-    # 2. Invoke provider
-    resp = await provider.generate(request)
+    # 2. Invoke provider with bounded retry for transient errors
+    async def _call() -> ProviderResponse:
+        return await provider.generate(request)
+
+    resp = await execute_with_retry(_call, max_retries=max_retries)
 
     # 3. Handle provider-level failures
     if not resp.is_success or resp.output_text is None:

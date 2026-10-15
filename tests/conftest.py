@@ -4,7 +4,6 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
-
 from app.config import get_settings
 
 

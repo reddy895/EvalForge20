@@ -1,6 +1,7 @@
 """Evaluator registry and metric discovery for EvalForge20."""
 
 # Import built-in evaluators to trigger automatic registration
+from app.agents import evaluator as agent_evaluators
 from app.evaluators.code import (
     exact_match,
     json_schema,
@@ -13,6 +14,7 @@ from app.evaluators.registry import registry
 from app.rag import metrics as rag_metrics
 
 __all__ = [
+    "agent_evaluators",
     "exact_match",
     "json_schema",
     "json_validity",

@@ -1,3 +1,11 @@
+"""FastAPI main application entrypoint for EvalForge20."""
+
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+from app import __version__
 from app.api.routes.datasets import dataset_router
 from app.api.routes.evaluations import eval_router
 from app.api.routes.health import health_router
@@ -35,6 +43,29 @@ app.include_router(eval_router)
 app.include_router(discovery_router)
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    """Format Pydantic request validation errors into a consistent structure."""
+    errors = []
+    for err in exc.errors():
+        field_path = ".".join(str(p) for p in err.get("loc", []))
+        errors.append(
+            {
+                "field": field_path,
+                "message": err.get("msg"),
+                "type": err.get("type"),
+            }
+        )
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "error": "RequestValidationError",
+            "message": "Input request validation failed",
+            "details": {"validation_errors": errors},
+        },
+    )
+
+
 @app.exception_handler(EvalForgeError)
 async def evalforge_error_handler(request: Request, exc: EvalForgeError) -> JSONResponse:
     """Standardized error handler for domain exceptions."""
@@ -44,5 +75,19 @@ async def evalforge_error_handler(request: Request, exc: EvalForgeError) -> JSON
             "error": exc.__class__.__name__,
             "message": exc.message,
             "details": exc.details,
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Safely handle unexpected server exceptions without leaking internal secrets."""
+    logger.error("Unhandled internal server exception: %s", exc, exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": "InternalServerError",
+            "message": "An unexpected server error occurred. Please consult backend logs.",
+            "details": {},
         },
     )

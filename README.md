@@ -81,21 +81,23 @@ It aims to help developers:
 
 ### 3. Evaluation Metrics
 
-Planned deterministic metrics include:
+EvalForge20 provides a comprehensive suite of deterministic, reference-based, and local model-based metrics:
 
-| Metric | Purpose |
-|---|---|
-| Exact Match | Checks whether output matches the expected answer |
-| Normalized Match | Compares outputs using documented normalization rules |
-| JSON Validity | Checks whether the response contains valid JSON |
-| Schema Validity | Validates structured output against a defined schema |
-| Pass Rate | Measures the proportion of eligible cases that pass |
-| Latency | Measures response time |
-| Error Rate | Tracks provider and execution failures |
-| Token Usage | Records token counts when reported by the provider |
-| Regression Detection | Identifies metric changes against a baseline |
+| Metric ID | Metric Name | Category | Purpose |
+|---|---|---|---|
+| `exact_match` | Exact Match | Deterministic | Strict string/structure equivalence check |
+| `normalized_match` | Normalized Match | Deterministic | Whitespace, case, and punctuation normalized equivalence |
+| `token_f1` | Token-Level F1 Score | Deterministic | Token precision, recall, and harmonic F1 score |
+| `classification_accuracy` | Classification Accuracy | Deterministic | Exact class label match |
+| `json_validity` | JSON Validity | Deterministic | Validates whether response parses as valid JSON |
+| `json_schema` | JSON Schema Validity | Deterministic | Validates payload against JSON Schema definition |
+| `response_completeness` | Response Completeness | Deterministic | Word count bounds and sentence termination checks |
+| `latency` / `pass_rate` | Performance Metrics | Deterministic | Latency, pass rate, and provider error distribution |
+| `ollama_judge_answer_relevance` | Answer Relevance | Model-Based | Evaluates prompt responsiveness via local Ollama judge |
+| `ollama_judge_factual_correctness` | Factual Correctness | Model-Based | Evaluates factual correctness against reference ground truth |
+| `ollama_judge_context_faithfulness` | Context Faithfulness | Model-Based | Evaluates groundedness and checks hallucinations |
+| `ollama_judge_explanation_quality` | Explanation Quality | Model-Based | Evaluates logical coherence and step-by-step clarity |
 
-Metrics will retain their definitions and denominators so results remain interpretable.
 
 ### 4. AI Agent Evaluation
 
@@ -414,28 +416,44 @@ These environment variable names must be implemented in the application before t
 
 ### 6. Run an Evaluation
 
-The following commands illustrate the intended CLI workflow:
+EvalForge20 provides verified CLI workflows via `evalforge20` or `python -m evalforge`:
 
+Discover local models and check readiness:
 ```bash
-evalforge20 dataset validate examples/datasets/basic.jsonl
+python -m evalforge models
+python -m evalforge models check qwen2.5:3b
+```
 
-evalforge20 provider check ollama
+Validate a dataset (JSON, JSONL, or CSV):
+```bash
+python -m evalforge datasets validate examples/datasets/qa_sample.json
+```
 
-evalforge20 evaluate \
-  --dataset examples/datasets/basic.jsonl \
+Run an evaluation using local Ollama model:
+```bash
+python -m evalforge evaluate \
+  --dataset examples/datasets/qa_sample.json \
   --provider ollama \
-  --model qwen2.5:3b
-
-evalforge20 runs list
+  --model qwen2.5:3b \
+  --metrics exact_match,token_f1,response_completeness
 ```
 
-Export a report:
-
+List historical evaluation runs:
 ```bash
-evalforge20 report export <run-id> --format json
+python -m evalforge runs list
 ```
 
-These commands are proposed until the corresponding CLI commands are implemented. Check the actual command-line help for the supported syntax.
+Compare candidate and baseline runs:
+```bash
+python -m evalforge compare <BASELINE_RUN_ID> <CANDIDATE_RUN_ID>
+```
+
+Export human-readable Markdown or tabular CSV reports:
+```bash
+python -m evalforge report export <RUN_ID> --format markdown --output reports/run.md
+python -m evalforge report export <RUN_ID> --format csv --output reports/cases.csv
+python -m evalforge report export <RUN_ID> --format json --output reports/run.json
+```
 
 ### 7. Start the API
 

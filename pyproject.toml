@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "evalforge20"
-version = "0.1.0"
+version = "0.2.0"
 description = "An open-source, local-first platform for evaluating, benchmarking, and comparing LLMs, RAG, and AI agents."
 readme = "README.md"
 requires-python = ">=3.11"

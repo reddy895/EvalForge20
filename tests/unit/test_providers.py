@@ -139,3 +139,92 @@ async def test_ollama_provider_connection_failure(monkeypatch: pytest.MonkeyPatc
     assert not resp.is_success
     assert resp.error_category == NormalizedErrorCategory.PROVIDER_UNAVAILABLE.value
     assert "Cannot connect to ollama" in (resp.error_message or "")
+
+
+@pytest.mark.asyncio
+async def test_ollama_list_detailed_models(monkeypatch: pytest.MonkeyPatch):
+    """Verify detailed model inspection with quantization and parameter counts."""
+    provider = OllamaProvider(base_url="http://mock-ollama:11434")
+
+    sample_tags = {
+        "models": [
+            {
+                "name": "qwen2.5:3b",
+                "size": 1920000000,
+                "modified_at": "2026-01-01T00:00:00Z",
+                "details": {
+                    "family": "qwen2",
+                    "parameter_size": "3.1B",
+                    "quantization_level": "Q4_K_M",
+                },
+            }
+        ]
+    }
+
+    async def mock_tags(self, url, **kwargs):
+        return httpx.Response(status_code=200, json=sample_tags, request=httpx.Request("GET", url))
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", mock_tags)
+
+    detailed = await provider.list_detailed_models()
+    assert len(detailed) == 1
+    assert detailed[0].name == "qwen2.5:3b"
+    assert detailed[0].parameter_size == "3.1B"
+    assert detailed[0].quantization_level == "Q4_K_M"
+    assert detailed[0].size_bytes == 1920000000
+
+    names = await provider.list_models()
+    assert names == ["qwen2.5:3b"]
+
+
+@pytest.mark.asyncio
+async def test_ollama_missing_model_404(monkeypatch: pytest.MonkeyPatch):
+    """Verify 404 response provides setup instructions to pull the model."""
+    provider = OllamaProvider(model_identifier="missing-model:latest", base_url="http://mock-ollama:11434")
+
+    async def mock_404(self, url, **kwargs):
+        return httpx.Response(
+            status_code=404,
+            json={"error": "model 'missing-model:latest' not found"},
+            request=httpx.Request("POST", url),
+        )
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_404)
+
+    resp = await provider.generate(ProviderRequest(prompt="Hello"))
+    assert not resp.is_success
+    assert "ollama pull missing-model:latest" in (resp.error_message or "")
+
+
+@pytest.mark.asyncio
+async def test_ollama_inference_options_payload(monkeypatch: pytest.MonkeyPatch):
+    """Verify context length and temperature options are correctly serialized."""
+    provider = OllamaProvider(model_identifier="qwen2.5:3b", base_url="http://mock-ollama:11434")
+
+    captured_payload = {}
+
+    async def mock_generate(self, url, **kwargs):
+        nonlocal captured_payload
+        captured_payload = kwargs.get("json", {})
+        return httpx.Response(
+            status_code=200,
+            json={"response": "Mock reply", "prompt_eval_count": 5, "eval_count": 10},
+            request=httpx.Request("POST", url),
+        )
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_generate)
+
+    req = ProviderRequest(
+        prompt="Tell a story",
+        temperature=0.2,
+        max_tokens=256,
+        extra_params={"context_length": 8192, "top_k": 40, "seed": 42},
+    )
+    resp = await provider.generate(req)
+    assert resp.is_success
+    opts = captured_payload.get("options", {})
+    assert opts.get("temperature") == 0.2
+    assert opts.get("num_ctx") == 8192
+    assert opts.get("top_k") == 40
+    assert opts.get("seed") == 42
+

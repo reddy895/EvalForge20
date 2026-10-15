@@ -1,6 +1,7 @@
 """CLI commands for dataset validation and inspection."""
 
 from pathlib import Path
+
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -26,7 +27,9 @@ def validate_command(
         console.print(f"[dim]SHA-256 Hash:[/] {content_hash}")
         raise typer.Exit(code=0)
     else:
-        console.print(f"[bold red]✘ Dataset validation failed with {len(report.issues)} issue(s):[/]")
+        console.print(
+            f"[bold red]✘ Dataset validation failed with {len(report.issues)} issue(s):[/]"
+        )
         for issue in report.issues:
             case_info = f" [cyan](id={issue.case_id})[/]" if issue.case_id else ""
             console.print(
@@ -65,7 +68,9 @@ def inspect_command(
         cat_table = Table(title="Category Distribution")
         cat_table.add_column("Category", style="green")
         cat_table.add_column("Count", style="yellow")
-        for cat, count in sorted(stats.categories_distribution.items(), key=lambda x: x[1], reverse=True):
+        for cat, count in sorted(
+            stats.categories_distribution.items(), key=lambda x: x[1], reverse=True
+        ):
             cat_table.add_row(cat, str(count))
         console.print(cat_table)
 

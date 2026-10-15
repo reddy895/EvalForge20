@@ -1,6 +1,7 @@
 """Main entrypoint for the EvalForge20 command line interface."""
 
 import typer
+
 from app import __version__
 from app.cli.datasets import dataset_cli
 

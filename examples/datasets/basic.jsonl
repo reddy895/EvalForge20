@@ -1,0 +1,4 @@
+{"id":"geo-001","input":"What is the capital of France?","expected_output":"Paris","category":"geography","tags":["capital","europe"],"metadata":{"difficulty":"easy"}}
+{"id":"math-001","input":"What is 15 multiplied by 4?","expected_output":"60","category":"math","tags":["arithmetic"],"metadata":{"difficulty":"easy"}}
+{"id":"code-001","input":"Return a JSON object with key 'status' equal to 'ok'.","expected_output":"{\"status\":\"ok\"}","category":"json","tags":["structured_output"],"metadata":{"format":"json"}}
+{"id":"logic-001","input":"If all bloops are razzies and all razzies are lazzies, are all bloops lazzies? Answer Yes or No.","expected_output":"Yes","category":"logic","tags":["deduction"],"metadata":{"difficulty":"medium"}}

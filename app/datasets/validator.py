@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.domain.dataset import DatasetStats
@@ -16,7 +17,9 @@ class DatasetValidationIssue(BaseModel):
 
     line_number: int = Field(..., ge=1)
     case_id: str | None = Field(default=None)
-    error_type: str = Field(..., description="e.g. MISSING_FIELD, INVALID_TYPE, MALFORMED_JSON, DUPLICATE_ID")
+    error_type: str = Field(
+        ..., description="e.g. MISSING_FIELD, INVALID_TYPE, MALFORMED_JSON, DUPLICATE_ID"
+    )
     message: str = Field(..., description="Human-readable explanation")
 
 
@@ -39,7 +42,9 @@ class DatasetValidationReport(BaseModel):
         lines: list[str] = [f"Found {len(self.issues)} issue(s) during dataset validation:"]
         for issue in self.issues:
             case_info = f" [id={issue.case_id}]" if issue.case_id else ""
-            lines.append(f"  Line {issue.line_number}: [{issue.error_type}]{case_info} {issue.message}")
+            lines.append(
+                f"  Line {issue.line_number}: [{issue.error_type}]{case_info} {issue.message}"
+            )
         return "\n".join(lines)
 
 
@@ -273,7 +278,11 @@ def validate_dataset(source: str | Path) -> DatasetValidationReport:
                 valid_cases.append(case)
 
     is_valid = len(all_issues) == 0 and total_non_empty > 0
-    stats = compute_dataset_stats(valid_cases) if is_valid else DatasetStats(total_cases=len(valid_cases))
+    stats = (
+        compute_dataset_stats(valid_cases)
+        if is_valid
+        else DatasetStats(total_cases=len(valid_cases))
+    )
 
     if total_non_empty == 0 and not all_issues:
         all_issues.append(

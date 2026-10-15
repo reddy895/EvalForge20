@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.table import Table
 
 from app.datasets.hasher import compute_cases_hash
-from app.datasets.validator import validate_dataset
+from app.datasets.loader import DatasetLoader
 
 dataset_cli = typer.Typer(help="Manage and validate evaluation datasets.")
 console = Console()
@@ -15,11 +15,11 @@ console = Console()
 
 @dataset_cli.command(name="validate")
 def validate_command(
-    path: Path = typer.Argument(..., help="Path to JSONL dataset file", exists=True),
+    path: Path = typer.Argument(..., help="Path to JSONL/JSON/CSV dataset file", exists=True),
 ) -> None:
     """Validate dataset schema, line-by-line syntax, and check for duplicate IDs."""
     console.print(f"[bold blue]Validating dataset:[/] {path}")
-    report = validate_dataset(path)
+    report = DatasetLoader.validate_path(path)
 
     if report.is_valid:
         content_hash = compute_cases_hash(report.cases)
@@ -43,7 +43,8 @@ def inspect_command(
     path: Path = typer.Argument(..., help="Path to JSONL dataset file", exists=True),
 ) -> None:
     """Inspect dataset statistics, category distributions, and metadata."""
-    report = validate_dataset(path)
+    report = DatasetLoader.validate_path(path)
+
     if not report.is_valid:
         console.print(f"[bold red]Cannot inspect invalid dataset:[/] {path}")
         console.print(report.format_errors())

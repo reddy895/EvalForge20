@@ -6,7 +6,7 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from app.datasets.hasher import compute_cases_hash
-from app.datasets.validator import validate_dataset
+from app.datasets.loader import DatasetLoader
 from app.domain.models import EvaluationCase
 from app.domain.results import AggregateMetrics, CaseResult
 from app.runner.config import EvaluationRunConfig, EvaluationRunRecord
@@ -34,10 +34,11 @@ class EvaluationService:
         elif config.dataset_cases:
             cases = config.dataset_cases
         elif config.dataset_path:
-            report = validate_dataset(Path(config.dataset_path))
+            report = DatasetLoader.validate_path(Path(config.dataset_path))
             if not report.is_valid:
                 raise ValueError(f"Dataset validation failed: {report.format_errors()}")
             cases = report.cases
+
         else:
             raise ValueError(
                 "No dataset cases or dataset path provided in evaluation configuration."

@@ -1,0 +1,75 @@
+/* EvalForge20 StepEvaluators Styles */
+
+.evaluators-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.evaluator-checkbox-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.evaluator-checkbox-item:hover {
+  border-color: var(--border-strong);
+  background-color: var(--bg-elevated);
+}
+
+.evaluator-checkbox-item.selected {
+  border-color: var(--accent-primary);
+  background-color: #1f1e1a;
+}
+
+.evaluator-checkbox-input {
+  margin-top: 3px;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
+.evaluator-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.evaluator-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: 2px;
+}
+
+.evaluator-name {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.evaluator-desc {
+  font-size: var(--font-size-2xs);
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.evaluator-category-pill {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 1px 4px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-default);
+  color: var(--text-muted);
+}
+
+@media (max-width: 600px) {
+  .evaluators-grid {
+    grid-template-columns: 1fr;
+  }
+}

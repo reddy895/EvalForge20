@@ -1,0 +1,6 @@
+/* EvalForge20 Main CSS Entrypoint */
+
+@import './styles/tokens.css';
+@import './styles/typography.css';
+@import './styles/layout.css';
+@import './styles/reset.css';

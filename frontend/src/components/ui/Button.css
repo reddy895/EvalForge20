@@ -1,0 +1,127 @@
+/* EvalForge20 Button Component Styles */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.btn:disabled,
+.btn.loading {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Button Sizes */
+.btn-sm {
+  height: 26px;
+  padding: 0 var(--space-sm);
+  font-size: var(--font-size-xs);
+}
+
+.btn-md {
+  height: 32px;
+  padding: 0 var(--space-md);
+  font-size: var(--font-size-sm);
+}
+
+.btn-lg {
+  height: 38px;
+  padding: 0 var(--space-base);
+  font-size: var(--font-size-base);
+}
+
+.btn-icon-only {
+  padding: 0;
+}
+
+.btn-icon-only.btn-sm { width: 26px; }
+.btn-icon-only.btn-md { width: 32px; }
+.btn-icon-only.btn-lg { width: 38px; }
+
+/* Button Variants */
+.btn-primary {
+  background-color: var(--accent-primary);
+  color: #171816;
+  border-color: var(--accent-border);
+  font-weight: var(--font-weight-semibold);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+
+.btn-primary:active:not(:disabled) {
+  background-color: var(--accent-active);
+}
+
+.btn-secondary {
+  background-color: var(--bg-elevated);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.btn-secondary:active:not(:disabled) {
+  background-color: var(--bg-active);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background-color: #241614;
+  border-color: var(--status-error-border);
+  color: var(--status-error);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #2e1b18;
+}
+
+/* Spinner for loading state */
+.btn-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}

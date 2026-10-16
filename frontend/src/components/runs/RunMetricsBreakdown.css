@@ -1,0 +1,76 @@
+/* EvalForge20 Run Metrics Breakdown Styles */
+
+.run-metrics-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.metrics-summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.metrics-subpanels-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.subpanel-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: var(--space-md) var(--space-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.subpanel-title {
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.subpanel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-xs);
+}
+
+.subpanel-tr {
+  border-bottom: 1px solid var(--border-subtle);
+  height: 28px;
+}
+
+.subpanel-tr:last-child {
+  border-bottom: none;
+}
+
+.subpanel-td-name {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.subpanel-td-val {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-medium);
+}
+
+@media (max-width: 900px) {
+  .metrics-summary-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metrics-subpanels-grid {
+    grid-template-columns: 1fr;
+  }
+}

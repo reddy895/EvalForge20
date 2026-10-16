@@ -1,0 +1,101 @@
+/* EvalForge20 StepDataset Styles */
+
+.dataset-mode-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  border-bottom: 1px solid var(--border-default);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-xs);
+}
+
+.dataset-mode-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  padding: 4px var(--space-md);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.dataset-mode-tab:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-hover);
+}
+
+.dataset-mode-tab.active {
+  background-color: var(--bg-elevated);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.dataset-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.dataset-option-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.dataset-option-item:hover {
+  border-color: var(--border-strong);
+  background-color: var(--bg-elevated);
+}
+
+.dataset-option-item.selected {
+  border-color: var(--accent-primary);
+  background-color: #1f1e1a;
+}
+
+.dataset-option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dataset-option-name {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.dataset-option-desc {
+  font-size: var(--font-size-2xs);
+  color: var(--text-muted);
+}
+
+.dataset-validation-box {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-sm);
+  border: 1px solid var(--border-default);
+}
+
+.dataset-validation-box.valid {
+  background-color: var(--status-success-bg);
+  border-color: var(--status-success-border);
+  color: var(--status-success);
+}
+
+.dataset-validation-box.invalid {
+  background-color: var(--status-error-bg);
+  border-color: var(--status-error-border);
+  color: var(--status-error);
+}

@@ -1,0 +1,101 @@
+/* EvalForge20 Datasets Page Styles */
+
+.datasets-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.datasets-grid-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.dataset-preview-panel {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: calc(var(--topbar-height) + 16px);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.dataset-preview-header {
+  padding: var(--space-md) var(--space-base);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-subtle);
+}
+
+.dataset-preview-title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.dataset-preview-body {
+  padding: var(--space-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.case-preview-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.case-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 4px;
+}
+
+.case-preview-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--font-size-xs);
+}
+
+.case-preview-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.case-preview-val {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  padding: 4px 6px;
+  border-radius: var(--radius-xs);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 900px) {
+  .datasets-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}

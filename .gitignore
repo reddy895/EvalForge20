@@ -82,3 +82,10 @@ dmypy.json
 reports/
 logs/
 scratch/
+
+# Frontend dependencies & build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+node_modules/
+dist/

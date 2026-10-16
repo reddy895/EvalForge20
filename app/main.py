@@ -1,10 +1,13 @@
 """FastAPI main application entrypoint for EvalForge20."""
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app import __version__
 from app.api.routes.comparisons import comparisons_router
@@ -40,6 +43,15 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+# Enable CORS for local developer tools and UI dev server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Register routes
 app.include_router(health_router)
 app.include_router(dataset_router)
@@ -48,6 +60,23 @@ app.include_router(discovery_router)
 app.include_router(ollama_router)
 app.include_router(integrations_router)
 app.include_router(comparisons_router)
+
+# Serve production frontend single-page application if built
+_frontend_dist = Path("frontend/dist")
+if _frontend_dist.exists() and (_frontend_dist / "index.html").exists():
+    _assets_dir = _frontend_dist / "assets"
+    if _assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa_frontend(full_path: str):
+        # Exclude API endpoints, docs, and system probes
+        if full_path.startswith(("v1/", "health", "ready", "docs", "redoc", "openapi.json")):
+            raise HTTPException(status_code=404, detail="Not Found")
+        target_file = _frontend_dist / full_path
+        if target_file.is_file():
+            return FileResponse(target_file)
+        return FileResponse(_frontend_dist / "index.html")
 
 
 @app.exception_handler(RequestValidationError)

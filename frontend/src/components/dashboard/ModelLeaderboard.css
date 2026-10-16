@@ -1,0 +1,133 @@
+/* EvalForge20 Model Leaderboard Styles */
+
+.leaderboard-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: var(--space-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.leaderboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.leaderboard-title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.leaderboard-sort-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.leaderboard-sort-btn {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
+  font-size: var(--font-size-2xs);
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.leaderboard-sort-btn.active {
+  background-color: var(--bg-elevated);
+  border-color: var(--accent-border);
+  color: var(--accent-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 32px minmax(130px, 1.2fr) 2fr 80px 70px;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 6px var(--space-sm);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  background-color: var(--bg-primary);
+  font-size: var(--font-size-xs);
+  transition: border-color var(--transition-fast);
+}
+
+.leaderboard-row:hover {
+  border-color: var(--border-default);
+}
+
+.leaderboard-rank {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-2xs);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.leaderboard-rank.top-1 {
+  color: var(--accent-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.leaderboard-model {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-bar-track {
+  width: 100%;
+  height: 8px;
+  background-color: var(--bg-elevated);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.leaderboard-bar-fill {
+  height: 100%;
+  background-color: var(--accent-primary);
+  border-radius: var(--radius-xs);
+  transition: width 0.3s ease;
+}
+
+.leaderboard-score {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  text-align: right;
+}
+
+.leaderboard-runs-count {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-2xs);
+  color: var(--text-muted);
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .leaderboard-row {
+    grid-template-columns: 24px 1fr 70px;
+  }
+  .leaderboard-bar-track,
+  .leaderboard-runs-count {
+    display: none;
+  }
+}

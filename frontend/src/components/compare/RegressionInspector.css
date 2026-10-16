@@ -1,0 +1,81 @@
+/* EvalForge20 Regression & Disagreement Inspector Styles */
+
+.regression-inspector-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  display: flex;
+  flex-direction: column;
+}
+
+.regression-inspector-header {
+  padding: var(--space-md) var(--space-base);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diff-case-item {
+  padding: var(--space-md) var(--space-base);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.diff-case-item:last-child {
+  border-bottom: none;
+}
+
+.diff-case-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diff-outputs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.diff-output-box {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diff-output-box.baseline-pass {
+  border-top: 2px solid var(--status-success);
+}
+
+.diff-output-box.candidate-fail {
+  border-top: 2px solid var(--status-error);
+}
+
+.diff-output-title {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.diff-output-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .diff-outputs-grid {
+    grid-template-columns: 1fr;
+  }
+}

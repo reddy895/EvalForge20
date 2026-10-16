@@ -1,0 +1,44 @@
+/* EvalForge20 Comparative Metrics Table Styles */
+
+.compare-metrics-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-lg);
+}
+
+.compare-metrics-header {
+  padding: var(--space-md) var(--space-base);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.compare-metrics-title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-caps);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.compare-regression-status-box {
+  padding: var(--space-sm) var(--space-base);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.compare-regression-status-box.passed {
+  background-color: var(--status-success-bg);
+  color: var(--status-success);
+}
+
+.compare-regression-status-box.failed {
+  background-color: var(--status-error-bg);
+  color: var(--status-error);
+}

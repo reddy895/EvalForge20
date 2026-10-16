@@ -100,4 +100,3 @@ async def diagnose_ollama(
 
 # Convenient alias
 check_ollama_status = diagnose_ollama
-

@@ -17,6 +17,7 @@ runner = CliRunner()
 
 def test_cli_models_offline(monkeypatch):
     """Test 'evalforge20 models' displays error and setup instructions when offline."""
+
     async def mock_diag(base_url: str):
         return OllamaDiagnosticReport(
             is_reachable=False,
@@ -35,6 +36,7 @@ def test_cli_models_offline(monkeypatch):
 
 def test_cli_models_online(monkeypatch):
     """Test 'evalforge20 models' outputs table when models are present."""
+
     async def mock_diag(base_url: str):
         return OllamaDiagnosticReport(
             is_reachable=True,
@@ -64,6 +66,7 @@ def test_cli_models_online(monkeypatch):
 
 def test_cli_models_check(monkeypatch):
     """Test 'evalforge20 models check' verifies presence or gives pull advice."""
+
     async def mock_diag(base_url: str):
         return OllamaDiagnosticReport(
             is_reachable=True,
@@ -126,7 +129,9 @@ def test_cli_report_markdown_and_csv_export(tmp_path: Path):
             run_id=run_id,
             input="hi",
             actual_output="hello",
-            metrics=[MetricResult(metric_id="exact_match", metric_name="EM", score=1.0, passed=True)],
+            metrics=[
+                MetricResult(metric_id="exact_match", metric_name="EM", score=1.0, passed=True)
+            ],
         )
     )
 

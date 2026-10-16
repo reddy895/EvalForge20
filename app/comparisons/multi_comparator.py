@@ -34,7 +34,9 @@ class MetricComparisonRow(BaseModel):
 
     metric_id: str
     metric_name: str
-    values: dict[str, float | None] = Field(default_factory=dict, description="run_id -> metric value")
+    values: dict[str, float | None] = Field(
+        default_factory=dict, description="run_id -> metric value"
+    )
     best_run_id: str | None = None
     worst_run_id: str | None = None
     spread: float | None = None
@@ -47,7 +49,9 @@ class CaseDisagreement(BaseModel):
 
     case_id: str
     input_preview: str
-    run_results: dict[str, bool | None] = Field(default_factory=dict, description="run_id -> passed")
+    run_results: dict[str, bool | None] = Field(
+        default_factory=dict, description="run_id -> passed"
+    )
 
 
 class MultiRunComparisonMatrix(BaseModel):
@@ -80,7 +84,11 @@ def compare_multiple_runs(
     headers: list[RunSummaryHeader] = []
     for r in runs:
         total = r.metrics.total_cases if r.metrics else r.total_cases
-        pass_rate = round(r.metrics.pass_rate, 4) if (r.metrics and r.metrics.pass_rate is not None) else 0.0
+        pass_rate = (
+            round(r.metrics.pass_rate, 4)
+            if (r.metrics and r.metrics.pass_rate is not None)
+            else 0.0
+        )
         passed = int(round(pass_rate * total))
         err_count = (
             sum(r.metrics.error_distribution.values())
@@ -185,11 +193,15 @@ def compare_multiple_runs(
     summary_parts = [f"Compared {len(runs)} evaluation runs across {models_str}."]
     if highest_accuracy_run_id:
         acc_h = next(h for h in headers if h.run_id == highest_accuracy_run_id)
-        summary_parts.append(f"Highest pass rate: {acc_h.pass_rate * 100:.1f}% ({acc_h.model_identifier}).")
+        summary_parts.append(
+            f"Highest pass rate: {acc_h.pass_rate * 100:.1f}% ({acc_h.model_identifier})."
+        )
     if fastest_run_id:
         fast_h = next(h for h in headers if h.run_id == fastest_run_id)
         if fast_h.mean_latency_ms is not None:
-            summary_parts.append(f"Fastest run: {fast_h.mean_latency_ms:.1f}ms ({fast_h.model_identifier}).")
+            summary_parts.append(
+                f"Fastest run: {fast_h.mean_latency_ms:.1f}ms ({fast_h.model_identifier})."
+            )
     if disagreements:
         summary_parts.append(f"Disagreements detected on {len(disagreements)} individual cases.")
 

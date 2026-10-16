@@ -18,20 +18,12 @@ def generate_markdown_report(
         if record.started_at and record.completed_at
         else "N/A"
     )
-    pass_pct = (
-        f"{aggregates.pass_rate * 100:.1f}%"
-        if aggregates.pass_rate is not None
-        else "N/A"
-    )
+    pass_pct = f"{aggregates.pass_rate * 100:.1f}%" if aggregates.pass_rate is not None else "N/A"
     mean_lat = (
-        f"{aggregates.mean_latency_ms:.1f} ms"
-        if aggregates.mean_latency_ms is not None
-        else "N/A"
+        f"{aggregates.mean_latency_ms:.1f} ms" if aggregates.mean_latency_ms is not None else "N/A"
     )
     p95_lat = (
-        f"{aggregates.p95_latency_ms:.1f} ms"
-        if aggregates.p95_latency_ms is not None
-        else "N/A"
+        f"{aggregates.p95_latency_ms:.1f} ms" if aggregates.p95_latency_ms is not None else "N/A"
     )
 
     lines: list[str] = [
@@ -82,13 +74,15 @@ def generate_markdown_report(
 
     # Category performance if present
     if aggregates.category_performance:
-        lines.extend([
-            "",
-            "### Category Performance",
-            "",
-            "| Category | Pass Rate | Cases |",
-            "|---|---|---|",
-        ])
+        lines.extend(
+            [
+                "",
+                "### Category Performance",
+                "",
+                "| Category | Pass Rate | Cases |",
+                "|---|---|---|",
+            ]
+        )
         for cat, stats in sorted(aggregates.category_performance.items()):
             c_rate = stats.get("pass_rate")
             rate_str = f"{c_rate * 100:.1f}%" if c_rate is not None else "N/A"
@@ -96,23 +90,25 @@ def generate_markdown_report(
             lines.append(f"| **{cat}** | {rate_str} | {c_count} |")
 
     # Local inference and resource notice
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 3. Local Execution & Infrastructure",
-        "",
-        "- **Inference Infrastructure:** Fully local evaluation using Ollama and Python execution.",
-        "- **External SaaS / API Costs:** $0.00 (Zero cloud API fees incurred).",
-        f"- **Measured Runtime:** {duration_s}s end-to-end execution time.",
-        "",
-        "---",
-        "",
-        "## 4. Case Results Sample",
-        "",
-        "| Case ID | Input Preview | Latency | Passed | Primary Metric |",
-        "|---|---|---|---|---|",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 3. Local Execution & Infrastructure",
+            "",
+            "- **Inference Infrastructure:** Fully local evaluation using Ollama and Python execution.",
+            "- **External SaaS / API Costs:** $0.00 (Zero cloud API fees incurred).",
+            f"- **Measured Runtime:** {duration_s}s end-to-end execution time.",
+            "",
+            "---",
+            "",
+            "## 4. Case Results Sample",
+            "",
+            "| Case ID | Input Preview | Latency | Passed | Primary Metric |",
+            "|---|---|---|---|---|",
+        ]
+    )
 
     sample_cases = case_results[:20]
     for c in sample_cases:
@@ -128,7 +124,9 @@ def generate_markdown_report(
             val = f"{first_m.score:.2f}" if first_m.score is not None else str(first_m.passed)
             primary_metric = f"{first_m.metric_id}: {val}"
 
-        lines.append(f"| `{c.case_id}` | {inp_preview} | {lat_str} | {pass_badge} | {primary_metric} |")
+        lines.append(
+            f"| `{c.case_id}` | {inp_preview} | {lat_str} | {pass_badge} | {primary_metric} |"
+        )
 
     if len(case_results) > 20:
         lines.append(f"\n*... and {len(case_results) - 20} more test cases.*")
@@ -144,4 +142,3 @@ def export_markdown_report_to_file(path: Path | str, markdown_content: str) -> P
     with dest.open("w", encoding="utf-8") as f:
         f.write(markdown_content)
     return dest
-

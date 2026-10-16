@@ -60,9 +60,7 @@ def list_models_command() -> None:
 
     for m in detailed_models:
         size_mb = (
-            f"{m.get('size_bytes', 0) / (1024 * 1024):.1f} MB"
-            if m.get("size_bytes")
-            else "N/A"
+            f"{m.get('size_bytes', 0) / (1024 * 1024):.1f} MB" if m.get("size_bytes") else "N/A"
         )
         mod_date = str(m.get("modified_at", "N/A"))[:19].replace("T", " ")
         table.add_row(
@@ -99,5 +97,7 @@ def check_model_command(
         console.print(f"[bold green]✔ Model '{model_name}' is locally installed and ready.[/]")
     else:
         console.print(f"[bold red]✘ Model '{model_name}' is not found locally.[/]")
-        console.print(f"[bold yellow]Run this command to pull the model:[/] ollama pull {model_name}")
+        console.print(
+            f"[bold yellow]Run this command to pull the model:[/] ollama pull {model_name}"
+        )
         raise typer.Exit(code=1)

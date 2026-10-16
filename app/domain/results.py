@@ -46,7 +46,6 @@ class CaseResult(BaseModel):
         return all(m.passed is True for m in self.metrics if m.passed is not None)
 
 
-
 class AggregateMetrics(BaseModel):
     """Dataset-level aggregated performance summary."""
 

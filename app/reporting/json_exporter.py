@@ -98,4 +98,3 @@ def export_report_to_file(path: Path | str, report_data: dict[str, Any]) -> Path
     with dest.open("w", encoding="utf-8") as f:
         json.dump(report_data, f, indent=2, ensure_ascii=False)
     return dest
-

@@ -229,4 +229,3 @@ class EvaluationRepository:
             records.append(rec)
 
         return records[offset : offset + limit]
-

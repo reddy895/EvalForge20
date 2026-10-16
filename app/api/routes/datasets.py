@@ -18,7 +18,9 @@ dataset_router = APIRouter(prefix="/v1/datasets", tags=["Datasets"])
 class ImportDatasetRequest(BaseModel):
     """Payload to import and persist a new dataset file."""
 
-    filename: str = Field(..., min_length=1, description="Dataset filename (e.g. custom_eval.jsonl)")
+    filename: str = Field(
+        ..., min_length=1, description="Dataset filename (e.g. custom_eval.jsonl)"
+    )
     content: str = Field(..., min_length=1, description="Raw dataset content")
 
 

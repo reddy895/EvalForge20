@@ -122,7 +122,6 @@ async def list_evaluations_endpoint(
     return summaries
 
 
-
 @eval_router.get(
     "/v1/evaluations/{run_id}",
     summary="Retrieve evaluation run status and aggregate metrics",
@@ -226,4 +225,3 @@ async def get_report_endpoint(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported report format '{format}'. Supported formats: ['json', 'markdown', 'csv']",
         )
-

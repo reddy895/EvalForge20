@@ -16,9 +16,7 @@ def generate_csv_report(
 ) -> str:
     """Generate a tabular CSV export of per-case evaluation results with metric scores."""
     # Discover all distinct metric IDs across case results
-    metric_ids = sorted(
-        {m.metric_id for c in case_results for m in c.metrics}
-    )
+    metric_ids = sorted({m.metric_id for c in case_results for m in c.metrics})
 
     base_headers = [
         "case_id",
@@ -47,7 +45,11 @@ def generate_csv_report(
 
     for c in case_results:
         # Format complex payload types to string
-        inp_str = json.dumps(c.input, ensure_ascii=False) if isinstance(c.input, (dict, list)) else str(c.input or "")
+        inp_str = (
+            json.dumps(c.input, ensure_ascii=False)
+            if isinstance(c.input, (dict, list))
+            else str(c.input or "")
+        )
         exp_str = (
             json.dumps(c.expected_output, ensure_ascii=False)
             if isinstance(c.expected_output, (dict, list))
@@ -100,4 +102,3 @@ def export_csv_report_to_file(path: Path | str, csv_content: str) -> Path:
     with dest.open("w", encoding="utf-8", newline="") as f:
         f.write(csv_content)
     return dest
-

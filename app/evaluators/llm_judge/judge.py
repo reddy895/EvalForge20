@@ -274,4 +274,3 @@ registry.register(
         requires_expected_output=False,
     ),
 )
-

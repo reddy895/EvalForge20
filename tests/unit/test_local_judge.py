@@ -24,13 +24,18 @@ def base_case() -> EvaluationCase:
         id="judge_case_1",
         input="Explain why the sky is blue.",
         expected_output="The sky appears blue due to Rayleigh scattering.",
-        metadata={"context": "Rayleigh scattering causes shorter blue wavelengths to scatter more."},
+        metadata={
+            "context": "Rayleigh scattering causes shorter blue wavelengths to scatter more."
+        },
     )
 
 
 @pytest.mark.asyncio
-async def test_judge_perfect_json_response(base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch):
+async def test_judge_perfect_json_response(
+    base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch
+):
     """Test judge successfully evaluates with standard structured JSON."""
+
     async def mock_generate(self, req):
         return ProviderResponse(
             output_text='{"score": 5, "passed": true, "explanation": "Directly and accurately explains Rayleigh scattering.", "confidence": 0.95}',
@@ -58,7 +63,9 @@ async def test_judge_perfect_json_response(base_case: EvaluationCase, monkeypatc
 
 
 @pytest.mark.asyncio
-async def test_judge_markdown_fence_extraction(base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch):
+async def test_judge_markdown_fence_extraction(
+    base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch
+):
     """Test judge successfully extracts JSON enclosed in markdown code fences."""
     raw_markdown = """```json
 {
@@ -88,7 +95,9 @@ async def test_judge_markdown_fence_extraction(base_case: EvaluationCase, monkey
 
 
 @pytest.mark.asyncio
-async def test_judge_regex_fallback_recovery(base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch):
+async def test_judge_regex_fallback_recovery(
+    base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch
+):
     """Test regex extraction when output is conversational rather than strict JSON."""
     conversational_output = (
         "Here is my assessment of the answer:\n"
@@ -115,8 +124,11 @@ async def test_judge_regex_fallback_recovery(base_case: EvaluationCase, monkeypa
 
 
 @pytest.mark.asyncio
-async def test_judge_factual_correctness(base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch):
+async def test_judge_factual_correctness(
+    base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch
+):
     """Test factual correctness evaluator scoring below threshold."""
+
     async def mock_generate(self, req):
         return ProviderResponse(
             output_text='{"score": 2, "passed": false, "explanation": "Claims the sky is blue because oceans reflect it, which is false.", "confidence": 0.99}',
@@ -139,8 +151,11 @@ async def test_judge_factual_correctness(base_case: EvaluationCase, monkeypatch:
 
 
 @pytest.mark.asyncio
-async def test_judge_context_faithfulness(base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch):
+async def test_judge_context_faithfulness(
+    base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch
+):
     """Test context faithfulness evaluator using supplied context."""
+
     async def mock_generate(self, req):
         return ProviderResponse(
             output_text='{"score": 5, "passed": true, "explanation": "Every single claim is verified by the context.", "confidence": 1.0}',
@@ -162,8 +177,11 @@ async def test_judge_context_faithfulness(base_case: EvaluationCase, monkeypatch
 
 
 @pytest.mark.asyncio
-async def test_judge_unparseable_output_graceful_failure(base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch):
+async def test_judge_unparseable_output_graceful_failure(
+    base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch
+):
     """Test graceful error handling when output cannot be parsed into a score."""
+
     async def mock_generate(self, req):
         return ProviderResponse(
             output_text="I am not sure how to evaluate this prompt. Have a nice day!",
@@ -183,8 +201,11 @@ async def test_judge_unparseable_output_graceful_failure(base_case: EvaluationCa
 
 
 @pytest.mark.asyncio
-async def test_judge_provider_error_handling(base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch):
+async def test_judge_provider_error_handling(
+    base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch
+):
     """Test provider connection failure or inference error handling."""
+
     async def mock_generate(self, req):
         return ProviderResponse(
             output_text="",
@@ -206,7 +227,9 @@ async def test_judge_provider_error_handling(base_case: EvaluationCase, monkeypa
 
 
 @pytest.mark.asyncio
-async def test_judge_disabled_via_settings(base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch):
+async def test_judge_disabled_via_settings(
+    base_case: EvaluationCase, monkeypatch: pytest.MonkeyPatch
+):
     """Test that when ENABLE_LOCAL_JUDGE=False, the evaluator returns skipped reason without invoking LLM."""
     monkeypatch.setattr(
         "app.evaluators.llm_judge.judge.get_settings",

@@ -68,4 +68,3 @@ class EvaluationRunRecord(BaseModel):
     completed_at: datetime | None = None
     error_message: str | None = None
     metrics: AggregateMetrics | None = None
-

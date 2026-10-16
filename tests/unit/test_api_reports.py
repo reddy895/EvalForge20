@@ -97,4 +97,3 @@ def test_get_report_multi_formats(client: TestClient):
     resp_bad = client.get(f"/v1/reports/{run_id}?format=unsupported_format")
     assert resp_bad.status_code == 400
     assert "Unsupported report format" in resp_bad.json()["detail"]
-

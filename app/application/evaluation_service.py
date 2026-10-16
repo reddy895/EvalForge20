@@ -79,7 +79,6 @@ class EvaluationService:
         record = record.model_copy(update={"metrics": aggregates})
         return record, results, aggregates
 
-
     def get_run(self, run_id: str) -> EvaluationRunRecord | None:
         """Retrieve historical run record."""
         return self.repo.get_run(run_id)
@@ -108,4 +107,3 @@ class EvaluationService:
             model_identifier=model_identifier,
             min_pass_rate=min_pass_rate,
         )
-

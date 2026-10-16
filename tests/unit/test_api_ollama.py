@@ -14,6 +14,7 @@ def client() -> TestClient:
 
 def test_ollama_status_endpoint_offline(client: TestClient, monkeypatch: pytest.MonkeyPatch):
     """Test /v1/ollama/status endpoint when server is unreachable."""
+
     async def mock_check(base_url: str):
         return OllamaDiagnosticReport(
             is_reachable=False,
@@ -35,6 +36,7 @@ def test_ollama_status_endpoint_offline(client: TestClient, monkeypatch: pytest.
 
 def test_ollama_status_endpoint_online(client: TestClient, monkeypatch: pytest.MonkeyPatch):
     """Test /v1/ollama/status endpoint when server is online with models."""
+
     async def mock_check(base_url: str):
         return OllamaDiagnosticReport(
             is_reachable=True,

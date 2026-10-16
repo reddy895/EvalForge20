@@ -94,7 +94,9 @@ def test_compare_matrix_api(client: TestClient):
             run_id="matrix_run_qwen",
             input="Test 1",
             actual_output="Pass",
-            metrics=[MetricResult(metric_id="exact_match", metric_name="EM", score=1.0, passed=True)],
+            metrics=[
+                MetricResult(metric_id="exact_match", metric_name="EM", score=1.0, passed=True)
+            ],
         )
     )
     repo.save_case_result(
@@ -103,7 +105,9 @@ def test_compare_matrix_api(client: TestClient):
             run_id="matrix_run_llama",
             input="Test 1",
             actual_output="Fail",
-            metrics=[MetricResult(metric_id="exact_match", metric_name="EM", score=0.0, passed=False)],
+            metrics=[
+                MetricResult(metric_id="exact_match", metric_name="EM", score=0.0, passed=False)
+            ],
         )
     )
 

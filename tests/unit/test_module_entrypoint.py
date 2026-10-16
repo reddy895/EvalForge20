@@ -19,7 +19,14 @@ def test_python_m_evalforge_version():
 def test_python_m_evalforge_datasets_validate():
     """Verify python -m evalforge datasets validate works with sample JSON dataset."""
     result = subprocess.run(
-        [sys.executable, "-m", "evalforge", "datasets", "validate", "examples/datasets/qa_sample.json"],
+        [
+            sys.executable,
+            "-m",
+            "evalforge",
+            "datasets",
+            "validate",
+            "examples/datasets/qa_sample.json",
+        ],
         capture_output=True,
         text=True,
         check=False,

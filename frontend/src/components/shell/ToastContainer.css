@@ -1,0 +1,98 @@
+.toast-container {
+  position: fixed;
+  bottom: var(--space-base);
+  right: var(--space-base);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-width: 420px;
+  width: calc(100vw - 32px);
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-xs);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-menu);
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  animation: toast-in 150ms ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast-item.success {
+  border-color: var(--status-success-border);
+  background-color: #192017;
+}
+
+.toast-item.error {
+  border-color: var(--status-error-border);
+  background-color: #241614;
+}
+
+.toast-item.warning {
+  border-color: var(--status-warning-border);
+  background-color: #241D14;
+}
+
+.toast-item.info {
+  border-color: var(--status-info-border);
+  background-color: var(--bg-elevated);
+}
+
+.toast-icon {
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.toast-item.success .toast-icon { color: var(--status-success); }
+.toast-item.error .toast-icon { color: var(--status-error); }
+.toast-item.warning .toast-icon { color: var(--status-warning); }
+.toast-item.info .toast-icon { color: var(--status-info); }
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 2px;
+}
+
+.toast-message {
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+.toast-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-close-btn:hover {
+  color: var(--text-primary);
+}

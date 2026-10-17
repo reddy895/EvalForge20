@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import __version__
+from app.api.routes.catalog import catalog_router
 from app.api.routes.comparisons import comparisons_router
 from app.api.routes.datasets import dataset_router
 from app.api.routes.evaluations import eval_router
@@ -57,6 +58,7 @@ app.include_router(health_router)
 app.include_router(dataset_router)
 app.include_router(eval_router)
 app.include_router(discovery_router)
+app.include_router(catalog_router)
 app.include_router(ollama_router)
 app.include_router(integrations_router)
 app.include_router(comparisons_router)

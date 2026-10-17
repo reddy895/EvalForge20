@@ -87,6 +87,8 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
                         type="button"
                         className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
                         onClick={() => handleNavClick(item.id)}
+                        id={`mobile-nav-item-${item.id}`}
+                        aria-current={isActive ? 'page' : undefined}
                       >
                         <div className="sidebar-nav-link-content">
                           <span>{item.label}</span>

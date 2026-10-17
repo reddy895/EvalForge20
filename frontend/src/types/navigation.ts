@@ -3,8 +3,10 @@ export type NavRoute =
   | 'runs'
   | 'run-detail'
   | 'new-eval'
+  | 'catalog'
   | 'compare'
   | 'datasets'
+  | 'task-analysis'
   | 'providers'
   | 'evaluators'
   | 'reports'
@@ -26,19 +28,21 @@ export interface NavSectionConfig {
 
 export const NAVIGATION_STRUCTURE: NavSectionConfig[] = [
   {
-    title: 'WORKSPACE',
+    title: 'EVALUATION WORKSPACE',
     items: [
       { id: 'overview', label: 'Overview' },
+      { id: 'new-eval', label: 'New Evaluation' },
       { id: 'runs', label: 'Evaluation Runs' },
-      { id: 'compare', label: 'Compare Runs' },
+      { id: 'catalog', label: 'Model Catalog' },
+      { id: 'compare', label: 'Compare Models' },
+      { id: 'task-analysis', label: 'Task Analysis' },
       { id: 'datasets', label: 'Datasets' },
-      { id: 'providers', label: 'Models & Providers' },
       { id: 'evaluators', label: 'Evaluators' },
       { id: 'reports', label: 'Reports' },
     ],
   },
   {
-    title: 'DEVELOPMENT',
+    title: 'ADVANCED TRACES',
     items: [
       { id: 'rag', label: 'RAG Evaluation' },
       { id: 'agents', label: 'Agent Evaluation' },

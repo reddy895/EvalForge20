@@ -19,7 +19,10 @@ class OllamaModelDetails(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     name: str = Field(..., description="Model tag name, e.g. 'qwen2.5:3b'")
-    size_bytes: int = Field(default=0, description="Size on disk in bytes")
+    model: str = Field(default="", description="Model identifier")
+    size: int = Field(default=0, description="Size on disk in bytes")
+    size_bytes: int = Field(default=0, description="Size on disk in bytes (alias)")
+    digest: str = Field(default="", description="Model digest hash")
     parameter_size: str | None = Field(
         default=None, description="Reported parameter size, e.g. '3.1B'"
     )
@@ -28,6 +31,7 @@ class OllamaModelDetails(BaseModel):
     )
     family: str | None = Field(default=None, description="Model family, e.g. 'qwen2'")
     modified_at: str | None = Field(default=None, description="ISO timestamp of last update")
+    details: dict[str, Any] = Field(default_factory=dict, description="Raw details dictionary")
 
 
 class OllamaProvider(BaseProvider):
@@ -70,14 +74,20 @@ class OllamaProvider(BaseProvider):
                     results: list[OllamaModelDetails] = []
                     for item in data.get("models", []):
                         details_meta = item.get("details", {})
+                        size_val = int(item.get("size", 0))
+                        name_val = item.get("name", "unknown")
                         results.append(
                             OllamaModelDetails(
-                                name=item.get("name", "unknown"),
-                                size_bytes=int(item.get("size", 0)),
+                                name=name_val,
+                                model=item.get("model", name_val),
+                                size=size_val,
+                                size_bytes=size_val,
+                                digest=item.get("digest", ""),
                                 parameter_size=details_meta.get("parameter_size"),
                                 quantization_level=details_meta.get("quantization_level"),
                                 family=details_meta.get("family"),
                                 modified_at=item.get("modified_at"),
+                                details=details_meta,
                             )
                         )
                     return results

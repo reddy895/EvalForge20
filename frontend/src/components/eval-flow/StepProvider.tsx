@@ -21,6 +21,7 @@ export const StepProvider: React.FC<StepProviderProps> = ({
   const [ollamaReport, setOllamaReport] = useState<OllamaDiagnosticReport | null>(null);
   const [ollamaModels, setOllamaModels] = useState<DetailedModel[]>([]);
   const [isChecking, setIsChecking] = useState<boolean>(true);
+  const [isManualModelEntry, setIsManualModelEntry] = useState<boolean>(false);
 
   const checkOllama = async () => {
     setIsChecking(true);
@@ -129,13 +130,18 @@ export const StepProvider: React.FC<StepProviderProps> = ({
             {ollamaReport?.connected ? (
               <>
                 <Badge variant="success" showDot>
-                  Connected ({ollamaReport.version || 'v0.x'})
+                  Online ({ollamaReport.version || 'v0.x'})
                 </Badge>
-                <span>{ollamaReport.models_count} models discovered</span>
+                <span>
+                  {ollamaReport.models_count} installed
+                  {ollamaReport.latency_ms !== null && ollamaReport.latency_ms !== undefined
+                    ? ` · ${ollamaReport.latency_ms}ms`
+                    : ''}
+                </span>
               </>
             ) : (
               <Badge variant="error" showDot>
-                Daemon Offline (http://localhost:11434)
+                Offline (http://localhost:11434)
               </Badge>
             )}
           </div>
@@ -177,12 +183,23 @@ export const StepProvider: React.FC<StepProviderProps> = ({
           placeholder="e.g. qwen2.5-3b-benchmark"
         />
 
-        {target.provider_name === 'ollama' && ollamaModels.length > 0 ? (
+        {target.provider_name === 'ollama' && ollamaModels.length > 0 && !isManualModelEntry ? (
           <div className="form-group">
-            <label className="form-label">
-              <span>Select Installed Model *</span>
-            </label>
+            <div className="flex-between" style={{ marginBottom: '4px' }}>
+              <label className="form-label" htmlFor="select-ollama-model">
+                <span>Select Installed Model *</span>
+              </label>
+              <button
+                type="button"
+                className="btn-text"
+                style={{ fontSize: '11px', color: 'var(--accent-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                onClick={() => setIsManualModelEntry(true)}
+              >
+                Enter custom identifier manually
+              </button>
+            </div>
             <select
+              id="select-ollama-model"
               className="input-control font-mono"
               value={target.model_identifier}
               onChange={(e) =>
@@ -195,20 +212,65 @@ export const StepProvider: React.FC<StepProviderProps> = ({
             >
               {ollamaModels.map((m) => (
                 <option key={m.name} value={m.name}>
-                  {m.name} ({m.details?.parameter_size || 'local'})
+                  {m.name} ({m.details?.parameter_size || 'local'} · {m.details?.quantization_level || 'GGUF'})
                 </option>
               ))}
             </select>
+            <div className="flex-row gap-xs" style={{ marginTop: '6px', flexWrap: 'wrap' }}>
+              {ollamaModels.map((m) => (
+                <button
+                  key={m.name}
+                  type="button"
+                  style={{
+                    background: target.model_identifier === m.name ? 'var(--accent-subtle)' : 'var(--bg-subtle)',
+                    border: target.model_identifier === m.name ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                    color: target.model_identifier === m.name ? 'var(--accent-text)' : 'var(--text-secondary)',
+                    borderRadius: 'var(--radius-xs)',
+                    padding: '2px 6px',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-mono)',
+                  }}
+                  onClick={() =>
+                    onChange({
+                      ...target,
+                      model_identifier: m.name,
+                      target_name: `ollama-${m.name.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+                    })
+                  }
+                >
+                  {m.name}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
-          <Input
-            label="Model Identifier"
-            required
-            isMonospace
-            value={target.model_identifier}
-            onChange={(e) => onChange({ ...target, model_identifier: e.target.value })}
-            placeholder="e.g. qwen2.5:3b or mock-model-v1"
-          />
+          <div className="form-group">
+            <div className="flex-between" style={{ marginBottom: '4px' }}>
+              <label className="form-label" htmlFor="input-model-id">
+                <span>Model Identifier *</span>
+              </label>
+              {target.provider_name === 'ollama' && ollamaModels.length > 0 && (
+                <button
+                  type="button"
+                  className="btn-text"
+                  style={{ fontSize: '11px', color: 'var(--accent-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                  onClick={() => setIsManualModelEntry(false)}
+                >
+                  Choose from installed models
+                </button>
+              )}
+            </div>
+            <Input
+              id="input-model-id"
+              label=""
+              required
+              isMonospace
+              value={target.model_identifier}
+              onChange={(e) => onChange({ ...target, model_identifier: e.target.value })}
+              placeholder="e.g. qwen2.5:3b or mock-model-v1"
+            />
+          </div>
         )}
       </div>
 
@@ -218,7 +280,12 @@ export const StepProvider: React.FC<StepProviderProps> = ({
           <div className="toast-content">
             <div className="toast-title">Ollama Daemon Not Detected</div>
             <div className="toast-message">
-              The backend reported that Ollama is unreachable at http://localhost:11434. Start Ollama locally with <code>ollama serve</code>, or use the Deterministic Mock Target.
+              The backend reported that Ollama is unreachable at http://localhost:11434. To enable local inference:
+              <ul style={{ margin: '4px 0 0 16px', padding: 0, listStyle: 'disc' }}>
+                <li>Start the daemon: <code>ollama serve</code></li>
+                <li>Pull a model: <code>ollama pull qwen2.5:3b</code></li>
+                <li>Click <strong>Check Local Daemons</strong> above</li>
+              </ul>
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ from app.evaluators import llm_judge
 from app.evaluators.code import (
     classification,
     completeness,
+    contains_match,
     exact_match,
     json_schema,
     json_validity,
@@ -21,6 +22,7 @@ __all__ = [
     "agent_evaluators",
     "classification",
     "completeness",
+    "contains_match",
     "exact_match",
     "json_schema",
     "json_validity",

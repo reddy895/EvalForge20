@@ -12,7 +12,58 @@ export interface ReadinessResponse {
   version: string;
   environment: string;
   available_providers: string[];
+  providers_status?: Record<string, string>;
   langsmith_enabled: boolean;
+}
+
+export interface ModelPricing {
+  input_price_per_m: number | null;
+  output_price_per_m: number | null;
+  cached_input_price_per_m?: number | null;
+  currency: string;
+  unit: string;
+  effective_date: string;
+  source_url: string;
+  is_verified: boolean;
+  notes?: string;
+}
+
+export interface CatalogModel {
+  name: string;
+  provider: string;
+  model_identifier: string;
+  is_local: boolean;
+  context_window?: number | null;
+  modalities: string[];
+  supports_tools: boolean;
+  supports_structured_output: boolean;
+  release_date?: string | null;
+  pricing?: ModelPricing | null;
+  connection_status: 'online' | 'offline' | 'configured' | 'unconfigured' | 'unknown';
+  description?: string;
+}
+
+export interface TaskCapabilityAnalysis {
+  category: string;
+  total_cases: number;
+  pass_rate: number | null;
+  mean_latency_ms: number | null;
+  failure_rate: number;
+  estimated_cost_per_task: number | null;
+  representative_failures: Array<{
+    case_id: string;
+    input_preview: string;
+    actual_output_preview?: string;
+    error_message?: string;
+  }>;
+}
+
+export interface ComplexityBandAnalysis {
+  band: 'low' | 'medium' | 'high';
+  case_count: number;
+  pass_rate: number | null;
+  mean_latency_ms: number | null;
+  has_sufficient_data: boolean;
 }
 
 export interface TargetConfiguration {

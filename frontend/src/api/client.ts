@@ -11,6 +11,10 @@ import type {
   DatasetValidationReport,
   ComparisonResult,
   MultiRunComparisonMatrix,
+  CatalogModel,
+  ModelPricing,
+  TaskCapabilityAnalysis,
+  ComplexityBandAnalysis,
 } from './types';
 
 export class ApiError extends Error {
@@ -166,4 +170,51 @@ export const api = {
 
   // Integrations
   getLangSmithStatus: () => request<any>('/v1/integrations/langsmith/status'),
+
+  // Model Catalog & Pricing
+  listCatalogModels: (params?: { provider?: string; is_local?: boolean; search?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.provider) query.set('provider', params.provider);
+    if (params?.is_local !== undefined) query.set('is_local', String(params.is_local));
+    if (params?.search) query.set('search', params.search);
+    const qs = query.toString();
+    return request<CatalogModel[]>(`/v1/catalog/models${qs ? `?${qs}` : ''}`);
+  },
+
+  getPricingCatalog: () => request<Record<string, ModelPricing>>('/v1/catalog/pricing'),
+
+  // Task & Complexity Analysis
+  getTaskAnalysis: (runId: string) =>
+    request<{
+      run_id: string;
+      model_identifier: string;
+      categories: TaskCapabilityAnalysis[];
+      complexity_bands: ComplexityBandAnalysis[];
+    }>(`/v1/task-analysis/${runId}`),
+};
+
+export const apiClient = {
+  ...api,
+  getEvaluations: (params?: {
+    limit?: number;
+    offset?: number;
+    status?: string;
+    model_identifier?: string;
+    min_pass_rate?: number;
+  }) => api.listEvaluations(params),
+  checkOllamaStatus: async (): Promise<OllamaDiagnosticReport> => {
+    try {
+      return await api.getOllamaStatus();
+    } catch {
+      return {
+        connected: false,
+        base_url: 'http://localhost:11434',
+        version: null,
+        models_count: 0,
+        models: [],
+        error_message: 'Daemon not reachable',
+        latency_ms: null,
+      };
+    }
+  },
 };

@@ -66,11 +66,12 @@ export const TopBar: React.FC<TopBarProps> = ({
             type="button"
             className="topbar-quick-action"
             onClick={onRefreshStatus}
-            title="Refresh system status"
+            id="btn-sync-status"
+            title="Refresh local engine and provider daemon status"
             aria-label="Refresh system status"
           >
             <RefreshCw size={13} />
-            <span className="hide-on-mobile">Sync</span>
+            <span className="hide-on-mobile">Sync Status</span>
           </button>
         )}
 

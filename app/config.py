@@ -57,6 +57,68 @@ class Settings(BaseSettings):
     default_judge_model: str = Field(default="qwen2.5:3b")
     enable_local_judge: bool = Field(default=True)
 
+    # Cloud Provider settings
+    openai_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("EVALFORGE20_OPENAI_API_KEY", "OPENAI_API_KEY"),
+    )
+    openai_base_url: str = Field(
+        default="https://api.openai.com/v1",
+        validation_alias=AliasChoices("EVALFORGE20_OPENAI_BASE_URL", "OPENAI_BASE_URL"),
+    )
+
+    anthropic_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("EVALFORGE20_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY"),
+    )
+    anthropic_base_url: str = Field(
+        default="https://api.anthropic.com/v1",
+        validation_alias=AliasChoices("EVALFORGE20_ANTHROPIC_BASE_URL", "ANTHROPIC_BASE_URL"),
+    )
+
+    gemini_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "EVALFORGE20_GEMINI_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY"
+        ),
+    )
+    gemini_base_url: str = Field(
+        default="https://generativelanguage.googleapis.com/v1beta",
+        validation_alias=AliasChoices("EVALFORGE20_GEMINI_BASE_URL", "GEMINI_BASE_URL"),
+    )
+
+    nvidia_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("EVALFORGE20_NVIDIA_API_KEY", "NVIDIA_API_KEY"),
+    )
+    nvidia_base_url: str = Field(
+        default="https://integrate.api.nvidia.com/v1",
+        validation_alias=AliasChoices("EVALFORGE20_NVIDIA_BASE_URL", "NVIDIA_BASE_URL"),
+    )
+
+    custom_openai_base_url: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "EVALFORGE20_CUSTOM_OPENAI_BASE_URL", "CUSTOM_OPENAI_BASE_URL"
+        ),
+    )
+    custom_openai_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("EVALFORGE20_CUSTOM_OPENAI_API_KEY", "CUSTOM_OPENAI_API_KEY"),
+    )
+
+    # Local Hardware & Power Cost Estimation Parameters
+    local_power_kwh_rate: float = Field(
+        default=0.15,
+        ge=0.0,
+        description="Electricity cost rate in USD per kWh for local inference estimation",
+    )
+    local_hardware_power_watts: float = Field(
+        default=250.0,
+        ge=0.0,
+        description="Estimated average system power draw in Watts during local model inference",
+    )
+
     # Optional LangSmith settings (supports LANGSMITH_ environment variables directly)
     langsmith_tracing: bool = Field(default=False, validation_alias="LANGSMITH_TRACING")
     langsmith_endpoint: str = Field(

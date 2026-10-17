@@ -1,10 +1,10 @@
-"""Safe, predefined declarative task assertion evaluator (no arbitrary code execution)."""
-
+import json
 import re
 from typing import Any
 
 from app.domain.contracts import EvaluatorContract, EvaluatorInput
 from app.domain.results import MetricResult
+from app.evaluators.code.json_validity import extract_json_payload
 from app.evaluators.registry import MetricCategory, MetricDefinition, registry
 
 

@@ -139,3 +139,22 @@
     display: none !important;
   }
 }
+
+/* Dense table wrapper and metric strip utilities */
+.dense-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-default);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.metric-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}

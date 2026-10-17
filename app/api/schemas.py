@@ -44,3 +44,24 @@ class RunSummaryResponse(BaseModel):
     completed_at: str | None
     pass_rate: float | None
     error_message: str | None
+
+
+class ProviderHealthReport(BaseModel):
+    """Diagnostic health state for a single model provider."""
+
+    provider_name: str
+    status: str
+    is_local: bool
+    details: dict[str, str | int | bool | None] = Field(default_factory=dict)
+
+
+class SystemReadinessResponse(BaseModel):
+    """Detailed system and provider readiness report."""
+
+    status: str
+    database: str
+    version: str
+    environment: str
+    available_providers: list[str]
+    providers_status: dict[str, str] = Field(default_factory=dict)
+    langsmith_enabled: bool

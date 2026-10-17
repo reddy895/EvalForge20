@@ -141,7 +141,9 @@ class OllamaProvider(BaseProvider):
             try:
                 async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
                     resp = await client.post(f"{self.base_url}/api/generate", json=payload)
-                    if resp.status_code == 404:
+                    if resp.status_code == 404 or (
+                        "not found" in resp.text.lower() and "model" in resp.text.lower()
+                    ):
                         elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
                         return ProviderResponse(
                             output_text=None,
@@ -149,7 +151,7 @@ class OllamaProvider(BaseProvider):
                             error_category=NormalizedErrorCategory.PROVIDER_UNAVAILABLE.value,
                             error_message=(
                                 f"Model '{self.model_identifier}' is not installed in local Ollama. "
-                                f"Run 'ollama pull {self.model_identifier}' to download it."
+                                f"Run 'ollama pull {self.model_identifier}' in your terminal to install it."
                             ),
                             is_success=False,
                         )
@@ -162,8 +164,20 @@ class OllamaProvider(BaseProvider):
                     latency_ms=elapsed_ms,
                     error_category=NormalizedErrorCategory.PROVIDER_UNAVAILABLE.value,
                     error_message=(
-                        f"Cannot connect to ollama daemon at '{self.base_url}'. "
+                        f"Cannot connect to Ollama daemon at '{self.base_url}'. "
                         "Ensure the server is running with 'ollama serve'."
+                    ),
+                    is_success=False,
+                )
+            except httpx.TimeoutException:
+                elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 2)
+                return ProviderResponse(
+                    output_text=None,
+                    latency_ms=elapsed_ms,
+                    error_category=NormalizedErrorCategory.TIMEOUT.value,
+                    error_message=(
+                        f"Inference request for model '{self.model_identifier}' timed out after {self.timeout_seconds}s. "
+                        "If running a large model or cold-starting GPU weights, increase timeout in settings."
                     ),
                     is_success=False,
                 )

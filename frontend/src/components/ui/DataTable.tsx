@@ -24,6 +24,7 @@ export interface DataTableProps<T> {
   pageSize?: number;
   initialSortKey?: string;
   initialSortDir?: 'asc' | 'desc';
+  onSort?: (key: string) => void;
   className?: string;
 }
 
@@ -38,6 +39,7 @@ export function DataTable<T>({
   pageSize = 25,
   initialSortKey,
   initialSortDir = 'desc',
+  onSort,
   className = '',
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | undefined>(initialSortKey);
@@ -54,6 +56,7 @@ export function DataTable<T>({
       setSortKey(key);
       setSortDir('asc');
     }
+    onSort?.(key);
   };
 
   const sortedData = useMemo(() => {

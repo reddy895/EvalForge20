@@ -138,7 +138,7 @@ async def test_ollama_provider_connection_failure(monkeypatch: pytest.MonkeyPatc
     resp = await provider.generate(ProviderRequest(prompt="test connection"))
     assert not resp.is_success
     assert resp.error_category == NormalizedErrorCategory.PROVIDER_UNAVAILABLE.value
-    assert "Cannot connect to ollama" in (resp.error_message or "")
+    assert "cannot connect to ollama" in (resp.error_message or "").lower()
 
 
 @pytest.mark.asyncio

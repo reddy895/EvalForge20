@@ -53,8 +53,10 @@ async def readiness_check(db: Session = Depends(get_db)) -> SystemReadinessRespo
 
     # Ollama local check (non-blocking, failure does not fail readiness)
     try:
-        ollama_rep = await check_ollama_status(base_url=settings.ollama_base_url, timeout=1.5)
-        providers_status["ollama"] = "online" if ollama_rep.connected else "offline"
+        ollama_rep = await check_ollama_status(
+            base_url=settings.ollama_base_url, timeout_seconds=1.5
+        )
+        providers_status["ollama"] = "online" if ollama_rep.is_reachable else "offline"
     except Exception:
         providers_status["ollama"] = "offline"
 

@@ -68,6 +68,14 @@
   --shadow-menu: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.7);
 
+  /* Complexity Band Colors */
+  --complexity-low: #8BAF78;
+  --complexity-low-bg: rgba(139, 175, 120, 0.12);
+  --complexity-med: #DE9E4E;
+  --complexity-med-bg: rgba(222, 158, 78, 0.12);
+  --complexity-high: #D97767;
+  --complexity-high-bg: rgba(217, 119, 103, 0.12);
+
   /* Transitions — Fast and purposeful micro-transitions */
   --transition-fast: 120ms ease-out;
   --transition-base: 180ms ease-out;

@@ -12,6 +12,7 @@ import {
   Settings,
   Plus,
   Terminal,
+  BarChart3,
 } from 'lucide-react';
 import { NAVIGATION_STRUCTURE, type NavRoute } from '../../types/navigation';
 import './Sidebar.css';
@@ -27,8 +28,10 @@ const ROUTE_ICONS: Record<NavRoute, React.ComponentType<{ className?: string }>>
   runs: PlayCircle,
   'run-detail': PlayCircle,
   'new-eval': Plus,
+  catalog: Cpu,
   compare: GitCompare,
   datasets: Database,
+  'task-analysis': BarChart3,
   providers: Cpu,
   evaluators: CheckSquare,
   reports: FileText,

@@ -149,6 +149,22 @@ export const CaseResultsTable: React.FC<CaseResultsTableProps> = ({ cases, isLoa
       },
     },
     {
+      key: 'tokens',
+      header: 'Tokens',
+      sortable: true,
+      align: 'right',
+      width: '85px',
+      render: (c) => {
+        const total = c.token_usage?.total_tokens ?? c.token_usage?.total;
+        return (
+          <span className="font-mono tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+            {total !== undefined && total !== null ? total.toLocaleString() : '—'}
+          </span>
+        );
+      },
+      sortValue: (c) => (c.token_usage?.total_tokens ?? c.token_usage?.total ?? -1),
+    },
+    {
       key: 'latency_ms',
       header: 'Latency',
       sortable: true,
@@ -301,18 +317,52 @@ export const CaseResultsTable: React.FC<CaseResultsTableProps> = ({ cases, isLoa
             {/* Execution Telemetry */}
             <div className="inspector-section">
               <div className="inspector-section-title">Execution Telemetry</div>
-              <div className="grid-2">
+              <div className="grid-2" style={{ gap: 'var(--space-sm)' }}>
                 <div className="meta-field">
                   <span className="meta-label">Latency</span>
-                  <span className="meta-val">
+                  <span className="meta-val font-mono">
                     {selectedCase.latency_ms !== null ? `${selectedCase.latency_ms.toFixed(1)} ms` : '—'}
                   </span>
                 </div>
-                {selectedCase.token_usage && (
+                {(selectedCase.trace?.complexity_band || (selectedCase.input as any)?.complexity) && (
                   <div className="meta-field">
-                    <span className="meta-label">Tokens</span>
+                    <span className="meta-label">Complexity Band</span>
+                    <span className="meta-val">
+                      <Badge variant="neutral">
+                        {String(selectedCase.trace?.complexity_band || (selectedCase.input as any)?.complexity).toUpperCase()}
+                      </Badge>
+                    </span>
+                  </div>
+                )}
+                {selectedCase.token_usage?.prompt_tokens !== undefined && (
+                  <div className="meta-field">
+                    <span className="meta-label">Prompt Tokens</span>
                     <span className="meta-val font-mono">
-                      {JSON.stringify(selectedCase.token_usage)}
+                      {selectedCase.token_usage.prompt_tokens.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                {selectedCase.token_usage?.completion_tokens !== undefined && (
+                  <div className="meta-field">
+                    <span className="meta-label">Completion Tokens</span>
+                    <span className="meta-val font-mono">
+                      {selectedCase.token_usage.completion_tokens.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                {(selectedCase.token_usage?.total_tokens !== undefined || selectedCase.token_usage?.total !== undefined) && (
+                  <div className="meta-field">
+                    <span className="meta-label">Total Tokens</span>
+                    <span className="meta-val font-mono">
+                      {(selectedCase.token_usage.total_tokens ?? selectedCase.token_usage.total ?? 0).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                {selectedCase.trace?.estimated_cost_usd !== undefined && (
+                  <div className="meta-field">
+                    <span className="meta-label">Estimated Cost</span>
+                    <span className="meta-val font-mono">
+                      ${Number(selectedCase.trace.estimated_cost_usd).toFixed(6)}
                     </span>
                   </div>
                 )}
@@ -320,10 +370,12 @@ export const CaseResultsTable: React.FC<CaseResultsTableProps> = ({ cases, isLoa
             </div>
 
             {/* Trace payload if present */}
-            {selectedCase.trace && (
+            {selectedCase.trace && Object.keys(selectedCase.trace).length > 0 && (
               <div className="inspector-section">
                 <div className="inspector-section-title">Diagnostic Execution Trace</div>
-                <pre>{JSON.stringify(selectedCase.trace, null, 2)}</pre>
+                <pre style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                  {JSON.stringify(selectedCase.trace, null, 2)}
+                </pre>
               </div>
             )}
           </div>

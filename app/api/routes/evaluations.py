@@ -74,6 +74,10 @@ async def create_evaluation_endpoint(
         completed_at=record.completed_at.isoformat() if record.completed_at else None,
         pass_rate=aggregates.pass_rate,
         error_message=record.error_message,
+        model_identifier=record.config.target.model_identifier,
+        provider_name=record.config.target.provider_name,
+        mean_latency_ms=aggregates.mean_latency_ms,
+        total_tokens=aggregates.total_tokens,
     )
 
 
@@ -117,6 +121,10 @@ async def list_evaluations_endpoint(
                 completed_at=r.completed_at.isoformat() if r.completed_at else None,
                 pass_rate=aggs.pass_rate if aggs else None,
                 error_message=r.error_message,
+                model_identifier=r.config.target.model_identifier,
+                provider_name=r.config.target.provider_name,
+                mean_latency_ms=aggs.mean_latency_ms if aggs else None,
+                total_tokens=aggs.total_tokens if aggs else None,
             )
         )
     return summaries
@@ -168,6 +176,46 @@ async def get_case_results_endpoint(
 
     all_results = service.get_run_results(run_id)
     return all_results[offset : offset + limit]
+
+
+@eval_router.get(
+    "/v1/evaluations/{run_id}/failures",
+    response_model=list[CaseResult],
+    summary="Retrieve failed and errored cases for an evaluation run",
+)
+async def get_failed_cases_endpoint(
+    run_id: str,
+    db: Session = Depends(get_db),
+) -> list[CaseResult]:
+    """Retrieve only test cases that failed assertion checks or encountered errors."""
+    service = EvaluationService(db)
+    record = service.get_run(run_id)
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Evaluation run '{run_id}' not found",
+        )
+    return service.repo.get_run_failure_cases(run_id)
+
+
+@eval_router.delete(
+    "/v1/evaluations/{run_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Delete an evaluation run and its results",
+)
+async def delete_evaluation_endpoint(
+    run_id: str,
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    """Permanently delete an evaluation run and associated case results."""
+    service = EvaluationService(db)
+    deleted = service.repo.delete_run(run_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Evaluation run '{run_id}' not found",
+        )
+    return {"message": f"Evaluation run '{run_id}' deleted successfully"}
 
 
 @eval_router.get(

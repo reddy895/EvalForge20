@@ -44,6 +44,10 @@ class RunSummaryResponse(BaseModel):
     completed_at: str | None
     pass_rate: float | None
     error_message: str | None
+    model_identifier: str | None = None
+    provider_name: str | None = None
+    mean_latency_ms: float | None = None
+    total_tokens: int | None = None
 
 
 class ProviderHealthReport(BaseModel):

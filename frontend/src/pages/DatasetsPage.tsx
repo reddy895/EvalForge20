@@ -215,13 +215,13 @@ export const DatasetsPage: React.FC<DatasetsPageProps> = ({ onOpenImportModal })
                 <div className="review-summary-card">
                   <div className="review-row">
                     <span className="review-label">Canonical Path</span>
-                    <span className="review-value" style={{ fontSize: '11px' }}>
+                    <span className="review-value font-mono" style={{ fontSize: '11px' }}>
                       {preview.path}
                     </span>
                   </div>
                   <div className="review-row">
                     <span className="review-label">Version Hash</span>
-                    <span className="review-value" style={{ fontSize: '11px' }}>
+                    <span className="review-value font-mono" style={{ fontSize: '11px' }}>
                       {preview.dataset_hash ? preview.dataset_hash.substring(0, 16) : 'N/A'}
                     </span>
                   </div>
@@ -231,6 +231,20 @@ export const DatasetsPage: React.FC<DatasetsPageProps> = ({ onOpenImportModal })
                       {preview.valid_cases_count} of {preview.total_lines_read} lines
                     </span>
                   </div>
+                </div>
+
+                {/* Complexity Summary */}
+                <div style={{ display: 'flex', gap: 'var(--space-xs)', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span className="text-label" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Complexity:</span>
+                  <Badge variant="neutral">
+                    Low: {preview.cases.filter((c) => (c.metadata?.complexity || '').toLowerCase() === 'low').length}
+                  </Badge>
+                  <Badge variant="neutral">
+                    Med: {preview.cases.filter((c) => (c.metadata?.complexity || '').toLowerCase() === 'medium').length}
+                  </Badge>
+                  <Badge variant="accent">
+                    High: {preview.cases.filter((c) => (c.metadata?.complexity || '').toLowerCase() === 'high').length}
+                  </Badge>
                 </div>
 
                 {preview.issues.length > 0 && (
@@ -262,7 +276,14 @@ export const DatasetsPage: React.FC<DatasetsPageProps> = ({ onOpenImportModal })
                         <span className="font-mono" style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>
                           ID: {c.id}
                         </span>
-                        {c.category && <Badge variant="neutral">{c.category}</Badge>}
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          {c.category && <Badge variant="neutral">{c.category}</Badge>}
+                          {c.metadata?.complexity && (
+                            <Badge variant={c.metadata.complexity.toLowerCase() === 'high' ? 'accent' : 'neutral'}>
+                              {c.metadata.complexity}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
 
                       <div className="case-preview-field">

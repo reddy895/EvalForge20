@@ -58,11 +58,21 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
         ? (runsWithScore.reduce((sum, r) => sum + Number(r.pass_rate), 0) / runsWithScore.length) * 100
         : null;
 
+    const runsWithLatency = completedRuns.filter(
+      (r) => (r as any).mean_latency_ms !== null && (r as any).mean_latency_ms !== undefined
+    );
+    const avgLatency =
+      runsWithLatency.length > 0
+        ? (runsWithLatency.reduce((sum, r) => sum + Number((r as any).mean_latency_ms), 0) /
+            runsWithLatency.length).toFixed(1)
+        : null;
+
     const failureRate = totalRuns > 0 ? (failedRuns.length / totalRuns) * 100 : 0;
 
     return {
       totalRuns,
       avgScore: avgScore !== null ? `${avgScore.toFixed(1)}%` : null,
+      avgLatency,
       failureRate: `${failureRate.toFixed(1)}%`,
     };
   }, [runs]);
@@ -189,8 +199,8 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
         />
         <MetricCard
           title="Average Latency"
-          value={runs.length > 0 ? '11.1' : null}
-          unit="ms"
+          value={stats.avgLatency}
+          unit={stats.avgLatency ? "ms" : undefined}
           footer="Mean per-case execution latency"
           icon={<Clock size={14} />}
           isLoading={isLoading}

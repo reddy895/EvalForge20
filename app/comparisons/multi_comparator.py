@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.domain.results import CaseResult
+from app.pricing.calculator import cost_calculator
 from app.runner.config import EvaluationRunRecord
 
 
@@ -23,6 +24,11 @@ class RunSummaryHeader(BaseModel):
     passed_cases: int = 0
     pass_rate: float = 0.0
     mean_latency_ms: float | None = None
+    median_latency_ms: float | None = None
+    p95_latency_ms: float | None = None
+    total_tokens: int | None = None
+    cost_per_task: float | None = None
+    cost_per_1k_tasks: float | None = None
     error_rate: float = 0.0
     status: str = "completed"
 
@@ -64,7 +70,9 @@ class MultiRunComparisonMatrix(BaseModel):
     metric_rows: list[MetricComparisonRow]
     fastest_run_id: str | None = None
     highest_accuracy_run_id: str | None = None
+    cheapest_run_id: str | None = None
     case_disagreements: list[CaseDisagreement] = Field(default_factory=list)
+    complexity_rows: list[dict[str, Any]] = Field(default_factory=list)
     dataset_consistent: bool = True
     summary: str = ""
 
@@ -97,6 +105,19 @@ def compare_multiple_runs(
         )
         err_rate = round(err_count / total, 4) if total > 0 else 0.0
 
+        cases_for_run = cases_by_run.get(r.run_id, [])
+        cost_breakdown = None
+        if cases_for_run and r.metrics:
+            try:
+                cost_breakdown = cost_calculator.calculate_run_cost(
+                    results=cases_for_run,
+                    aggregates=r.metrics,
+                    provider=r.config.provider,
+                    model_identifier=r.config.model_identifier,
+                )
+            except Exception:
+                pass
+
         headers.append(
             RunSummaryHeader(
                 run_id=r.run_id,
@@ -109,6 +130,17 @@ def compare_multiple_runs(
                 passed_cases=passed,
                 pass_rate=pass_rate,
                 mean_latency_ms=r.metrics.mean_latency_ms if r.metrics else None,
+                median_latency_ms=r.metrics.median_latency_ms if r.metrics else None,
+                p95_latency_ms=r.metrics.p95_latency_ms if r.metrics else None,
+                total_tokens=r.metrics.total_tokens if r.metrics else None,
+                cost_per_task=(cost_breakdown.total_estimated_cost_usd / total)
+                if (
+                    cost_breakdown
+                    and cost_breakdown.total_estimated_cost_usd is not None
+                    and total > 0
+                )
+                else None,
+                cost_per_1k_tasks=cost_breakdown.cost_per_1k_tasks_usd if cost_breakdown else None,
                 error_rate=err_rate,
                 status=r.status.value if hasattr(r.status, "value") else str(r.status),
             )
@@ -205,13 +237,38 @@ def compare_multiple_runs(
     if disagreements:
         summary_parts.append(f"Disagreements detected on {len(disagreements)} individual cases.")
 
+    cheapest_run_id = None
+    costs = [(h.run_id, h.cost_per_1k_tasks) for h in headers if h.cost_per_1k_tasks is not None]
+    if costs:
+        cheapest_run_id = min(costs, key=lambda x: x[1])[0]
+
+    # Build complexity band comparison rows
+    complexity_rows: list[dict[str, Any]] = []
+    for band_name in ["low", "medium", "high"]:
+        row_vals: dict[str, Any] = {}
+        for r in runs:
+            band_data = (
+                (r.metrics.complexity_performance or {}).get(band_name) if r.metrics else None
+            )
+            row_vals[r.run_id] = band_data
+        complexity_rows.append({"band": band_name, "runs": row_vals})
+
+    if cheapest_run_id:
+        cheap_h = next(h for h in headers if h.run_id == cheapest_run_id)
+        if cheap_h.cost_per_1k_tasks is not None:
+            summary_parts.append(
+                f"Most cost-effective: ${cheap_h.cost_per_1k_tasks:.4f}/1k tasks ({cheap_h.model_identifier})."
+            )
+
     return MultiRunComparisonMatrix(
         run_ids=[r.run_id for r in runs],
         runs=headers,
         metric_rows=metric_rows,
         fastest_run_id=fastest_run_id,
         highest_accuracy_run_id=highest_accuracy_run_id,
+        cheapest_run_id=cheapest_run_id,
         case_disagreements=disagreements,
+        complexity_rows=complexity_rows,
         dataset_consistent=dataset_consistent,
         summary=" ".join(summary_parts),
     )

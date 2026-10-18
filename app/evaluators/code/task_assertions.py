@@ -125,10 +125,52 @@ class TaskAssertionEvaluator(EvaluatorContract):
                 passed = check_text.startswith(prefix)
                 message = f"Starts with '{val}'" if passed else f"Does not start with '{val}'"
 
-            elif assert_type == "ends_with":
-                suffix = str(val) if case_sensitive else str(val).lower()
-                passed = check_text.endswith(suffix)
-                message = f"Ends with '{val}'" if passed else f"Does not end with '{val}'"
+            elif assert_type == "numeric_range":
+                try:
+                    num_match = re.search(r"[-+]?\d*\.?\d+", text)
+                    if num_match:
+                        num_val = float(num_match.group(0))
+                        min_v = assertion.get("min")
+                        max_v = assertion.get("max")
+                        above_min = min_v is None or num_val >= float(min_v)
+                        below_max = max_v is None or num_val <= float(max_v)
+                        passed = above_min and below_max
+                        message = (
+                            f"Number {num_val} within [{min_v}, {max_v}]"
+                            if passed
+                            else f"Number {num_val} outside [{min_v}, {max_v}]"
+                        )
+                    else:
+                        passed = False
+                        message = "No numeric value found in output"
+                except Exception as exc:
+                    passed = False
+                    message = f"Numeric range check error: {exc}"
+
+            elif assert_type in ("json_field_equals", "json_field_exists"):
+                try:
+                    raw_json = extract_json_payload(text)
+                    parsed_json = json.loads(raw_json)
+                    field_name = str(assertion.get("field", ""))
+                    if assert_type == "json_field_exists":
+                        passed = field_name in parsed_json
+                        message = (
+                            f"Field '{field_name}' exists in JSON"
+                            if passed
+                            else f"Field '{field_name}' missing in JSON"
+                        )
+                    else:
+                        actual_field_val = parsed_json.get(field_name)
+                        expected_field_val = assertion.get("expected")
+                        passed = str(actual_field_val) == str(expected_field_val)
+                        message = (
+                            f"Field '{field_name}' matches '{expected_field_val}'"
+                            if passed
+                            else f"Field '{field_name}' got '{actual_field_val}', expected '{expected_field_val}'"
+                        )
+                except Exception as exc:
+                    passed = False
+                    message = f"JSON field check error: {exc}"
 
             else:
                 passed = False

@@ -18,6 +18,7 @@ from app.api.routes.health import health_router
 from app.api.routes.integrations import integrations_router
 from app.api.routes.ollama import ollama_router
 from app.api.routes.providers import discovery_router
+from app.api.routes.task_analysis import analysis_router
 from app.domain.errors import EvalForgeError
 from app.logging import get_logger, setup_logging
 from app.storage.database import init_db
@@ -62,6 +63,7 @@ app.include_router(catalog_router)
 app.include_router(ollama_router)
 app.include_router(integrations_router)
 app.include_router(comparisons_router)
+app.include_router(analysis_router)
 
 # Serve production frontend single-page application if built
 _frontend_dist = Path("frontend/dist")

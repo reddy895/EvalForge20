@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from app.domain.results import CaseResult
+from app.pricing.calculator import CostCalculator
 from app.runner.config import EvaluationRunRecord
 from app.security import validate_safe_path
 
@@ -13,8 +14,12 @@ from app.security import validate_safe_path
 def generate_csv_report(
     record: EvaluationRunRecord,
     case_results: list[CaseResult],
+    redact_inputs: bool = False,
+    redact_outputs: bool = False,
 ) -> str:
-    """Generate a tabular CSV export of per-case evaluation results with metric scores."""
+    """Generate a tabular CSV export of per-case evaluation results with metric scores and costs."""
+    cost_calc = CostCalculator()
+
     # Discover all distinct metric IDs across case results
     metric_ids = sorted({m.metric_id for c in case_results for m in c.metrics})
 
@@ -27,7 +32,10 @@ def generate_csv_report(
         "actual_output",
         "passed",
         "latency_ms",
+        "prompt_tokens",
+        "completion_tokens",
         "total_tokens",
+        "cost_usd",
         "error_category",
         "error_message",
     ]
@@ -43,25 +51,46 @@ def generate_csv_report(
     writer = csv.writer(output, lineterminator="\n")
     writer.writerow(all_headers)
 
+    provider = record.config.target.provider_name
+    model_id = record.config.target.model_identifier
+
     for c in case_results:
-        # Format complex payload types to string
-        inp_str = (
-            json.dumps(c.input, ensure_ascii=False)
-            if isinstance(c.input, (dict, list))
-            else str(c.input or "")
-        )
+        # Format complex payload types to string with optional redaction
+        if redact_inputs:
+            inp_str = "[REDACTED_PROMPT]"
+        else:
+            inp_str = (
+                json.dumps(c.input, ensure_ascii=False)
+                if isinstance(c.input, (dict, list))
+                else str(c.input or "")
+            )
+
         exp_str = (
             json.dumps(c.expected_output, ensure_ascii=False)
             if isinstance(c.expected_output, (dict, list))
             else str(c.expected_output or "")
         )
-        act_str = (
-            json.dumps(c.actual_output, ensure_ascii=False)
-            if isinstance(c.actual_output, (dict, list))
-            else str(c.actual_output or "")
-        )
 
-        tokens = c.token_usage.get("total_tokens") if c.token_usage else ""
+        if redact_outputs:
+            act_str = "[REDACTED_OUTPUT]"
+        else:
+            act_str = (
+                json.dumps(c.actual_output, ensure_ascii=False)
+                if isinstance(c.actual_output, (dict, list))
+                else str(c.actual_output or "")
+            )
+
+        usage = c.token_usage or {}
+        p_tokens = usage.get("prompt_tokens", "")
+        c_tokens = usage.get("completion_tokens", "")
+        tot_tokens = usage.get("total_tokens", "")
+
+        case_cost = cost_calc.calculate_case_cost(c, provider=provider, model_identifier=model_id)
+        cost_str = (
+            f"{case_cost.total_estimated_cost_usd:.6f}"
+            if case_cost.is_cost_known and case_cost.total_estimated_cost_usd is not None
+            else ""
+        )
 
         # Map metric values by metric_id
         metric_map = {m.metric_id: m for m in c.metrics}
@@ -69,13 +98,16 @@ def generate_csv_report(
         row = [
             c.case_id,
             c.run_id,
-            record.config.target.model_identifier,
+            model_id,
             inp_str,
             exp_str,
             act_str,
             c.passed,
             round(c.latency_ms, 2) if c.latency_ms is not None else "",
-            tokens,
+            p_tokens,
+            c_tokens,
+            tot_tokens,
+            cost_str,
             c.error_category or "",
             c.error_message or "",
         ]

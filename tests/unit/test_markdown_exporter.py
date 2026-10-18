@@ -103,3 +103,100 @@ def test_generate_markdown_report(tmp_path: Path):
     written = export_markdown_report_to_file(dest, md)
     assert written.exists()
     assert written.read_text(encoding="utf-8") == md
+
+
+def test_markdown_redaction():
+    """Verify Markdown report redacts prompts when redact_inputs is True."""
+    from app.domain.models import TargetConfiguration, TargetType
+    from app.domain.results import AggregateMetrics, CaseResult
+    from app.domain.state import EvaluationRunStatus
+    from app.reporting.markdown_exporter import generate_markdown_report
+    from app.runner.config import EvaluationRunConfig, EvaluationRunRecord
+
+    record = EvaluationRunRecord(
+        run_id="run_redact_1",
+        name="Redaction Test",
+        status=EvaluationRunStatus.COMPLETED,
+        config=EvaluationRunConfig(
+            run_id="run_redact_1",
+            target=TargetConfiguration(
+                target_name="Test",
+                target_type=TargetType.LLM,
+                provider_name="openai",
+                model_identifier="gpt-4o",
+            ),
+        ),
+        total_cases=1,
+        completed_cases=1,
+        failed_cases=0,
+    )
+    case_results = [
+        CaseResult(
+            case_id="case_secret",
+            run_id="run_redact_1",
+            input="SUPER_SECRET_USER_INPUT_PROMPT",
+            actual_output="CONFIDENTIAL_OUTPUT",
+            metrics=[],
+            token_usage={"prompt_tokens": 100, "completion_tokens": 50, "total_tokens": 150},
+        )
+    ]
+    aggregates = AggregateMetrics(
+        total_cases=1,
+        completed_cases=1,
+        failed_cases=0,
+        pass_rate=1.0,
+        mean_latency_ms=100.0,
+        p95_latency_ms=100.0,
+        total_tokens=150,
+    )
+
+    md = generate_markdown_report(record, case_results, aggregates, redact_inputs=True)
+    assert "[REDACTED_PROMPT]" in md
+    assert "SUPER_SECRET_USER_INPUT_PROMPT" not in md
+    assert "Total Measured Run Cost" in md
+
+
+def test_csv_export_with_cost_and_tokens():
+    """Verify CSV report exports tokens, costs, and supports prompt/output redaction."""
+    from app.domain.models import TargetConfiguration, TargetType
+    from app.domain.results import CaseResult
+    from app.domain.state import EvaluationRunStatus
+    from app.reporting.csv_exporter import generate_csv_report
+    from app.runner.config import EvaluationRunConfig, EvaluationRunRecord
+
+    record = EvaluationRunRecord(
+        run_id="run_csv_1",
+        name="CSV Test",
+        status=EvaluationRunStatus.COMPLETED,
+        config=EvaluationRunConfig(
+            run_id="run_csv_1",
+            target=TargetConfiguration(
+                target_name="Test OpenAI",
+                target_type=TargetType.LLM,
+                provider_name="openai",
+                model_identifier="gpt-4o",
+            ),
+        ),
+        total_cases=1,
+        completed_cases=1,
+        failed_cases=0,
+    )
+    case_results = [
+        CaseResult(
+            case_id="case_csv_1",
+            run_id="run_csv_1",
+            input="Secret CSV Question",
+            actual_output="Secret CSV Answer",
+            metrics=[],
+            latency_ms=250.0,
+            token_usage={"prompt_tokens": 200, "completion_tokens": 100, "total_tokens": 300},
+        )
+    ]
+
+    csv_out = generate_csv_report(record, case_results, redact_inputs=True, redact_outputs=True)
+    assert "prompt_tokens,completion_tokens,total_tokens,cost_usd" in csv_out
+    assert "[REDACTED_PROMPT]" in csv_out
+    assert "[REDACTED_OUTPUT]" in csv_out
+    assert "Secret CSV Question" not in csv_out
+    assert "Secret CSV Answer" not in csv_out
+    assert "200,100,300" in csv_out

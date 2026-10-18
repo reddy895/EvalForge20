@@ -263,10 +263,21 @@ async def get_report_endpoint(
             redact_outputs=redact_outputs,
         )
     elif fmt in ("markdown", "md"):
-        content = generate_markdown_report(record, case_results, aggregates)
+        content = generate_markdown_report(
+            record,
+            case_results,
+            aggregates,
+            redact_inputs=redact_inputs,
+            redact_outputs=redact_outputs,
+        )
         return PlainTextResponse(content, media_type="text/markdown")
     elif fmt == "csv":
-        content = generate_csv_report(record, case_results)
+        content = generate_csv_report(
+            record,
+            case_results,
+            redact_inputs=redact_inputs,
+            redact_outputs=redact_outputs,
+        )
         return PlainTextResponse(content, media_type="text/csv")
     else:
         raise HTTPException(

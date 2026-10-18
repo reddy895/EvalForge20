@@ -103,7 +103,7 @@ class JSONSchemaEvaluator(EvaluatorContract):
                 metric_name=self.metric_name,
                 score=0.0,
                 passed=False,
-                reason=f"Found {len(errors)} schema violation(s). First at '{first_path}': {first_msg}",
+                reason=f"Schema violation: found {len(errors)} violation(s). First at '{first_path}': {first_msg}",
                 details={
                     "violations": violations,
                     "total_violations": len(errors),

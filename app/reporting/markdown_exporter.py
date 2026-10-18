@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from app.domain.results import AggregateMetrics, CaseResult
+from app.pricing.calculator import CostCalculator
 from app.runner.config import EvaluationRunRecord
 from app.security import validate_safe_path
 
@@ -11,6 +12,8 @@ def generate_markdown_report(
     record: EvaluationRunRecord,
     case_results: list[CaseResult],
     aggregates: AggregateMetrics,
+    redact_inputs: bool = False,
+    redact_outputs: bool = False,
 ) -> str:
     """Generate a clean, structured Markdown evaluation report for human consumption."""
     duration_s = (
@@ -24,6 +27,20 @@ def generate_markdown_report(
     )
     p95_lat = (
         f"{aggregates.p95_latency_ms:.1f} ms" if aggregates.p95_latency_ms is not None else "N/A"
+    )
+
+    cost_calc = CostCalculator()
+    run_cost = cost_calc.calculate_run_cost(
+        case_results,
+        aggregates,
+        provider=record.config.target.provider_name,
+        model_identifier=record.config.target.model_identifier,
+    )
+
+    cost_str = (
+        f"${run_cost.total_estimated_cost_usd:.6f}"
+        if run_cost.is_cost_known and run_cost.total_estimated_cost_usd is not None
+        else "$0.00 (Local / Unbilled)"
     )
 
     lines: list[str] = [
@@ -49,6 +66,7 @@ def generate_markdown_report(
         f"| **Mean Latency** | {mean_lat} |",
         f"| **P95 Latency** | {p95_lat} |",
         f"| **Total Tokens** | {aggregates.total_tokens if aggregates.total_tokens is not None else 'Unmeasured'} |",
+        f"| **Estimated Cost** | {cost_str} |",
         "",
         "---",
         "",
@@ -89,17 +107,57 @@ def generate_markdown_report(
             c_count = int(stats.get("count", 0))
             lines.append(f"| **{cat}** | {rate_str} | {c_count} |")
 
-    # Local inference and resource notice
+    # Pricing & Economics section
     lines.extend(
         [
             "",
             "---",
             "",
-            "## 3. Local Execution & Infrastructure",
+            "## 3. Economics & Resource Projections",
             "",
-            "- **Inference Infrastructure:** Fully local evaluation using Ollama and Python execution.",
-            "- **External SaaS / API Costs:** $0.00 (Zero cloud API fees incurred).",
-            f"- **Measured Runtime:** {duration_s}s end-to-end execution time.",
+        ]
+    )
+    if (
+        record.config.target.provider_name.lower() in ("ollama", "local")
+        or run_cost.cloud_cost_usd == 0.0
+    ):
+        lines.extend(
+            [
+                f"- **Inference Infrastructure:** Fully local evaluation using {record.config.target.provider_name.title()} and Python execution.",
+                "- **External SaaS / API Costs:** $0.00 (Zero cloud API fees incurred).",
+                f"- **Measured Runtime:** {duration_s}s end-to-end execution time.",
+            ]
+        )
+    if (
+        run_cost.is_cost_known
+        and run_cost.total_estimated_cost_usd is not None
+        and run_cost.total_estimated_cost_usd > 0
+    ):
+        lines.extend(
+            [
+                f"- **Total Measured Run Cost:** ${run_cost.total_estimated_cost_usd:.6f}",
+                f"- **Cost per Successful Case:** ${run_cost.cost_per_successful_case_usd:.6f}"
+                if run_cost.cost_per_successful_case_usd is not None
+                else "- **Cost per Successful Case:** N/A",
+                f"- **Projected Cost / 1k Tasks:** ${run_cost.cost_per_1k_tasks_usd:.4f}"
+                if run_cost.cost_per_1k_tasks_usd is not None
+                else "- **Projected Cost / 1k Tasks:** N/A",
+                f"- **Pricing Source / Assumptions:** {run_cost.assumptions or run_cost.pricing_source or 'Standard API rates'}",
+            ]
+        )
+    elif not (
+        record.config.target.provider_name.lower() in ("ollama", "local")
+        or run_cost.cloud_cost_usd == 0.0
+    ):
+        lines.extend(
+            [
+                f"- **Inference Infrastructure:** Private endpoint ({record.config.target.provider_name}).",
+                f"- **Measured Runtime:** {duration_s}s end-to-end execution time.",
+            ]
+        )
+
+    lines.extend(
+        [
             "",
             "---",
             "",
@@ -112,8 +170,12 @@ def generate_markdown_report(
 
     sample_cases = case_results[:20]
     for c in sample_cases:
-        inp_str = str(c.input).replace("\n", " ")
-        inp_preview = (inp_str[:40] + "...") if len(inp_str) > 40 else inp_str
+        if redact_inputs:
+            inp_preview = "[REDACTED_PROMPT]"
+        else:
+            inp_str = str(c.input).replace("\n", " ")
+            inp_preview = (inp_str[:40] + "...") if len(inp_str) > 40 else inp_str
+
         lat_str = f"{c.latency_ms:.1f}ms" if c.latency_ms is not None else "N/A"
         pass_badge = "✅ Pass" if c.passed else "❌ Fail"
 

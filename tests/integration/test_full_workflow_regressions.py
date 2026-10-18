@@ -140,3 +140,65 @@ def test_cli_compare_command_integration():
     )
     assert cmp_res.exit_code == 0
     assert "Quality Gate: [PASSED]" in cmp_res.stdout
+
+
+@pytest.mark.asyncio
+async def test_full_lifecycle_evaluation_task_analysis_and_export(tmp_path: Path):
+    """Verify full end-to-end evaluation lifecycle: multi-evaluator execution, task analysis, and multi-format exports."""
+    from app.api.routes.task_analysis import get_run_task_analysis
+    from app.reporting.csv_exporter import generate_csv_report
+    from app.reporting.json_exporter import generate_json_report
+    from app.reporting.markdown_exporter import generate_markdown_report
+
+    init_db()
+    session_factory = get_session_factory()
+
+    with session_factory() as session:
+        service = EvaluationService(session)
+        cfg = EvaluationRunConfig(
+            name="Full Lifecycle Verification Run",
+            target=TargetConfiguration(
+                target_name="mock_lifecycle",
+                provider_name="mock",
+                model_identifier="echo",
+                extra_params={
+                    "canned_responses": {
+                        "France": "Paris",
+                        "15 multiplied": "60",
+                        "bloops": "Yes",
+                        "Return a JSON": '{"status":"ok"}',
+                    }
+                },
+            ),
+            evaluators=[
+                EvaluatorConfiguration(evaluator_name="exact_match", metric_id="exact_match"),
+                EvaluatorConfiguration(evaluator_name="contains_match", metric_id="contains_match"),
+            ],
+            dataset_path="examples/datasets/basic.jsonl",
+        )
+        record, results, aggregates = await service.run_evaluation(cfg)
+
+        assert record.status.value == "completed"
+        assert record.completed_cases == 4
+        assert aggregates.pass_rate is not None
+        assert len(results) == 4
+
+        # Task analysis route check
+        analysis = await get_run_task_analysis(record.run_id, db=session)
+        assert analysis.run_id == record.run_id
+        assert analysis.total_cases == 4
+        assert isinstance(analysis.complexity_bands, dict)
+        assert len(analysis.task_categories) > 0
+
+        # Export generators check
+        json_rep = generate_json_report(record, results, aggregates, redact_inputs=True)
+        assert json_rep["run_id"] == record.run_id
+        assert json_rep["per_case_results"][0]["input"] == "[REDACTED_PROMPT]"
+
+        md_rep = generate_markdown_report(record, results, aggregates, redact_inputs=True)
+        assert f"# Evaluation Report: {record.name}" in md_rep
+        assert "[REDACTED_PROMPT]" in md_rep
+
+        csv_rep = generate_csv_report(record, results, redact_inputs=True)
+        assert "case_id,run_id,model_identifier" in csv_rep
+        assert "[REDACTED_PROMPT]" in csv_rep

@@ -44,6 +44,13 @@ async def execute_case(
     resp = await execute_with_retry(_call, max_retries=max_retries)
 
     # 3. Handle provider-level failures
+    trace_info = {
+        "provider": target_config.provider_name,
+        "model": target_config.model_identifier,
+        "temperature": target_config.temperature,
+        "max_tokens": target_config.max_tokens,
+    }
+
     if not resp.is_success or resp.output_text is None:
         return CaseResult(
             case_id=case.id,
@@ -56,6 +63,7 @@ async def execute_case(
             token_usage=resp.token_usage,
             error_category=resp.error_category or "provider_error",
             error_message=resp.error_message or "Provider failed to produce output",
+            trace=trace_info,
         )
 
     # 4. Run configured evaluators on output
@@ -97,4 +105,5 @@ async def execute_case(
         token_usage=resp.token_usage,
         error_category=None,
         error_message=None,
+        trace=trace_info,
     )

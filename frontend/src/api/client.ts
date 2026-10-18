@@ -13,8 +13,7 @@ import type {
   MultiRunComparisonMatrix,
   CatalogModel,
   ModelPricing,
-  TaskCapabilityAnalysis,
-  ComplexityBandAnalysis,
+  RunAnalysisResponse,
 } from './types';
 
 export class ApiError extends Error {
@@ -184,13 +183,11 @@ export const api = {
   getPricingCatalog: () => request<Record<string, ModelPricing>>('/v1/catalog/pricing'),
 
   // Task & Complexity Analysis
+  getRunTaskAnalysis: (runId: string) =>
+    request<RunAnalysisResponse>(`/v1/task-analysis/${runId}`),
+
   getTaskAnalysis: (runId: string) =>
-    request<{
-      run_id: string;
-      model_identifier: string;
-      categories: TaskCapabilityAnalysis[];
-      complexity_bands: ComplexityBandAnalysis[];
-    }>(`/v1/task-analysis/${runId}`),
+    request<RunAnalysisResponse>(`/v1/task-analysis/${runId}`),
 };
 
 export const apiClient = {

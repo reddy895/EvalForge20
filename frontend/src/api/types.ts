@@ -43,6 +43,54 @@ export interface CatalogModel {
   description?: string;
 }
 
+export interface TaskCategoryMetrics {
+  category: string;
+  total_cases: number;
+  passed_cases: number;
+  failed_cases: number;
+  pass_rate: number | null;
+  failure_rate: number | null;
+  mean_latency_ms: number | null;
+  representative_failures?: Array<{
+    case_id: string;
+    input?: string;
+    actual_output?: string;
+    error_message?: string;
+  }>;
+}
+
+export interface BandMetrics {
+  band: 'low' | 'medium' | 'high' | 'unknown' | string;
+  total_cases: number;
+  passed_cases: number;
+  pass_rate: number | null;
+  mean_latency_ms: number | null;
+  has_sufficient_data: boolean;
+  insufficient_data_note?: string | null;
+}
+
+export interface RunAnalysisResponse {
+  run_id: string;
+  model_identifier: string;
+  provider_name: string;
+  total_cases: number;
+  pass_rate: number | null;
+  complexity_bands: Record<string, BandMetrics>;
+  task_categories: TaskCategoryMetrics[];
+  cost_breakdown?: {
+    prompt_tokens?: number | null;
+    completion_tokens?: number | null;
+    total_tokens?: number | null;
+    cloud_cost_usd?: number | null;
+    total_estimated_cost_usd?: number | null;
+    cost_per_successful_case_usd?: number | null;
+    cost_per_1k_tasks_usd?: number | null;
+    is_cost_known?: boolean;
+    pricing_source?: string | null;
+    assumptions?: string | null;
+  };
+}
+
 export interface TaskCapabilityAnalysis {
   category: string;
   total_cases: number;

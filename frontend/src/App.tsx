@@ -19,6 +19,7 @@ import { EvaluatorsPage } from './pages/EvaluatorsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { RagEvalPage } from './pages/RagEvalPage';
 import { AgentEvalPage } from './pages/AgentEvalPage';
+import { TaskAnalysisPage } from './pages/TaskAnalysisPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 export function AppContent() {
@@ -78,6 +79,10 @@ export function AppContent() {
             onOpenImportModal={() => setIsImportModalOpen(true)}
           />
         );
+      case 'catalog':
+        return <ProvidersPage />;
+      case 'task-analysis':
+        return <TaskAnalysisPage />;
       case 'providers':
         return <ProvidersPage />;
       case 'evaluators':

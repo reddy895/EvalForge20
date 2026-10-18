@@ -43,6 +43,11 @@ class RunAnalysisResponse(BaseModel):
     response_model=RunAnalysisResponse,
     summary="Get task capability and complexity analysis for a run",
 )
+@analysis_router.get(
+    "/task-analysis/{run_id}",
+    response_model=RunAnalysisResponse,
+    summary="Get task capability and complexity analysis for a run (alias)",
+)
 async def get_run_task_analysis(
     run_id: str,
     db: Session = Depends(get_db),

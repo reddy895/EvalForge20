@@ -105,6 +105,20 @@ def test_api_evaluation_lifecycle_and_report():
     assert report["report_schema_version"] == "1.0.0"
     assert report["run_id"] == run_id
 
+    # 5. Get failed cases
+    resp_failures = client.get(f"/v1/evaluations/{run_id}/failures")
+    assert resp_failures.status_code == 200
+    assert isinstance(resp_failures.json(), list)
+
+    # 6. Delete evaluation run
+    resp_del = client.delete(f"/v1/evaluations/{run_id}")
+    assert resp_del.status_code == 200
+    assert "deleted successfully" in resp_del.json()["message"]
+
+    # Verify 404 on deleted run
+    resp_gone = client.get(f"/v1/evaluations/{run_id}")
+    assert resp_gone.status_code == 404
+
 
 def test_api_validation_error_handler():
     """Verify structured 422 error response on invalid request schema."""

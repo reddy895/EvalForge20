@@ -102,15 +102,28 @@ class EvaluationRunner:
                         error_message="Evaluation run was cancelled",
                     )
 
-                res = await execute_case(
-                    case=case,
-                    provider=provider,
-                    target_config=self.config.target,
-                    evaluator_configs=self.config.evaluators,
-                    evaluators_map=evaluators_map,
-                    run_id=self.config.run_id,
-                    max_retries=self.config.max_retries,
-                )
+                try:
+                    res = await asyncio.wait_for(
+                        execute_case(
+                            case=case,
+                            provider=provider,
+                            target_config=self.config.target,
+                            evaluator_configs=self.config.evaluators,
+                            evaluators_map=evaluators_map,
+                            run_id=self.config.run_id,
+                            max_retries=self.config.max_retries,
+                        ),
+                        timeout=self.config.timeout_seconds,
+                    )
+                except TimeoutError:
+                    res = CaseResult(
+                        case_id=case.id,
+                        run_id=self.config.run_id,
+                        input=case.input,
+                        expected_output=case.expected_output,
+                        error_category="timeout",
+                        error_message=f"Case execution timed out after {self.config.timeout_seconds}s",
+                    )
 
                 if self.on_case_completed:
                     await self.on_case_completed(res)

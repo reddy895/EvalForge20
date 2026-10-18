@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.domain.errors import ComparisonIncompatibleError
 from app.domain.results import AggregateMetrics, CaseResult
+from app.pricing.calculator import cost_calculator
 from app.runner.config import EvaluationRunRecord
 
 
@@ -58,11 +59,16 @@ class ComparisonResult(BaseModel):
 
     baseline_run_id: str
     candidate_run_id: str
+    baseline_model: str | None = None
+    candidate_model: str | None = None
     is_compatible: bool
     dataset_version_hash: str | None
     metric_deltas: dict[str, MetricDelta] = Field(default_factory=dict)
     pass_rate_delta: float | None = None
     mean_latency_delta_ms: float | None = None
+    median_latency_delta_ms: float | None = None
+    p95_latency_delta_ms: float | None = None
+    cost_delta_usd: float | None = None
     regressed_cases: list[CaseRegression] = Field(default_factory=list)
     improved_cases: list[CaseRegression] = Field(default_factory=list)
     regressions_detected: bool = False
@@ -169,10 +175,41 @@ def compare_evaluation_runs(
     # Pass rate delta
     pr_delta, _ = calculate_metric_delta(baseline_aggs.pass_rate, candidate_aggs.pass_rate)
 
-    # Latency delta
+    # Latency deltas
     lat_delta, _ = calculate_metric_delta(
         baseline_aggs.mean_latency_ms, candidate_aggs.mean_latency_ms
     )
+    median_lat_delta, _ = calculate_metric_delta(
+        baseline_aggs.median_latency_ms, candidate_aggs.median_latency_ms
+    )
+    p95_lat_delta, _ = calculate_metric_delta(
+        baseline_aggs.p95_latency_ms, candidate_aggs.p95_latency_ms
+    )
+
+    # Cost deltas
+    cost_delta = None
+    try:
+        base_cost = cost_calculator.calculate_run_cost(
+            results=baseline_cases,
+            aggregates=baseline_aggs,
+            provider=baseline.config.provider,
+            model_identifier=baseline.config.model_identifier,
+        )
+        cand_cost = cost_calculator.calculate_run_cost(
+            results=candidate_cases,
+            aggregates=candidate_aggs,
+            provider=candidate.config.provider,
+            model_identifier=candidate.config.model_identifier,
+        )
+        if (
+            base_cost.total_estimated_cost_usd is not None
+            and cand_cost.total_estimated_cost_usd is not None
+        ):
+            cost_delta = round(
+                cand_cost.total_estimated_cost_usd - base_cost.total_estimated_cost_usd, 6
+            )
+    except Exception:
+        pass
 
     # 2. Case flips
     base_case_map = {c.case_id: c for c in baseline_cases}
@@ -234,11 +271,16 @@ def compare_evaluation_runs(
     return ComparisonResult(
         baseline_run_id=baseline.run_id,
         candidate_run_id=candidate.run_id,
+        baseline_model=baseline.config.model_identifier,
+        candidate_model=candidate.config.model_identifier,
         is_compatible=True,
         dataset_version_hash=candidate.config.dataset_version_hash,
         metric_deltas=deltas,
         pass_rate_delta=pr_delta,
         mean_latency_delta_ms=lat_delta,
+        median_latency_delta_ms=median_lat_delta,
+        p95_latency_delta_ms=p95_lat_delta,
+        cost_delta_usd=cost_delta,
         regressed_cases=regressed,
         improved_cases=improved,
         regressions_detected=len(regressed) > 0,

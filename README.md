@@ -398,21 +398,29 @@ ollama list
 
 Choose a model suitable for your hardware. Performance and memory requirements depend on the model and its configuration.
 
-### 5. Configure Environment Variables
+### 5. Configure Environment Variables & Provider Keys
 
-If environment-based configuration is implemented, create a local `.env` file using the supported settings.
-
-Example proposed configuration:
+Create a local `.env` file to configure local endpoints, cloud provider keys, and hardware economics:
 
 ```dotenv
 EVALFORGE20_ENV=development
 EVALFORGE20_DATABASE_URL=sqlite:///./data/evalforge20.db
 EVALFORGE20_OLLAMA_BASE_URL=http://localhost:11434
+EVALFORGE20_LOCAL_COST_PER_HOUR=0.15
+
+# Cloud Provider API Keys (Optional — only required for evaluating cloud models)
+OPENAI_API_KEY=sk-proj-...
+ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=AIzaSy...
+NVIDIA_API_KEY=nvapi-...
+CUSTOM_OPENAI_BASE_URL=https://my-openai-endpoint.internal/v1
+
+# Privacy & Logging
 EVALFORGE20_LOG_LEVEL=INFO
 EVALFORGE20_LOG_PROMPTS=false
 ```
 
-These environment variable names must be implemented in the application before they can be used. Never commit secrets or private evaluation data.
+Never commit secrets or live API keys to version control. Local evaluations via Ollama and Mock target operate 100% offline with zero cloud API keys.
 
 ### 6. Run an Evaluation
 
@@ -443,32 +451,41 @@ List historical evaluation runs:
 python -m evalforge runs list
 ```
 
-Compare candidate and baseline runs:
+Compare candidate and baseline runs with regression gates:
 ```bash
-python -m evalforge compare <BASELINE_RUN_ID> <CANDIDATE_RUN_ID>
+python -m evalforge compare <BASELINE_RUN_ID> <CANDIDATE_RUN_ID> --max-drop 0.05
 ```
 
-Export human-readable Markdown or tabular CSV reports:
+Export human-readable Markdown, tabular CSV, or JSON reports:
 ```bash
 python -m evalforge report export <RUN_ID> --format markdown --output reports/run.md
 python -m evalforge report export <RUN_ID> --format csv --output reports/cases.csv
 python -m evalforge report export <RUN_ID> --format json --output reports/run.json
 ```
 
-### 7. Start the API
+### 7. Start the Backend API & Frontend UI
 
-For an application exposed as `app.main:app`, use:
+Start the backend FastAPI evaluation daemon:
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-When the API is implemented, its documentation may be available at:
-
+Interactive documentation:
 - Swagger UI: `http://127.0.0.1:8000/docs`
 - OpenAPI schema: `http://127.0.0.1:8000/openapi.json`
+- Health check: `http://127.0.0.1:8000/health`
+- Readiness probe: `http://127.0.0.1:8000/ready`
 
-Update the module path if the repository uses a different application entry point.
+Start the developer-tool web console:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173` to access the EvalForge20 console.
 
 ## Dataset Format
 
@@ -527,24 +544,29 @@ Judge-generated scores must be clearly distinguished from deterministic measurem
 
 ## API Overview
 
-The following endpoints are proposed for the initial API. Document them as available only after implementation and testing.
+The EvalForge20 REST API exposes the following endpoints:
 
 | Method | Endpoint | Purpose |
 |---|---|---|
 | `GET` | `/health` | Check process health |
-| `GET` | `/ready` | Check readiness and dependencies |
+| `GET` | `/ready` | Check multi-provider readiness probe |
 | `GET` | `/v1/providers` | List configured provider adapters |
-| `POST` | `/v1/datasets/validate` | Validate a dataset |
+| `GET` | `/v1/catalog/models` | Discover available local and cloud models |
+| `GET` | `/v1/catalog/pricing` | Retrieve verified model pricing rules |
+| `POST` | `/v1/datasets/validate` | Validate a dataset (JSONL, JSON, CSV) |
 | `POST` | `/v1/datasets` | Register a dataset version |
-| `GET` | `/v1/datasets` | List datasets |
-| `POST` | `/v1/evaluations` | Create an evaluation run |
+| `GET` | `/v1/datasets` | List registered datasets |
+| `POST` | `/v1/evaluations` | Create and execute an evaluation run |
 | `GET` | `/v1/evaluations/{run_id}` | Retrieve run status and aggregate metrics |
-| `GET` | `/v1/evaluations/{run_id}/results` | Retrieve per-case results |
-| `GET` | `/v1/runs` | List evaluation runs |
-| `POST` | `/v1/compare` | Compare compatible evaluation runs |
-| `GET` | `/v1/reports/{run_id}` | Retrieve or export a report |
+| `GET` | `/v1/evaluations/{run_id}/results` | Retrieve per-case results with error traces |
+| `DELETE` | `/v1/evaluations/{run_id}` | Delete evaluation run and its case results |
+| `GET` | `/v1/evaluations` | List evaluation runs with optional filters |
+| `POST` | `/v1/compare` | Compare candidate against baseline with regression gates |
+| `POST` | `/v1/compare/matrix` | Multi-run comparison matrix across N evaluations |
+| `GET` | `/v1/task-analysis/{run_id}` | Task capability breakdown and complexity tiers |
+| `GET` | `/v1/reports/{run_id}` | Generate and export report (JSON, Markdown, CSV) |
 
-Long-running evaluations should have explicit run states, bounded execution, and a mechanism for retrieving partial results. API errors should be structured and should not expose secrets.
+Long-running evaluations have explicit run states, per-case timeouts, bounded threadpool concurrency, and atomic SQLite persistence. API errors are structured and never expose secrets.
 
 ## Storage Design
 

@@ -123,3 +123,31 @@ async def test_runner_cancellation():
     assert record.status == EvaluationRunStatus.CANCELLED
     cancelled_cases = [r for r in results if r.error_category == "cancelled"]
     assert len(cancelled_cases) > 0
+
+
+@pytest.mark.asyncio
+async def test_runner_timeout_per_case():
+    """Verify that a case exceeding timeout_seconds is safely aborted with timeout error category."""
+    from app.domain.contracts import ProviderRequest, ProviderResponse
+    from app.domain.models import EvaluationCase
+
+    class HangingProvider(MockProvider):
+        async def generate(self, request: ProviderRequest) -> ProviderResponse:
+            await asyncio.sleep(1.0)
+            return ProviderResponse(output_text="too late", latency_ms=1000.0, is_success=True)
+
+    provider = HangingProvider()
+    case = EvaluationCase(id="hang-1", input="slow prompt")
+    config = EvaluationRunConfig(
+        target=TargetConfiguration(target_name="hanging", provider_name="mock"),
+        evaluators=[EvaluatorConfiguration(evaluator_name="Exact Match", metric_id="exact_match")],
+        timeout_seconds=0.05,
+    )
+
+    runner = EvaluationRunner(config)
+    record, results, aggregates = await runner.run([case], provider_instance=provider)
+
+    assert len(results) == 1
+    assert results[0].error_category == "timeout"
+    assert "timed out" in (results[0].error_message or "").lower()
+    assert aggregates.failed_cases == 1

@@ -229,3 +229,43 @@ class EvaluationRepository:
             records.append(rec)
 
         return records[offset : offset + limit]
+
+    def get_runs_by_dataset_hash(self, dataset_version_hash: str) -> list[EvaluationRunRecord]:
+        """Retrieve all runs executed against an identical dataset version hash for comparison."""
+        stmt = (
+            select(EvaluationRunModel)
+            .where(EvaluationRunModel.dataset_version_hash == dataset_version_hash)
+            .order_by(desc(EvaluationRunModel.started_at))
+        )
+        models = self.session.scalars(stmt).all()
+        records: list[EvaluationRunRecord] = []
+        for m in models:
+            rec = self.get_run(m.run_id)
+            if rec:
+                records.append(rec)
+        return records
+
+    def get_run_failure_cases(self, run_id: str) -> list[CaseResult]:
+        """Retrieve only test cases that failed or encountered execution errors."""
+        all_cases = self.get_case_results(run_id)
+        return [c for c in all_cases if not c.passed]
+
+    def delete_run(self, run_id: str) -> bool:
+        """Delete an evaluation run and all associated cases and metric records."""
+        stmt = select(EvaluationRunModel).where(EvaluationRunModel.run_id == run_id)
+        run_model = self.session.scalars(stmt).first()
+        if not run_model:
+            return False
+
+        # Delete metric results first
+        case_models = self.session.scalars(
+            select(CaseResultModel).where(CaseResultModel.run_id == run_id)
+        ).all()
+        for cm in case_models:
+            for mm in cm.metric_results:
+                self.session.delete(mm)
+            self.session.delete(cm)
+
+        self.session.delete(run_model)
+        self.session.commit()
+        return True

@@ -5,6 +5,7 @@ import type { TargetConfiguration, OllamaDiagnosticReport, DetailedModel } from 
 import { Input } from '../ui/Input';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { ModelSelector } from './ModelSelector';
 import './StepProvider.css';
 
 interface StepProviderProps {
@@ -172,6 +173,21 @@ export const StepProvider: React.FC<StepProviderProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Searchable Model Selector */}
+      <ModelSelector
+        selectedModelId={target.model_identifier}
+        selectedProvider={target.provider_name}
+        onSelectModel={({ model_identifier, provider_name, target_name }) => {
+          onChange({
+            ...target,
+            model_identifier,
+            provider_name,
+            target_type: (provider_name === 'ollama' ? 'ollama' : provider_name === 'mock' ? 'mock' : 'llm') as any,
+            target_name: target_name || `${provider_name}-${model_identifier.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+          });
+        }}
+      />
 
       {/* Target Parameters Form */}
       <div className="grid-2">

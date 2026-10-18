@@ -9,8 +9,11 @@ interface RegressionInspectorProps {
 
 export const RegressionInspector: React.FC<RegressionInspectorProps> = ({ comparison }) => {
   const disagreements = comparison.disagreements || [];
-  const regressions = comparison.regressed_case_ids || [];
-  const improvements = comparison.improved_case_ids || [];
+  const regressions: string[] = comparison.regressed_case_ids || (comparison.regressed_cases || []).map((c) => c.case_id);
+  const improvements: string[] = comparison.improved_case_ids || (comparison.improved_cases || []).map((c) => c.case_id);
+
+  const baseLabel = comparison.baseline_model || comparison.baseline_name || 'Baseline';
+  const candLabel = comparison.candidate_model || comparison.candidate_name || 'Candidate';
 
   return (
     <div className="regression-inspector-card">
@@ -57,7 +60,7 @@ export const RegressionInspector: React.FC<RegressionInspectorProps> = ({ compar
                 <div className="diff-outputs-grid">
                   <div className={`diff-output-box ${d.baseline_passed ? 'baseline-pass' : ''}`}>
                     <span className="diff-output-title">
-                      Baseline Output ({comparison.baseline_name}):
+                      Baseline Output ({baseLabel}):
                     </span>
                     <div className="diff-output-text">
                       {d.baseline_output || <span style={{ color: 'var(--text-muted)' }}>—</span>}
@@ -66,7 +69,7 @@ export const RegressionInspector: React.FC<RegressionInspectorProps> = ({ compar
 
                   <div className={`diff-output-box ${!d.candidate_passed ? 'candidate-fail' : ''}`}>
                     <span className="diff-output-title">
-                      Candidate Output ({comparison.candidate_name}):
+                      Candidate Output ({candLabel}):
                     </span>
                     <div className="diff-output-text">
                       {d.candidate_output || <span style={{ color: 'var(--text-muted)' }}>—</span>}

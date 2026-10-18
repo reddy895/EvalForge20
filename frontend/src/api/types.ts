@@ -226,25 +226,54 @@ export interface DatasetValidationReport {
   dataset_hash?: string | null;
 }
 
+export interface MetricDelta {
+  metric_id: string;
+  baseline_value: number | null;
+  candidate_value: number | null;
+  delta: number | null;
+  percentage_change: number | null;
+}
+
+export interface CaseRegression {
+  case_id: string;
+  baseline_passed: boolean | null;
+  candidate_passed: boolean | null;
+  reason: string;
+}
+
 export interface ComparisonResult {
   baseline_run_id: string;
   candidate_run_id: string;
-  baseline_name: string;
-  candidate_name: string;
+  baseline_name?: string;
+  candidate_name?: string;
+  baseline_model?: string | null;
+  candidate_model?: string | null;
+  is_compatible?: boolean;
+  dataset_version_hash?: string | null;
+  metric_deltas?: Record<string, any>;
+  pass_rate_delta?: number | null;
+  score_delta?: number;
+  mean_latency_delta_ms?: number | null;
+  latency_delta_ms?: number;
+  median_latency_delta_ms?: number | null;
+  p95_latency_delta_ms?: number | null;
+  cost_delta_usd?: number | null;
+  regressed_cases?: CaseRegression[];
+  improved_cases?: CaseRegression[];
+  regressed_case_ids?: string[];
+  improved_case_ids?: string[];
+  regressions_detected?: boolean;
+  threshold_violations?: string[];
   passed_regression_gate: boolean;
-  score_delta: number;
-  latency_delta_ms: number;
-  metric_deltas: Record<string, number>;
-  regressed_case_ids: string[];
-  improved_case_ids: string[];
-  disagreements: Array<{
+  disagreements?: Array<{
     case_id: string;
     baseline_passed: boolean;
     candidate_passed: boolean;
     baseline_output?: string;
     candidate_output?: string;
   }>;
-  messages: string[];
+  messages?: string[];
+  summary?: string;
 }
 
 export interface MultiRunComparisonMatrix {

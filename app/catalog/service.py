@@ -1,6 +1,5 @@
 """Unified model catalog service aggregating verified metadata, pricing, and live discovery."""
 
-
 from app.catalog.models import CatalogModel, CatalogProviderInfo, ModelPricing
 from app.config import get_settings
 from app.providers.ollama_diagnostics import check_ollama_status

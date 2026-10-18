@@ -3,6 +3,8 @@
 import math
 import statistics
 
+from app.domain.complexity import aggregate_complexity_bands
+from app.domain.models import EvaluationCase
 from app.domain.results import AggregateMetrics, CaseResult
 
 
@@ -26,6 +28,7 @@ def calculate_percentile(values: list[float], percentile: float) -> float | None
 def aggregate_results(
     case_results: list[CaseResult],
     case_categories: dict[str, str | None] | None = None,
+    cases_map: dict[str, EvaluationCase] | None = None,
 ) -> AggregateMetrics:
     """Aggregate per-case results into dataset-level metrics with accurate denominators.
 
@@ -129,6 +132,10 @@ def aggregate_results(
                 "total_cases": float(len(flags)),
             }
 
+    # Complexity band performance
+    bands_dict = aggregate_complexity_bands(case_results, cases_map=cases_map)
+    complexity_performance = {k: v.model_dump() for k, v in bands_dict.items()}
+
     return AggregateMetrics(
         total_cases=total_cases,
         completed_cases=completed_cases,
@@ -141,5 +148,6 @@ def aggregate_results(
         metric_averages=metric_averages,
         metric_pass_rates=metric_pass_rates,
         category_performance=category_performance,
+        complexity_performance=complexity_performance,
         error_distribution=error_counts,
     )

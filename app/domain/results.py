@@ -62,4 +62,5 @@ class AggregateMetrics(BaseModel):
     metric_averages: dict[str, float] = Field(default_factory=dict)
     metric_pass_rates: dict[str, float] = Field(default_factory=dict)
     category_performance: dict[str, dict[str, float]] = Field(default_factory=dict)
+    complexity_performance: dict[str, dict[str, Any]] = Field(default_factory=dict)
     error_distribution: dict[str, int] = Field(default_factory=dict)

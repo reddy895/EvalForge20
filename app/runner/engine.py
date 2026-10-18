@@ -162,7 +162,10 @@ class EvaluationRunner:
         self._results = results
 
         # 4. Compute Aggregate Metrics
-        aggregates = aggregate_results(results, case_categories=categories_map)
+        cases_dict = {c.id: c for c in cases}
+        aggregates = aggregate_results(
+            results, case_categories=categories_map, cases_map=cases_dict
+        )
 
         # 5. Determine Final Run Status
         completed_at = datetime.now(UTC)

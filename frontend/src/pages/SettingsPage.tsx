@@ -1,10 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, Database, Cpu, Layers, RefreshCw } from 'lucide-react';
+import {
+  Settings,
+  Database,
+  Cpu,
+  Layers,
+  RefreshCw,
+  Key,
+  DollarSign,
+  Save,
+  Eye,
+  EyeOff,
+  Check,
+} from 'lucide-react';
 import { api } from '../api/client';
 import type { SystemHealthResponse, ReadinessResponse, OllamaDiagnosticReport } from '../api/types';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
+import { Input } from '../components/ui/Input';
 import './SettingsPage.css';
 
 export const SettingsPage: React.FC = () => {
@@ -14,6 +27,22 @@ export const SettingsPage: React.FC = () => {
   const [ollama, setOllama] = useState<OllamaDiagnosticReport | null>(null);
   const [langsmith, setLangsmith] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  // Provider Keys State
+  const [openaiKey, setOpenaiKey] = useState<string>(() => localStorage.getItem('evalforge_openai_key') || '');
+  const [anthropicKey, setAnthropicKey] = useState<string>(() => localStorage.getItem('evalforge_anthropic_key') || '');
+  const [geminiKey, setGeminiKey] = useState<string>(() => localStorage.getItem('evalforge_gemini_key') || '');
+  const [nvidiaKey, setNvidiaKey] = useState<string>(() => localStorage.getItem('evalforge_nvidia_key') || '');
+  const [showKeys, setShowKeys] = useState<boolean>(false);
+
+  // Hardware Economics State
+  const [ollamaEndpoint, setOllamaEndpoint] = useState<string>(
+    () => localStorage.getItem('evalforge_ollama_endpoint') || 'http://localhost:11434'
+  );
+  const [hardwareCostPerHour, setHardwareCostPerHour] = useState<string>(
+    () => localStorage.getItem('evalforge_hardware_cost_per_hour') || '0.15'
+  );
 
   const fetchDiagnostics = async () => {
     setIsLoading(true);
@@ -28,7 +57,6 @@ export const SettingsPage: React.FC = () => {
       setReadiness(r);
       setOllama(o);
       setLangsmith(ls);
-      toast.success('Environment diagnostics synced successfully');
     } catch {
       toast.error('Failed to sync diagnostics');
     } finally {
@@ -40,13 +68,31 @@ export const SettingsPage: React.FC = () => {
     fetchDiagnostics();
   }, []);
 
+  const handleSaveSettings = () => {
+    setIsSaving(true);
+    try {
+      localStorage.setItem('evalforge_openai_key', openaiKey.trim());
+      localStorage.setItem('evalforge_anthropic_key', anthropicKey.trim());
+      localStorage.setItem('evalforge_gemini_key', geminiKey.trim());
+      localStorage.setItem('evalforge_nvidia_key', nvidiaKey.trim());
+      localStorage.setItem('evalforge_ollama_endpoint', ollamaEndpoint.trim());
+      localStorage.setItem('evalforge_hardware_cost_per_hour', hardwareCostPerHour.trim());
+
+      toast.success('Configuration and provider credentials saved locally', 'Settings Persisted');
+    } catch {
+      toast.error('Failed to persist settings in local storage', 'Save Error');
+    } finally {
+      setTimeout(() => setIsSaving(false), 400);
+    }
+  };
+
   return (
     <div className="settings-page">
       <div className="page-header">
         <div>
-          <h1 className="page-header-title">Settings & Diagnostics</h1>
+          <h1 className="page-header-title">Settings & System Configuration</h1>
           <p className="page-header-subtitle">
-            System configuration, persistence engine diagnostics, and local-first execution parameters.
+            Manage provider credentials, local Ollama daemon connection, hardware cost rates, and persistence diagnostics.
           </p>
         </div>
         <div className="page-header-actions">
@@ -58,10 +104,149 @@ export const SettingsPage: React.FC = () => {
           >
             Refresh Diagnostics
           </Button>
+          <Button
+            variant="primary"
+            iconLeft={isSaving ? <Check size={13} /> : <Save size={13} />}
+            loading={isSaving}
+            onClick={handleSaveSettings}
+          >
+            Save Settings
+          </Button>
         </div>
       </div>
 
-      {/* Backend & Engine Info */}
+      {/* Provider API Credentials */}
+      <div className="settings-section-card">
+        <div className="settings-section-title">
+          <Key size={16} color="var(--accent-primary)" />
+          <span>Cloud Provider Credentials</span>
+          <button
+            type="button"
+            className="btn-text"
+            style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer' }}
+            onClick={() => setShowKeys(!showKeys)}
+          >
+            {showKeys ? <EyeOff size={13} /> : <Eye size={13} />}
+            {showKeys ? 'Hide Keys' : 'Show Keys'}
+          </button>
+        </div>
+        <p className="settings-section-desc">
+          API keys are used for evaluating external cloud models. Local-first evaluations (Ollama & Mock) never require API keys.
+        </p>
+
+        <div className="settings-input-row">
+          <div className="settings-label-wrap">
+            <span className="settings-key-title">OpenAI API Key</span>
+            <span className="settings-key-desc">For GPT-4o, GPT-4o-mini, and embeddings</span>
+          </div>
+          <div className="settings-input-control">
+            <Input
+              type={showKeys ? 'text' : 'password'}
+              isMonospace
+              placeholder="sk-proj-..."
+              value={openaiKey}
+              onChange={(e) => setOpenaiKey(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="settings-input-row">
+          <div className="settings-label-wrap">
+            <span className="settings-key-title">Anthropic API Key</span>
+            <span className="settings-key-desc">For Claude 3.5 Sonnet and Haiku</span>
+          </div>
+          <div className="settings-input-control">
+            <Input
+              type={showKeys ? 'text' : 'password'}
+              isMonospace
+              placeholder="sk-ant-..."
+              value={anthropicKey}
+              onChange={(e) => setAnthropicKey(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="settings-input-row">
+          <div className="settings-label-wrap">
+            <span className="settings-key-title">Google Gemini API Key</span>
+            <span className="settings-key-desc">For Gemini 1.5 Pro and Gemini 1.5 Flash</span>
+          </div>
+          <div className="settings-input-control">
+            <Input
+              type={showKeys ? 'text' : 'password'}
+              isMonospace
+              placeholder="AIzaSy..."
+              value={geminiKey}
+              onChange={(e) => setGeminiKey(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="settings-input-row">
+          <div className="settings-label-wrap">
+            <span className="settings-key-title">NVIDIA NIM API Key</span>
+            <span className="settings-key-desc">For NVIDIA hosted inference and Llama NIM endpoints</span>
+          </div>
+          <div className="settings-input-control">
+            <Input
+              type={showKeys ? 'text' : 'password'}
+              isMonospace
+              placeholder="nvapi-..."
+              value={nvidiaKey}
+              onChange={(e) => setNvidiaKey(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Local Hardware & Power Economics */}
+      <div className="settings-section-card">
+        <div className="settings-section-title">
+          <DollarSign size={16} color="var(--accent-primary)" />
+          <span>Local Hardware Economics & Ollama Endpoint</span>
+        </div>
+        <p className="settings-section-desc">
+          Parameters for estimating local compute, electricity costs, and custom daemon socket endpoints.
+        </p>
+
+        <div className="settings-input-row">
+          <div className="settings-label-wrap">
+            <span className="settings-key-title">Ollama Base URL</span>
+            <span className="settings-key-desc">Local Ollama HTTP socket URL</span>
+          </div>
+          <div className="settings-input-control">
+            <Input
+              type="text"
+              isMonospace
+              placeholder="http://localhost:11434"
+              value={ollamaEndpoint}
+              onChange={(e) => setOllamaEndpoint(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="settings-input-row">
+          <div className="settings-label-wrap">
+            <span className="settings-key-title">Local Hardware Cost Rate ($/hour)</span>
+            <span className="settings-key-desc">
+              Estimated electricity and machine depreciation rate for local evaluations (Default: $0.15/hr)
+            </span>
+          </div>
+          <div className="settings-input-control">
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              isMonospace
+              placeholder="0.15"
+              value={hardwareCostPerHour}
+              onChange={(e) => setHardwareCostPerHour(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Backend & Engine Diagnostics */}
       <div className="settings-section-card">
         <div className="settings-section-title">
           <Settings size={16} color="var(--accent-primary)" />
@@ -86,7 +271,7 @@ export const SettingsPage: React.FC = () => {
             <span className="settings-key-title">Software Version</span>
             <span className="settings-key-desc">Application semantic version tag</span>
           </div>
-          <span className="font-mono">{health?.version || 'v0.1.0'}</span>
+          <span className="font-mono">{health?.version || 'v1.0.0'}</span>
         </div>
 
         <div className="settings-row">
@@ -127,28 +312,20 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Ollama Local Integration */}
+      {/* Ollama Local Integration State */}
       <div className="settings-section-card">
         <div className="settings-section-title">
           <Cpu size={16} color="var(--accent-primary)" />
-          <span>Ollama Local Daemon</span>
+          <span>Ollama Daemon Live Status</span>
         </div>
         <p className="settings-section-desc">
-          Local model execution daemon configuration for offline benchmarking.
+          Live probe response from the local Ollama daemon socket.
         </p>
 
         <div className="settings-row">
           <div className="settings-label-wrap">
-            <span className="settings-key-title">Daemon Endpoint</span>
-            <span className="settings-key-desc">OLLAMA_BASE_URL setting</span>
-          </div>
-          <span className="font-mono">{ollama?.base_url || 'http://localhost:11434'}</span>
-        </div>
-
-        <div className="settings-row">
-          <div className="settings-label-wrap">
             <span className="settings-key-title">Connection State</span>
-            <span className="settings-key-desc">HTTP probe against Ollama daemon</span>
+            <span className="settings-key-desc">HTTP probe against {ollamaEndpoint}</span>
           </div>
           <Badge variant={ollama?.connected ? 'success' : 'error'} showDot>
             {ollama?.connected ? `Connected (${ollama.version || 'Active'})` : 'Offline'}
@@ -164,7 +341,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* LangSmith Optional Integration */}
+      {/* LangSmith Observability */}
       <div className="settings-section-card">
         <div className="settings-section-title">
           <Layers size={16} />

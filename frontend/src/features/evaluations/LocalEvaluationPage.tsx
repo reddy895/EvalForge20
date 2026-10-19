@@ -3,7 +3,6 @@ import type { ModelCatalogItem, BenchmarkDefinition, EvaluationRun } from '../..
 import { api } from '../../services/api';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
-import './LocalEvaluationPage.css';
 
 interface LocalEvaluationPageProps {
   initialModelId?: string | null;
@@ -36,7 +35,8 @@ export const LocalEvaluationPage: React.FC<LocalEvaluationPageProps> = ({
         setBenchmarks(benchmarksData);
 
         if (!selectedModelId && modelsData.length > 0) {
-          const localModel = modelsData.find((m) => m.is_local) || modelsData[0];
+          // Default to first local model or first available model
+          const localModel = modelsData.find(m => m.is_local) || modelsData[0];
           setSelectedModelId(localModel.id);
         }
       } catch (err: any) {
@@ -70,74 +70,71 @@ export const LocalEvaluationPage: React.FC<LocalEvaluationPageProps> = ({
     }
   };
 
-  const selectedModel = models.find((m) => m.id === selectedModelId);
-  const selectedBenchmark = benchmarks.find((b) => b.id === selectedBenchmarkId);
+  const selectedModel = models.find(m => m.id === selectedModelId);
+  const selectedBenchmark = benchmarks.find(b => b.id === selectedBenchmarkId);
 
   if (loading) {
     return (
-      <div className="page-container loading-state">
-        <span className="spinner" />
-        <p>Loading evaluation configuration and benchmarks...</p>
+      <div className="py-16 text-center text-[#A5A59A]">
+        Loading evaluation configuration...
       </div>
     );
   }
 
   return (
-    <div className="page-container eval-page-container">
+    <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
-      <div className="eval-header-bar">
+      <div className="border-b border-[#393A33] pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="eval-header-title">Evaluate Locally</h1>
-          <p className="eval-header-subtitle">
+          <h1 className="text-2xl font-bold text-[#F0EEE6] tracking-tight">Evaluate Locally</h1>
+          <p className="text-sm text-[#A5A59A] mt-1">
             Execute reproducible, deterministic test cases against local Ollama models or verified catalog test-doubles.
           </p>
         </div>
         {onNavigateToHistory && (
-          <Button variant="outline" size="sm" onClick={onNavigateToHistory}>
+          <Button variant="secondary" onClick={onNavigateToHistory}>
             View Evaluation History &rarr;
           </Button>
         )}
       </div>
 
       {/* Execution Form Card */}
-      <div className="eval-config-card">
-        <h2 className="config-card-title">Run Configuration</h2>
+      <div className="bg-[#20211E] border border-[#393A33] rounded-lg p-6 space-y-6">
+        <h2 className="text-base font-semibold text-[#F0EEE6]">Run Configuration</h2>
 
-        <div className="config-inputs-grid">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Model Selection */}
-          <div className="config-field">
-            <label className="field-label">Select Model</label>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A5A59A] mb-2">
+              Select Model
+            </label>
             <select
               value={selectedModelId}
               onChange={(e) => setSelectedModelId(e.target.value)}
               disabled={running}
-              className="field-select font-mono"
+              className="w-full bg-[#171816] border border-[#393A33] text-[#F0EEE6] rounded px-3 py-2 text-sm focus:outline-none focus:border-[#E58B45]"
             >
               <optgroup label="Local Models">
-                {models
-                  .filter((m) => m.is_local)
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.provider}) [Installed Local]
-                    </option>
-                  ))}
+                {models.filter(m => m.is_local).map(m => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({m.provider}) [Installed Local]
+                  </option>
+                ))}
               </optgroup>
               <optgroup label="Hosted & Catalog Models">
-                {models
-                  .filter((m) => !m.is_local)
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.provider})
-                    </option>
-                  ))}
+                {models.filter(m => !m.is_local).map(m => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({m.provider})
+                  </option>
+                ))}
               </optgroup>
             </select>
             {selectedModel && (
-              <div className="field-meta-row">
+              <div className="mt-2 flex items-center gap-2">
                 <Badge variant={selectedModel.is_local ? 'success' : 'neutral'}>
                   {selectedModel.is_local ? 'Ollama Local' : 'Hosted/Catalog'}
                 </Badge>
-                <span className="field-helper font-mono">
+                <span className="text-xs text-[#A5A59A]">
                   Params: {selectedModel.parameter_count || 'N/A'}
                 </span>
               </div>
@@ -145,56 +142,65 @@ export const LocalEvaluationPage: React.FC<LocalEvaluationPageProps> = ({
           </div>
 
           {/* Benchmark Selection */}
-          <div className="config-field">
-            <label className="field-label">Select Benchmark Task</label>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A5A59A] mb-2">
+              Select Benchmark Task
+            </label>
             <select
               value={selectedBenchmarkId}
               onChange={(e) => setSelectedBenchmarkId(e.target.value)}
               disabled={running}
-              className="field-select"
+              className="w-full bg-[#171816] border border-[#393A33] text-[#F0EEE6] rounded px-3 py-2 text-sm focus:outline-none focus:border-[#E58B45]"
             >
-              {benchmarks.map((b) => (
+              {benchmarks.map(b => (
                 <option key={b.id} value={b.id}>
                   {b.name} ({b.task})
                 </option>
               ))}
             </select>
             {selectedBenchmark && (
-              <p className="field-helper">{selectedBenchmark.description}</p>
+              <p className="mt-2 text-xs text-[#A5A59A] line-clamp-2">
+                {selectedBenchmark.description}
+              </p>
             )}
           </div>
 
           {/* Test Case Limit */}
-          <div className="config-field">
-            <label className="field-label">Sample Count (Cases)</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A5A59A] mb-2">
+              Sample Count (Cases)
+            </label>
+            <div className="flex items-center gap-3">
               <input
                 type="number"
                 min="1"
                 max="10"
                 value={limit}
-                onChange={(e) =>
-                  setLimit(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))
-                }
+                onChange={(e) => setLimit(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
                 disabled={running}
-                className="field-input font-mono"
-                style={{ width: '90px' }}
+                className="w-24 bg-[#171816] border border-[#393A33] text-[#F0EEE6] rounded px-3 py-2 text-sm focus:outline-none focus:border-[#E58B45]"
               />
-              <span className="field-helper">
+              <span className="text-xs text-[#A5A59A]">
                 1 to {selectedBenchmark?.total_cases || 5} cases
               </span>
             </div>
-            <p className="field-helper">Keeps execution reproducible and responsive.</p>
+            <p className="mt-2 text-xs text-[#A5A59A]">
+              Keeps execution reproducible and responsive.
+            </p>
           </div>
         </div>
 
-        {error && <div className="error-banner">{error}</div>}
+        {error && (
+          <div className="p-3 bg-red-950/40 border border-red-800/60 rounded text-xs text-red-300">
+            {error}
+          </div>
+        )}
 
-        <div className="config-footer-row">
-          <div className="eval-status-message">
+        <div className="flex items-center justify-between pt-2">
+          <div className="text-xs text-[#A5A59A]">
             {running ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)' }}>
-                <span className="running-pulse" />
+              <span className="inline-flex items-center gap-2 text-[#E58B45]">
+                <span className="inline-block w-2 h-2 rounded-full bg-[#E58B45] animate-ping" />
                 Executing test suite against {selectedModel?.name}...
               </span>
             ) : (
@@ -205,7 +211,6 @@ export const LocalEvaluationPage: React.FC<LocalEvaluationPageProps> = ({
             variant="primary"
             onClick={handleRunEvaluation}
             disabled={running || !selectedModelId}
-            loading={running}
           >
             {running ? 'Running Evaluation...' : 'Execute Evaluation'}
           </Button>
@@ -214,83 +219,87 @@ export const LocalEvaluationPage: React.FC<LocalEvaluationPageProps> = ({
 
       {/* Results View */}
       {currentRun && (
-        <div className="eval-results-card">
-          <div className="results-top-header">
-            <div className="results-title-group">
-              <h3>
-                {currentRun.benchmark_name} Results
-                <Badge variant={currentRun.status === 'completed' ? 'success' : 'error'}>
-                  {currentRun.status.toUpperCase()}
-                </Badge>
-              </h3>
-              <div className="results-meta">
-                Model: <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{currentRun.model_id}</span> &bull; Run ID: <span className="font-mono">{currentRun.id}</span>
+        <div className="space-y-6">
+          <div className="bg-[#20211E] border border-[#393A33] rounded-lg p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#393A33] gap-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-bold text-[#F0EEE6]">{currentRun.benchmark_name} Results</h3>
+                  <Badge variant={currentRun.status === 'completed' ? 'success' : 'error'}>
+                    {currentRun.status.toUpperCase()}
+                  </Badge>
+                </div>
+                <p className="text-xs text-[#A5A59A] mt-1">
+                  Model: <span className="text-[#F0EEE6] font-mono">{currentRun.model_id}</span> &bull; Run ID: <span className="font-mono">{currentRun.id}</span>
+                </p>
+              </div>
+
+              {/* Metrics Pills */}
+              <div className="flex items-center gap-4">
+                <div className="bg-[#171816] px-4 py-2 rounded border border-[#393A33] text-center">
+                  <span className="block text-xs uppercase text-[#A5A59A]">Pass Rate</span>
+                  <span className="text-lg font-bold text-[#E58B45]">
+                    {((currentRun.metrics.pass_rate || 0) * 100).toFixed(0)}%
+                  </span>
+                </div>
+                <div className="bg-[#171816] px-4 py-2 rounded border border-[#393A33] text-center">
+                  <span className="block text-xs uppercase text-[#A5A59A]">Passed / Total</span>
+                  <span className="text-lg font-bold text-[#F0EEE6]">
+                    {currentRun.metrics.passed_cases || 0} / {currentRun.metrics.total_cases || 0}
+                  </span>
+                </div>
+                <div className="bg-[#171816] px-4 py-2 rounded border border-[#393A33] text-center">
+                  <span className="block text-xs uppercase text-[#A5A59A]">Mean Latency</span>
+                  <span className="text-lg font-bold text-[#F0EEE6]">
+                    {currentRun.metrics.avg_latency_ms ? `${currentRun.metrics.avg_latency_ms.toFixed(0)}ms` : 'N/A'}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Metrics Pills */}
-            <div className="metrics-stats-row">
-              <div className="stat-metric-card">
-                <span className="metric-card-label">Pass Rate</span>
-                <span className="metric-card-val accent font-mono">
-                  {((currentRun.metrics.pass_rate || 0) * 100).toFixed(0)}%
-                </span>
-              </div>
-              <div className="stat-metric-card">
-                <span className="metric-card-label">Passed / Total</span>
-                <span className="metric-card-val font-mono">
-                  {currentRun.metrics.passed_cases || 0} / {currentRun.metrics.total_cases || 0}
-                </span>
-              </div>
-              <div className="stat-metric-card">
-                <span className="metric-card-label">Mean Latency</span>
-                <span className="metric-card-val font-mono">
-                  {currentRun.metrics.avg_latency_ms ? `${currentRun.metrics.avg_latency_ms.toFixed(0)}ms` : 'N/A'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Test Cases Table */}
-          <div>
-            <div className="assertions-section-title">Individual Case Assertions</div>
-            <div className="assertions-table-wrapper">
-              <table className="assertions-table">
-                <thead>
-                  <tr>
-                    <th>Status</th>
-                    <th>Case ID</th>
-                    <th>Prompt</th>
-                    <th>Expected Output</th>
-                    <th>Actual Response</th>
-                    <th>Latency</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentRun.case_results.map((c: any) => (
-                    <tr key={c.case_id}>
-                      <td>
-                        <Badge variant={c.passed ? 'success' : 'error'}>
-                          {c.passed ? 'PASS' : 'FAIL'}
-                        </Badge>
-                      </td>
-                      <td className="font-mono" style={{ color: 'var(--text-muted)' }}>{c.case_id}</td>
-                      <td style={{ color: 'var(--text-primary)', maxWidth: '280px', wordBreak: 'break-word' }} title={c.prompt || undefined}>
-                        {c.prompt}
-                      </td>
-                      <td className="font-mono cell-expected" style={{ maxWidth: '240px', wordBreak: 'break-word' }} title={c.expected_output || undefined}>
-                        {c.expected_output}
-                      </td>
-                      <td className="font-mono cell-actual" style={{ maxWidth: '280px', wordBreak: 'break-word' }} title={c.actual_output || undefined}>
-                        {c.actual_output || '<empty>'}
-                      </td>
-                      <td className="cell-latency font-mono">
-                        {c.latency_ms ? `${c.latency_ms.toFixed(0)} ms` : '-'}
-                      </td>
+            {/* Test Cases Table */}
+            <div className="mt-6">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#A5A59A] mb-3">
+                Individual Case Assertions
+              </h4>
+              <div className="overflow-x-auto border border-[#393A33] rounded">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-[#171816] text-[#A5A59A] border-b border-[#393A33]">
+                    <tr>
+                      <th className="py-2.5 px-3">Status</th>
+                      <th className="py-2.5 px-3">Case ID</th>
+                      <th className="py-2.5 px-3">Prompt</th>
+                      <th className="py-2.5 px-3">Expected Output</th>
+                      <th className="py-2.5 px-3">Actual Response</th>
+                      <th className="py-2.5 px-3">Latency</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#393A33]">
+                    {currentRun.case_results.map((c: any) => (
+                      <tr key={c.case_id} className="hover:bg-[#171816]/50">
+                        <td className="py-3 px-3 align-top">
+                          <Badge variant={c.passed ? 'success' : 'error'}>
+                            {c.passed ? 'PASS' : 'FAIL'}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-[#A5A59A] align-top">{c.case_id}</td>
+                        <td className="py-3 px-3 text-[#F0EEE6] max-w-xs truncate align-top" title={c.prompt || undefined}>
+                          {c.prompt}
+                        </td>
+                        <td className="py-3 px-3 font-mono text-emerald-400 max-w-xs truncate align-top" title={c.expected_output || undefined}>
+                          {c.expected_output}
+                        </td>
+                        <td className="py-3 px-3 font-mono text-[#F0EEE6] max-w-sm truncate align-top" title={c.actual_output || undefined}>
+                          {c.actual_output || '<empty>'}
+                        </td>
+                        <td className="py-3 px-3 text-[#A5A59A] align-top whitespace-nowrap">
+                          {c.latency_ms ? `${c.latency_ms.toFixed(0)} ms` : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

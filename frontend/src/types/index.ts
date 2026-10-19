@@ -255,4 +255,34 @@ export interface HardwareProfile {
   disk_available_gb: number;
 }
 
-export type NavRoute = 'catalog' | 'model-profile' | 'compare' | 'evaluate' | 'history' | 'settings';
+export type NavRoute = 'landing' | 'models' | 'model-detail' | 'compare' | 'evaluate' | 'history';
+
+export type LandingSectionId =
+  | 'hero'
+  | 'discovery'
+  | 'why'
+  | 'how-it-works'
+  | 'comparison'
+  | 'evaluation'
+  | 'local-first'
+  | 'cta';
+
+export interface FilterOptions {
+  query: string;
+  provider: string;
+  task: string;
+  onlyLocal: boolean;
+  sortBy: 'recommended' | 'benchmark' | 'context' | 'ram';
+}
+
+export interface DemoEvaluationState {
+  modelId: string;
+  taskId: string;
+  benchmarkId: string;
+  sampleCount: number;
+  isRunning: boolean;
+  stepProgress: number;
+  currentStepDescription: string;
+  result: EvaluationRun | null;
+}
+

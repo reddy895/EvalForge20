@@ -3,6 +3,7 @@ import { HardDrive, CheckCircle2, Cloud, Sparkles, Scale, PlayCircle, Layers } f
 import type { ModelSummary } from '../../types';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
+import './ModelCard.css';
 
 interface ModelCardProps {
   model: ModelSummary;

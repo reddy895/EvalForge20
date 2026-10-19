@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, X, Filter, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import './SearchAndFilterBar.css';
 
 interface SearchAndFilterBarProps {
   searchQuery: string;
@@ -100,6 +101,7 @@ export const SearchAndFilterBar: React.FC<SearchAndFilterBarProps> = ({
           <label className="filter-checkbox-label">
             <input
               type="checkbox"
+              className="filter-checkbox"
               checked={onlyInstalled}
               onChange={onOnlyInstalledToggle}
             />

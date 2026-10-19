@@ -1,12 +1,16 @@
 import React from 'react';
-import { Compass, Scale, PlayCircle, History, Settings, Cpu, HardDrive } from 'lucide-react';
+import { Compass, Scale, PlayCircle, History, Settings, Cpu, HardDrive, Activity } from 'lucide-react';
 import type { NavRoute, OllamaStatusReport } from '../types';
+import './Navigation.css';
 
 interface NavigationProps {
   currentRoute?: NavRoute;
   activeRoute?: NavRoute;
   onRouteChange: (route: NavRoute) => void;
   ollamaStatus?: OllamaStatusReport | null;
+  backendOnline?: boolean;
+  backendLatencyMs?: number;
+  onRefreshHealth?: () => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -14,6 +18,9 @@ export const Navigation: React.FC<NavigationProps> = ({
   activeRoute,
   onRouteChange,
   ollamaStatus,
+  backendOnline = true,
+  backendLatencyMs,
+  onRefreshHealth,
 }) => {
   const selectedRoute = currentRoute || activeRoute || 'catalog';
   const navItems: { route: NavRoute; label: string; icon: React.ReactNode }[] = [
@@ -53,6 +60,25 @@ export const Navigation: React.FC<NavigationProps> = ({
       </div>
 
       <div className="header-right">
+        {/* Backend API Health Indicator */}
+        <div
+          className={`backend-status-indicator ${backendOnline ? 'online' : 'offline'}`}
+          onClick={onRefreshHealth}
+          title={
+            backendOnline
+              ? `FastAPI Backend Connected (${backendLatencyMs ? `${backendLatencyMs}ms` : 'active'})`
+              : 'Backend unreachable. Click to test connection.'
+          }
+          role="button"
+          tabIndex={0}
+        >
+          <span className="status-dot" />
+          <span className="status-text">
+            API: {backendOnline ? 'Connected' : 'Offline'}
+          </span>
+          <Activity size={12} style={{ opacity: 0.7 }} />
+        </div>
+
         {/* Ollama Daemon Status Pill */}
         <div
           className={`ollama-status-indicator ${
@@ -72,7 +98,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               ? 'Online (No Models)'
               : 'Offline'}
           </span>
-          <HardDrive size={13} style={{ marginLeft: '4px', opacity: 0.7 }} />
+          <HardDrive size={13} style={{ opacity: 0.7 }} />
         </div>
       </div>
     </header>

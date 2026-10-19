@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import type { NavRoute } from '../types';
+import React, { useState, useEffect, useCallback } from 'react';
+import type { NavRoute, OllamaStatusReport } from '../types';
+import { api } from '../services/api';
 import { Navigation } from './Navigation';
 import { ModelCatalogPage } from '../features/catalog/ModelCatalogPage';
 import { ModelProfilePage } from '../features/model-profile/ModelProfilePage';
@@ -16,6 +17,31 @@ export const App: React.FC = () => {
     'llama-3.1-8b-instruct',
     'qwen-2.5-7b-instruct',
   ]);
+
+  // System Diagnostics State
+  const [backendOnline, setBackendOnline] = useState<boolean>(true);
+  const [backendLatencyMs, setBackendLatencyMs] = useState<number | undefined>(undefined);
+  const [ollamaReport, setOllamaReport] = useState<OllamaStatusReport | null>(null);
+
+  const checkDiagnostics = useCallback(async () => {
+    try {
+      const [health, ollama] = await Promise.all([
+        api.checkBackendHealth(),
+        api.getOllamaReport().catch(() => null),
+      ]);
+      setBackendOnline(health.is_connected);
+      setBackendLatencyMs(health.latency_ms);
+      if (ollama) setOllamaReport(ollama);
+    } catch {
+      setBackendOnline(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkDiagnostics();
+    const timer = setInterval(checkDiagnostics, 15000);
+    return () => clearInterval(timer);
+  }, [checkDiagnostics]);
 
   const handleOpenProfile = (modelId: string) => {
     setActiveProfileModelId(modelId);
@@ -110,6 +136,10 @@ export const App: React.FC = () => {
           setCurrentRoute(route);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
+        ollamaStatus={ollamaReport}
+        backendOnline={backendOnline}
+        backendLatencyMs={backendLatencyMs}
+        onRefreshHealth={checkDiagnostics}
       />
 
       {/* Main Content Area */}

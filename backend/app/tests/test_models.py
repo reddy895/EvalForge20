@@ -87,3 +87,21 @@ def test_gemini_catalog_and_profile():
     assert any(b["benchmark_name"] == "GSM8K" for b in p["benchmarks"])
 
 
+def test_deepseek_v3_and_gpt4o_profiles():
+    """Verify DeepSeek V3 671B MoE and OpenAI GPT-4o are discoverable."""
+    resp_v3 = client.get("/v1/models/deepseek-v3")
+    assert resp_v3.status_code == 200
+    v3 = resp_v3.json()
+    assert v3["family"] == "DeepSeek"
+    assert "671B" in v3["parameter_count"]
+    assert v3["license"] == "MIT"
+
+    resp_4o = client.get("/v1/models/gpt-4o")
+    assert resp_4o.status_code == 200
+    gpt = resp_4o.json()
+    assert gpt["family"] == "GPT"
+    assert gpt["context_window"] == 128000
+    assert any(b["benchmark_name"] == "HumanEval" for b in gpt["benchmarks"])
+
+
+

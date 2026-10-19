@@ -47,49 +47,51 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
         setCatalog(models);
       } catch {
         // Fallback default models if catalog endpoint is offline
+        // Backend unavailable: show safe fallback. Ollama status is unknown.
+        // Do NOT claim any remote model is 'online' or 'configured' without verification.
         setCatalog([
           {
-            name: 'Qwen 2.5 3B Instruct',
+            name: 'Qwen 2.5 3B (Ollama — status unknown)',
             provider: 'ollama',
             model_identifier: 'qwen2.5:3b',
             is_local: true,
             modalities: ['text'],
             supports_tools: true,
             supports_structured_output: true,
-            connection_status: 'online',
+            connection_status: 'unknown',
           },
           {
-            name: 'Llama 3.2 3B Instruct',
+            name: 'Llama 3.2 3B (Ollama — status unknown)',
             provider: 'ollama',
             model_identifier: 'llama3.2:3b',
             is_local: true,
             modalities: ['text'],
             supports_tools: true,
             supports_structured_output: true,
-            connection_status: 'online',
+            connection_status: 'unknown',
           },
           {
-            name: 'GPT-4o Mini',
+            name: 'GPT-4o Mini (requires API key)',
             provider: 'openai',
             model_identifier: 'gpt-4o-mini',
             is_local: false,
             modalities: ['text'],
             supports_tools: true,
             supports_structured_output: true,
-            connection_status: 'configured',
+            connection_status: 'unconfigured',
           },
           {
-            name: 'Claude 3.5 Sonnet',
+            name: 'Claude 3.5 Sonnet (requires API key)',
             provider: 'anthropic',
             model_identifier: 'claude-3-5-sonnet-20241022',
             is_local: false,
             modalities: ['text'],
             supports_tools: true,
             supports_structured_output: true,
-            connection_status: 'configured',
+            connection_status: 'unconfigured',
           },
           {
-            name: 'Deterministic Mock Target',
+            name: 'Deterministic Mock (always available)',
             provider: 'mock',
             model_identifier: 'mock-model-v1',
             is_local: true,

@@ -44,6 +44,18 @@ export const RunMetricsBreakdown: React.FC<RunMetricsBreakdownProps> = ({ aggreg
   const categoryKeys = Object.keys(aggregates.category_performance || {});
   const errorKeys = Object.keys(aggregates.error_distribution || {});
 
+  const passedCasesCount =
+    aggregates.pass_rate !== null && aggregates.pass_rate !== undefined
+      ? Math.round(aggregates.pass_rate * aggregates.completed_cases)
+      : 0;
+
+  const passRateFooter =
+    aggregates.completed_cases === 0 && aggregates.failed_cases > 0
+      ? `${aggregates.failed_cases} execution error${aggregates.failed_cases > 1 ? 's' : ''} (0 completed)`
+      : aggregates.failed_cases > 0
+      ? `${passedCasesCount} of ${aggregates.completed_cases} completed passed (${aggregates.failed_cases} error${aggregates.failed_cases > 1 ? 's' : ''})`
+      : `${passedCasesCount} of ${aggregates.total_cases} cases passed`;
+
   return (
     <div className="run-metrics-container">
       {/* 4 Summary Cards */}
@@ -51,7 +63,7 @@ export const RunMetricsBreakdown: React.FC<RunMetricsBreakdownProps> = ({ aggreg
         <MetricCard
           title="Overall Pass Rate"
           value={passRateStr}
-          footer={`${aggregates.completed_cases - aggregates.failed_cases} of ${aggregates.total_cases} cases passed`}
+          footer={passRateFooter}
           icon={<CheckCircle2 size={14} />}
         />
         <MetricCard

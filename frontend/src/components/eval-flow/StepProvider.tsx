@@ -36,12 +36,19 @@ export const StepProvider: React.FC<StepProviderProps> = ({
     } catch {
       setOllamaReport({
         connected: false,
+        is_reachable: false,
         base_url: 'http://localhost:11434',
         version: null,
-        models_count: 0,
         models: [],
+        installed_models: [],
+        models_count: 0,
         error_message: 'Failed to communicate with local Ollama daemon',
         latency_ms: null,
+        status_code: null,
+        status_label: 'offline',
+        setup_instructions: [
+          "Ensure the EvalForge20 backend is running: uvicorn app.main:app --host 127.0.0.1 --port 8000",
+        ],
       });
     } finally {
       setIsChecking(false);

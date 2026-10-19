@@ -123,8 +123,23 @@ export const CaseResultsTable: React.FC<CaseResultsTableProps> = ({ cases, isLoa
       header: 'Metric Verdicts',
       width: '180px',
       render: (c) => {
+        if (c.error_category) {
+          const label =
+            c.error_category === 'authentication_error'
+              ? 'AUTH ERROR'
+              : c.error_category.replace(/_/g, ' ').toUpperCase();
+          return (
+            <Badge variant="error" title={c.error_message || undefined}>
+              {label}
+            </Badge>
+          );
+        }
         if (c.error_message) {
-          return <Badge variant="error">ERROR</Badge>;
+          return (
+            <Badge variant="error" title={c.error_message}>
+              ERROR
+            </Badge>
+          );
         }
         if (!c.metrics || c.metrics.length === 0) {
           return <Badge variant="neutral">No Metrics</Badge>;

@@ -24,7 +24,7 @@ import { SettingsPage } from './pages/SettingsPage';
 
 export function AppContent() {
   const [currentRoute, setCurrentRoute] = useState<NavRoute>('overview');
-  const [activeRunId, setActiveRunId] = useState<string>('run_851c7adf7d6a');
+  const [activeRunId, setActiveRunId] = useState<string>('');
   const [currentWorkspace, setCurrentWorkspace] = useState<string>('reddy895/EvalForge20');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);

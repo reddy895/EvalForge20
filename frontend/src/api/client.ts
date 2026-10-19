@@ -144,6 +144,11 @@ export const api = {
   getOllamaStatus: () => request<OllamaDiagnosticReport>('/v1/ollama/status'),
   listModels: () => request<DetailedModel[]>('/v1/models'),
   listProviders: () => request<string[]>('/v1/providers'),
+  pullOllamaModel: (model: string) =>
+    request<{ model: string; status: string; message: string }>('/v1/ollama/models/pull', {
+      method: 'POST',
+      body: JSON.stringify({ model }),
+    }),
 
   // Evaluators & Metrics
   listMetrics: () => request<MetricDefinition[]>('/v1/metrics'),
@@ -205,12 +210,19 @@ export const apiClient = {
     } catch {
       return {
         connected: false,
+        is_reachable: false,
         base_url: 'http://localhost:11434',
         version: null,
-        models_count: 0,
         models: [],
-        error_message: 'Daemon not reachable',
+        installed_models: [],
+        models_count: 0,
+        error_message: 'Backend not reachable — start the EvalForge20 server.',
         latency_ms: null,
+        status_code: null,
+        status_label: 'offline',
+        setup_instructions: [
+          "Start the backend: cd <repo> && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
+        ],
       };
     }
   },

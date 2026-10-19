@@ -24,12 +24,17 @@ describe('StepProvider Component', () => {
   it('displays online status and installed models when Ollama is running', async () => {
     vi.spyOn(api, 'getOllamaStatus').mockResolvedValueOnce({
       connected: true,
+      is_reachable: true,
       base_url: 'http://localhost:11434',
       version: '0.3.14',
-      models_count: 2,
       models: ['qwen2.5:3b', 'llama3.2:3b'],
+      installed_models: ['qwen2.5:3b', 'llama3.2:3b'],
+      models_count: 2,
       error_message: null,
       latency_ms: 14.2,
+      status_code: 200,
+      status_label: 'online',
+      setup_instructions: [],
     });
 
     vi.spyOn(api, 'listModels').mockResolvedValueOnce([
@@ -69,12 +74,17 @@ describe('StepProvider Component', () => {
   it('displays offline status and troubleshooting commands when Ollama is not reachable', async () => {
     vi.spyOn(api, 'getOllamaStatus').mockResolvedValueOnce({
       connected: false,
+      is_reachable: false,
       base_url: 'http://localhost:11434',
       version: null,
-      models_count: 0,
       models: [],
+      installed_models: [],
+      models_count: 0,
       error_message: 'Connection refused',
       latency_ms: null,
+      status_code: null,
+      status_label: 'offline',
+      setup_instructions: [],
     });
 
     const onChange = vi.fn();
@@ -94,12 +104,17 @@ describe('StepProvider Component', () => {
   it('allows switching between installed dropdown and manual identifier input', async () => {
     vi.spyOn(api, 'getOllamaStatus').mockResolvedValueOnce({
       connected: true,
+      is_reachable: true,
       base_url: 'http://localhost:11434',
       version: '0.3.14',
-      models_count: 1,
       models: ['qwen2.5:3b'],
+      installed_models: ['qwen2.5:3b'],
+      models_count: 1,
       error_message: null,
       latency_ms: 10,
+      status_code: 200,
+      status_label: 'online',
+      setup_instructions: [],
     });
 
     vi.spyOn(api, 'listModels').mockResolvedValueOnce([

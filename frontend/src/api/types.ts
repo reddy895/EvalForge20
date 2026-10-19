@@ -225,13 +225,24 @@ export interface CreateEvaluationPayload {
 }
 
 export interface OllamaDiagnosticReport {
+  /** True when Ollama daemon is reachable. Serialized from is_reachable field. */
   connected: boolean;
+  /** Raw field — same as connected. Use connected for boolean checks. */
+  is_reachable: boolean;
   base_url: string;
   version: string | null;
-  models_count: number;
+  /** Serialized alias for installed_models array. */
   models: string[];
+  /** Installed model names. Same as models. */
+  installed_models: string[];
+  /** Count of installed models. */
+  models_count: number;
   error_message: string | null;
   latency_ms: number | null;
+  status_code: number | null;
+  /** Status label: 'online' | 'no_models_installed' | 'offline' */
+  status_label: 'online' | 'no_models_installed' | 'offline';
+  setup_instructions: string[];
 }
 
 export interface DetailedModel {

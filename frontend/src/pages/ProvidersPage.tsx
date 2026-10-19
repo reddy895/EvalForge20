@@ -21,12 +21,17 @@ export const ProvidersPage: React.FC = () => {
       const [ollamaRes, readyRes, lsRes] = await Promise.all([
         api.getOllamaStatus().catch((e) => ({
           connected: false,
+          is_reachable: false,
           base_url: 'http://localhost:11434',
           version: null,
-          models_count: 0,
           models: [],
+          installed_models: [],
+          models_count: 0,
           error_message: e.message || 'Ollama daemon unreachable',
           latency_ms: null,
+          status_code: null,
+          status_label: 'offline' as const,
+          setup_instructions: [],
         })),
         api.getReadiness().catch(() => null),
         api.getLangSmithStatus().catch(() => null),

@@ -1,11 +1,8 @@
 """Tests validating backend modules and entrypoint integrity."""
 
+from backend.app.core.config import get_settings
+from backend.app.main import app
 from fastapi.testclient import TestClient
-
-from app.config import get_settings
-from app.evaluators.registry import registry
-from app.main import app
-from app.providers.registry import provider_registry
 
 
 def test_backend_app_instance():
@@ -17,8 +14,7 @@ def test_backend_app_instance():
 
 
 def test_backend_submodules_importable():
-    """Verify core, schemas, services, providers, evaluators, db are imported cleanly."""
+    """Verify core configuration and routes are mounted cleanly."""
     settings = get_settings()
     assert settings is not None
-    assert "exact_match" in registry.list_metric_ids()
-    assert "mock" in provider_registry.list_providers()
+    assert settings.ollama_base_url is not None

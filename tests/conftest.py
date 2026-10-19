@@ -4,7 +4,8 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
-from app.config import get_settings
+from backend.app.core.config import get_settings
+from backend.app.db.database import init_db
 
 
 @pytest.fixture(autouse=True)
@@ -13,16 +14,9 @@ def clean_environment(
 ) -> Generator[None, None, None]:
     """Isolate environment variables and use temporary database for all tests."""
     test_db = tmp_path / "test_evalforge20.db"
-    monkeypatch.setenv("EVALFORGE20_ENV", "testing")
-    monkeypatch.setenv("EVALFORGE20_DATABASE_URL", f"sqlite:///{test_db}")
-    monkeypatch.setenv("EVALFORGE20_DATA_DIR", str(tmp_path / "data"))
-    monkeypatch.setenv("LANGSMITH_TRACING", "false")
-    monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{test_db}")
 
-    # Invalidate cached settings
     get_settings.cache_clear()
-    from app.storage.database import init_db
-
     init_db()
     yield
     get_settings.cache_clear()

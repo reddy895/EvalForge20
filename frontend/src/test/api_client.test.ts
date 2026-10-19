@@ -1,120 +1,110 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { apiClient } from '../api/client'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { api } from '../services/api';
 
-describe('apiClient', () => {
-  const originalFetch = globalThis.fetch
+describe('Frontend API Client (services/api)', () => {
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
-    globalThis.fetch = vi.fn()
-  })
+    globalThis.fetch = vi.fn();
+  });
 
   afterEach(() => {
-    globalThis.fetch = originalFetch
-  })
+    globalThis.fetch = originalFetch;
+  });
 
   it('fetches health status correctly', async () => {
-    const mockHealth = { status: 'healthy', version: '0.1.0' }
+    const mockHealth = { status: 'healthy', app: 'EvalForge20', version: '2.0.0' };
     vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockHealth,
-    } as Response)
+    } as Response);
 
-    const result = await apiClient.getHealth()
-    expect(result).toEqual(mockHealth)
-    expect(globalThis.fetch).toHaveBeenCalledWith('/health', expect.any(Object))
-  })
+    const result = await api.getHealth();
+    expect(result).toEqual(mockHealth);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/health'),
+      expect.any(Object)
+    );
+  });
 
-  it('fetches evaluations with query parameters', async () => {
-    const mockRuns = [
+  it('fetches model catalog with filter parameters', async () => {
+    const mockModels = [
       {
-        id: 'eval_123',
-        model_name: 'llama3:8b',
-        dataset_name: 'trivia',
-        status: 'COMPLETED',
-        created_at: '2026-03-30T10:00:00Z',
+        id: 'meta-llama/llama-3.1-8b-instruct',
+        name: 'Llama 3.1 8B Instruct',
+        provider: 'Meta',
+        model_identifier: 'llama3.1:8b',
+        family: 'Llama 3.1',
+        context_window: 128000,
+        is_local: true,
+        is_installed: true,
+        supports_tools: true,
+        supports_structured_output: true,
+        license: 'Llama 3.1 Community License',
+        hardware_min_ram_gb: 16,
+        recommended_tasks: ['coding', 'reasoning'],
+        pricing_summary: 'Free Local Execution',
       },
-    ]
+    ];
+
     vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockRuns,
-    } as Response)
+      json: async () => mockModels,
+    } as Response);
 
-    const result = await apiClient.getEvaluations({ limit: 10, status: 'COMPLETED' })
-    expect(result).toEqual(mockRuns)
+    const result = await api.listModels({ provider: 'Meta', is_local: true });
+    expect(result).toEqual(mockModels);
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      '/v1/evaluations?limit=10&status=COMPLETED',
+      expect.stringContaining('/v1/models?provider=Meta&is_local=true'),
       expect.any(Object)
-    )
-  })
+    );
+  });
 
-  it('handles Ollama daemon connection error safely', async () => {
+  it('fetches benchmark definitions', async () => {
+    const mockBenchmarks = [
+      {
+        id: 'coding_basics',
+        name: 'Python Function Implementations',
+        task: 'coding',
+        description: 'Tests Python functions',
+        total_cases: 5,
+      },
+    ];
+
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockBenchmarks,
+    } as Response);
+
+    const result = await api.listBenchmarks();
+    expect(result).toEqual(mockBenchmarks);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/benchmarks'),
+      expect.any(Object)
+    );
+  });
+
+  it('handles Ollama daemon connection error safely without throwing', async () => {
     vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: false,
       status: 503,
       statusText: 'Service Unavailable',
-      json: async () => ({ detail: 'Ollama daemon not reachable at http://localhost:11434' }),
-    } as Response)
+      json: async () => ({ detail: 'Ollama daemon unreachable' }),
+    } as Response);
 
-    const status = await apiClient.checkOllamaStatus()
-    expect(status.connected).toBe(false)
-    expect(status.models).toEqual([])
-  })
+    const status = await api.getOllamaStatus();
+    expect(status.online).toBe(false);
+    expect(status.models).toEqual([]);
+  });
 
   it('throws descriptive error on failed API requests', async () => {
     vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: false,
       status: 404,
       statusText: 'Not Found',
-      json: async () => ({ detail: 'Run eval_unknown not found' }),
-    } as Response)
+      json: async () => ({ message: 'Model non-existent not found' }),
+    } as Response);
 
-    await expect(apiClient.getEvaluation('eval_unknown')).rejects.toThrow('Run eval_unknown not found')
-  })
-
-  it('fetches model catalog with provider query parameters', async () => {
-    const mockCatalog = [
-      {
-        name: 'Qwen 2.5 3B',
-        provider: 'ollama',
-        model_identifier: 'qwen2.5:3b',
-        is_local: true,
-        modalities: ['text'],
-        supports_tools: true,
-        supports_structured_output: true,
-        connection_status: 'online',
-      },
-    ]
-    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockCatalog,
-    } as Response)
-
-    const result = await apiClient.listCatalogModels({ provider: 'ollama', is_local: true })
-    expect(result).toEqual(mockCatalog)
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      '/v1/catalog/models?provider=ollama&is_local=true',
-      expect.any(Object)
-    )
-  })
-
-  it('fetches task and complexity analysis for an evaluation run', async () => {
-    const mockAnalysis = {
-      run_id: 'run-101',
-      model_identifier: 'qwen2.5:3b',
-      categories: [
-        { category: 'Reasoning', total_cases: 10, pass_rate: 0.9, mean_latency_ms: 120, failure_rate: 0.1, estimated_cost_per_task: 0, representative_failures: [] }
-      ],
-      complexity_bands: [
-        { band: 'low', case_count: 5, pass_rate: 1.0, mean_latency_ms: 80, has_sufficient_data: true }
-      ]
-    }
-    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockAnalysis,
-    } as Response)
-
-    const result = await apiClient.getTaskAnalysis('run-101')
-    expect(result).toEqual(mockAnalysis)
-    expect(globalThis.fetch).toHaveBeenCalledWith('/v1/task-analysis/run-101', expect.any(Object))
-  })
-})
+    await expect(api.getModelProfile('non-existent')).rejects.toThrow('Model non-existent not found');
+  });
+});

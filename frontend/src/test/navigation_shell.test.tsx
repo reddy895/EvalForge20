@@ -1,102 +1,89 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Sidebar } from '../components/shell/Sidebar';
-import { TopBar } from '../components/shell/TopBar';
-import { MobileDrawer } from '../components/shell/MobileDrawer';
+import { Navigation } from '../app/Navigation';
+import type { OllamaStatusReport } from '../types';
 
-describe('Sidebar Navigation Shell', () => {
-  it('renders brand title and primary navigation items', () => {
+describe('Navigation component', () => {
+  const mockStatusOnline: OllamaStatusReport = {
+    is_reachable: true,
+    base_url: 'http://localhost:11434',
+    installed_models: ['llama3.2:3b'],
+    models_count: 1,
+    status_label: 'online',
+    setup_instructions: [],
+  };
+
+  const mockStatusOffline: OllamaStatusReport = {
+    is_reachable: false,
+    base_url: 'http://localhost:11434',
+    installed_models: [],
+    models_count: 0,
+    status_label: 'offline',
+    setup_instructions: ['Run: ollama serve'],
+  };
+
+  it('renders brand title and all 5 primary minimal navigation tabs', () => {
     const onRouteChange = vi.fn();
-    render(<Sidebar currentRoute="overview" onRouteChange={onRouteChange} systemReady={true} />);
+    render(
+      <Navigation
+        activeRoute="catalog"
+        onRouteChange={onRouteChange}
+        ollamaStatus={mockStatusOnline}
+      />
+    );
 
-    expect(screen.getByText('EvalForge20')).toBeInTheDocument();
-    expect(screen.getByText('Overview')).toBeInTheDocument();
-    expect(screen.getAllByText('New Evaluation').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Evaluation Runs')).toBeInTheDocument();
-    expect(screen.getByText('Model Catalog')).toBeInTheDocument();
+    expect(screen.getByText('EvalForge')).toBeInTheDocument();
+    expect(screen.getByText('Explore Models')).toBeInTheDocument();
     expect(screen.getByText('Compare Models')).toBeInTheDocument();
-    expect(screen.getByText('Task Analysis')).toBeInTheDocument();
-    expect(screen.getByText('Local Engine Ready')).toBeInTheDocument();
+    expect(screen.getByText('Evaluate Locally')).toBeInTheDocument();
+    expect(screen.getByText('Evaluation History')).toBeInTheDocument();
+    expect(screen.getByText('Settings & Daemon')).toBeInTheDocument();
   });
 
-  it('triggers route changes when navigation links are clicked', () => {
+  it('triggers route changes when navigation tabs are clicked', () => {
     const onRouteChange = vi.fn();
-    render(<Sidebar currentRoute="overview" onRouteChange={onRouteChange} />);
+    render(
+      <Navigation
+        activeRoute="catalog"
+        onRouteChange={onRouteChange}
+        ollamaStatus={mockStatusOnline}
+      />
+    );
 
     fireEvent.click(screen.getByText('Compare Models'));
     expect(onRouteChange).toHaveBeenCalledWith('compare');
 
-    fireEvent.click(screen.getByText('Model Catalog'));
-    expect(onRouteChange).toHaveBeenCalledWith('catalog');
+    fireEvent.click(screen.getByText('Evaluate Locally'));
+    expect(onRouteChange).toHaveBeenCalledWith('evaluate');
 
-    fireEvent.click(screen.getByText('Task Analysis'));
-    expect(onRouteChange).toHaveBeenCalledWith('task-analysis');
+    fireEvent.click(screen.getByText('Evaluation History'));
+    expect(onRouteChange).toHaveBeenCalledWith('history');
+
+    fireEvent.click(screen.getByText('Settings & Daemon'));
+    expect(onRouteChange).toHaveBeenCalledWith('settings');
   });
 
-  it('indicates system disconnection when systemReady is false', () => {
-    render(<Sidebar currentRoute="overview" onRouteChange={vi.fn()} systemReady={false} />);
-    expect(screen.getByText('Backend Disconnected')).toBeInTheDocument();
-  });
-});
-
-describe('TopBar Component', () => {
-  it('renders workspace select and live Ollama daemon badge', () => {
-    const onWorkspaceChange = vi.fn();
-    const onToggleMenu = vi.fn();
-    const onRefresh = vi.fn();
-
+  it('displays online daemon indicator when Ollama is running', () => {
     render(
-      <TopBar
-        currentWorkspace="reddy895/EvalForge20"
-        onWorkspaceChange={onWorkspaceChange}
-        onToggleMobileMenu={onToggleMenu}
-        ollamaConnected={true}
-        onRefreshStatus={onRefresh}
+      <Navigation
+        activeRoute="catalog"
+        onRouteChange={vi.fn()}
+        ollamaStatus={mockStatusOnline}
       />
     );
 
-    expect(screen.getByText('Ollama: 11434 (Active)')).toBeInTheDocument();
-
-    const syncBtn = screen.getByRole('button', { name: /refresh system status/i });
-    fireEvent.click(syncBtn);
-    expect(onRefresh).toHaveBeenCalledTimes(1);
-
-    const toggleBtn = screen.getByRole('button', { name: /open mobile navigation menu/i });
-    fireEvent.click(toggleBtn);
-    expect(onToggleMenu).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(/1 Installed/i)).toBeInTheDocument();
   });
-});
 
-describe('MobileDrawer Component', () => {
-  it('renders when open and handles route selection and dismissal', () => {
-    const onClose = vi.fn();
-    const onRouteChange = vi.fn();
-
-    const { rerender } = render(
-      <MobileDrawer
-        isOpen={false}
-        onClose={onClose}
-        currentRoute="overview"
-        onRouteChange={onRouteChange}
+  it('displays offline indicator when Ollama is offline', () => {
+    render(
+      <Navigation
+        activeRoute="catalog"
+        onRouteChange={vi.fn()}
+        ollamaStatus={mockStatusOffline}
       />
     );
 
-    expect(screen.queryByRole('dialog')).not.toHaveClass('open');
-
-    rerender(
-      <MobileDrawer
-        isOpen={true}
-        onClose={onClose}
-        currentRoute="overview"
-        onRouteChange={onRouteChange}
-      />
-    );
-
-    expect(screen.getByRole('dialog')).toHaveClass('open');
-
-    const datasetsBtn = screen.getByRole('button', { name: /datasets/i });
-    fireEvent.click(datasetsBtn);
-    expect(onRouteChange).toHaveBeenCalledWith('datasets');
-    expect(onClose).toHaveBeenCalled();
+    expect(screen.getByText(/Offline/i)).toBeInTheDocument();
   });
 });

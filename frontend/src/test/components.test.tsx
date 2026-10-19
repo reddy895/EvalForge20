@@ -39,7 +39,7 @@ describe('Button component', () => {
   it('disables button when disabled or loading prop is set', () => {
     const handleClick = vi.fn()
     const { rerender } = render(<Button disabled onClick={handleClick}>Disabled</Button>)
-    const button = screen.getByText('Disabled') as HTMLButtonElement
+    const button = screen.getByRole('button') as HTMLButtonElement
     expect(button.disabled).toBe(true)
     fireEvent.click(button)
     expect(handleClick).not.toHaveBeenCalled()

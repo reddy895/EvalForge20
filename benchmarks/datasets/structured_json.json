@@ -1,0 +1,19 @@
+{
+  "task_id": "structured_json",
+  "name": "JSON Schema & Structured Extraction",
+  "description": "Tests models on adhering strictly to required JSON object formats with field constraints.",
+  "cases": [
+    {
+      "id": "json_01",
+      "prompt": "Extract the person information from: 'Alice Chen is a 29-year-old Senior Backend Architect residing in Zurich, Switzerland.' Respond ONLY with valid JSON having keys 'name' (string), 'age' (integer), 'role' (string), 'location' (string).",
+      "expected_output": "{\"name\": \"Alice Chen\", \"age\": 29, \"role\": \"Senior Backend Architect\", \"location\": \"Zurich, Switzerland\"}",
+      "assertions": ["\"name\"", "\"age\": 29", "\"role\"", "\"location\""]
+    },
+    {
+      "id": "json_02",
+      "prompt": "Convert this product report into JSON: 'Model SKU-9901 weighs 420 grams, costs $14.99, and has 85 units left in warehouse B.' Respond ONLY with valid JSON with keys: 'sku', 'weight_grams', 'price_usd', 'stock', 'warehouse'.",
+      "expected_output": "{\"sku\": \"SKU-9901\", \"weight_grams\": 420, \"price_usd\": 14.99, \"stock\": 85, \"warehouse\": \"B\"}",
+      "assertions": ["\"sku\": \"SKU-9901\"", "\"price_usd\": 14.99", "\"stock\": 85"]
+    }
+  ]
+}

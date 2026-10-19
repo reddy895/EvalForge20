@@ -1,0 +1,25 @@
+{
+  "task_id": "coding_basics",
+  "name": "Python Algorithm & Function Synthesis",
+  "description": "Tests code generation, function signatures, syntax correctness, and expected output.",
+  "cases": [
+    {
+      "id": "code_01",
+      "prompt": "Write a Python function named `is_palindrome(s: str) -> bool` that returns True if the string is a palindrome ignoring casing and non-alphanumeric characters, and False otherwise. Return only the function code.",
+      "expected_output": "def is_palindrome(s: str) -> bool:\n    cleaned = [c.lower() for c in s if c.isalnum()]\n    return cleaned == cleaned[::-1]",
+      "assertions": ["def is_palindrome", "isalnum", "return"]
+    },
+    {
+      "id": "code_02",
+      "prompt": "Write a Python function named `fibonacci(n: int) -> int` that returns the n-th Fibonacci number with fibonacci(0) = 0 and fibonacci(1) = 1. Return only the function code.",
+      "expected_output": "def fibonacci(n: int) -> int:\n    if n <= 0:\n        return 0\n    elif n == 1:\n        return 1\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b",
+      "assertions": ["def fibonacci", "return"]
+    },
+    {
+      "id": "code_03",
+      "prompt": "Write a Python function `two_sum(nums: list[int], target: int) -> list[int]` that returns the indices of the two numbers such that they add up to target. Return only the function.",
+      "expected_output": "def two_sum(nums: list[int], target: int) -> list[int]:\n    seen = {}\n    for i, num in enumerate(nums):\n        diff = target - num\n        if diff in seen:\n            return [seen[diff], i]\n        seen[num] = i\n    return []",
+      "assertions": ["def two_sum", "enumerate", "return"]
+    }
+  ]
+}

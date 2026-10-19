@@ -104,4 +104,16 @@ def test_deepseek_v3_and_gpt4o_profiles():
     assert any(b["benchmark_name"] == "HumanEval" for b in gpt["benchmarks"])
 
 
+def test_search_by_architecture_and_license():
+    """Verify search finds models matching architecture or license keywords."""
+    resp_arch = client.get("/v1/models?query=transformer")
+    assert resp_arch.status_code == 200
+    assert len(resp_arch.json()) > 0
+
+    resp_lic = client.get("/v1/models?query=apache")
+    assert resp_lic.status_code == 200
+    assert any("apache" in m["license"].lower() for m in resp_lic.json())
+
+
+
 

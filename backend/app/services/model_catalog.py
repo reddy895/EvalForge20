@@ -950,6 +950,9 @@ class ModelCatalogService:
                     or q in p.model_identifier.lower()
                     or q in p.family.lower()
                     or q in p.provider.lower()
+                    or q in (p.architecture or "").lower()
+                    or q in (p.description or "").lower()
+                    or q in (p.license or "").lower()
                     or any(q in t.lower() for t in p.recommended_tasks)
                 )
                 if not matches:
@@ -993,6 +996,45 @@ class ModelCatalogService:
                     pricing_summary=price_str,
                 )
             )
+
+        # Append dynamic installed Ollama models not present in curated catalog
+        catalog_identifiers = {p.model_identifier for p in VERIFIED_CATALOG}
+        for installed_tag in installed_set:
+            if installed_tag not in catalog_identifiers:
+                if provider and "ollama" not in provider.lower():
+                    continue
+                if is_local is False:
+                    continue
+                if is_installed is False:
+                    continue
+                if task and task.lower() not in ["local_inference", "general_reasoning"]:
+                    continue
+                if query:
+                    q = query.lower()
+                    if q not in installed_tag.lower() and "ollama" not in q:
+                        continue
+
+                summaries.append(
+                    ModelSummary(
+                        id=f"ollama-{installed_tag.replace(':', '-')}",
+                        name=f"{installed_tag} (Installed Local)",
+                        provider="Ollama Local",
+                        model_identifier=installed_tag,
+                        family="Local Ollama",
+                        parameter_count="Discovered",
+                        context_window=8192,
+                        is_local=True,
+                        is_installed=True,
+                        supports_tools=False,
+                        supports_structured_output=True,
+                        license="Refer to model card",
+                        hardware_min_ram_gb=4.0,
+                        recommended_tasks=["general_reasoning", "local_inference"],
+                        headline_benchmark_score=None,
+                        headline_benchmark_name="Unbenchmarked",
+                        pricing_summary="Free (Local)",
+                    )
+                )
 
         # Sorting
         if sort_by == "benchmark":

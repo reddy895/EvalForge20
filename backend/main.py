@@ -1,17 +1,21 @@
 """
 Backend entry point proxy.
 Allows starting the FastAPI application directly from the `backend/` directory:
-    cd backend && uvicorn main:app --reload --port 8000
+    cd backend && uvicorn app.main:app --reload --port 8000
 """
 
 import sys
 from pathlib import Path
 
-# Add project root to sys.path so `app` can be imported
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+BACKEND_DIR = Path(__file__).resolve().parent
+for p in (PROJECT_ROOT, BACKEND_DIR):
+    if str(p) not in sys.path:
+        sys.path.insert(0, str(p))
 
-from app.main import app  # noqa: E402
+try:
+    from backend.app.main import app
+except ImportError:
+    from app.main import app  # type: ignore
 
 __all__ = ["app"]

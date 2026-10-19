@@ -1,18 +1,57 @@
-"""Data contracts and schemas for EvalForge20."""
+"""Pydantic request and response schemas for EvalForge20."""
 
-from app.domain.contracts import EvaluatorContract, ProviderRequest, ProviderResponse
-from app.domain.models import EvaluationCase, EvaluationDataset
-from app.domain.results import AggregateMetrics, CaseResult, EvaluatorMetricResult
-from app.domain.state import EvaluationRunStatus
+from backend.app.schemas.comparisons import (
+    ComparisonRow,
+    ModelComparisonRequest,
+    ModelComparisonResult,
+)
+from backend.app.schemas.evaluations import (
+    AggregateMetrics,
+    CaseMetricResult,
+    CaseResult,
+    EvaluationCase,
+    EvaluationRunCreate,
+    EvaluationRunDetail,
+    EvaluationRunSummary,
+)
+from backend.app.schemas.models import (
+    BenchmarkResult,
+    HardwareRequirements,
+    ModelPricing,
+    ModelProfile,
+    ModelSummary,
+    OllamaModelPullRequest,
+    OllamaModelPullResponse,
+    OllamaStatusReport,
+)
+from backend.app.schemas.recommendations import (
+    HardwareProfileInput,
+    ModelRecommendation,
+    TaskRecommendationRequest,
+    TaskRecommendationResponse,
+)
 
 __all__ = [
-    "EvaluationCase",
-    "EvaluationDataset",
-    "EvaluatorContract",
-    "ProviderRequest",
-    "ProviderResponse",
-    "CaseResult",
+    "BenchmarkResult",
+    "HardwareRequirements",
+    "ModelPricing",
+    "ModelProfile",
+    "ModelSummary",
+    "OllamaModelPullRequest",
+    "OllamaModelPullResponse",
+    "OllamaStatusReport",
     "AggregateMetrics",
-    "EvaluatorMetricResult",
-    "EvaluationRunStatus",
+    "CaseMetricResult",
+    "CaseResult",
+    "EvaluationCase",
+    "EvaluationRunCreate",
+    "EvaluationRunDetail",
+    "EvaluationRunSummary",
+    "HardwareProfileInput",
+    "ModelRecommendation",
+    "TaskRecommendationRequest",
+    "TaskRecommendationResponse",
+    "ComparisonRow",
+    "ModelComparisonRequest",
+    "ModelComparisonResult",
 ]

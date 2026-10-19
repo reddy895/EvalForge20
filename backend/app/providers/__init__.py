@@ -1,13 +1,7 @@
-"""Provider adapters and registry for EvalForge20."""
+"""Provider adapters for local Ollama and deterministic mock execution."""
 
-from app.providers.base import BaseProvider
-from app.providers.mock import DeterministicMockProvider
-from app.providers.ollama import OllamaProvider
-from app.providers.registry import provider_registry
+from backend.app.services.ollama_service import OllamaService
 
 __all__ = [
-    "BaseProvider",
-    "provider_registry",
-    "OllamaProvider",
-    "DeterministicMockProvider",
+    "OllamaService",
 ]

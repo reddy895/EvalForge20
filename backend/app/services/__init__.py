@@ -1,13 +1,15 @@
-"""Application services for EvalForge20."""
+"""Application domain services for EvalForge20."""
 
-from app.comparisons.service import ComparisonService
-from app.runner.config import EvaluationRunConfig, EvaluatorRunConfig, TargetModelConfig
-from app.runner.engine import EvaluationRunner
+from backend.app.services.benchmark_service import BenchmarkService
+from backend.app.services.comparison_service import ComparisonService
+from backend.app.services.model_catalog import ModelCatalogService
+from backend.app.services.ollama_service import OllamaService
+from backend.app.services.recommendation_service import RecommendationService
 
 __all__ = [
-    "EvaluationRunner",
-    "EvaluationRunConfig",
-    "TargetModelConfig",
-    "EvaluatorRunConfig",
+    "BenchmarkService",
     "ComparisonService",
+    "ModelCatalogService",
+    "OllamaService",
+    "RecommendationService",
 ]

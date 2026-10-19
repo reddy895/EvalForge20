@@ -1,9 +1,15 @@
-"""Evaluator contracts and registry for EvalForge20."""
+"""Evaluators package for EvalForge20."""
 
-from app.domain.contracts import EvaluatorContract
-from app.evaluators.registry import registry
+from backend.app.evaluators.deterministic import (
+    ExactMatchEvaluator,
+    JsonValidityEvaluator,
+    KeywordContainsEvaluator,
+    NormalizedMatchEvaluator,
+)
 
 __all__ = [
-    "registry",
-    "EvaluatorContract",
+    "ExactMatchEvaluator",
+    "NormalizedMatchEvaluator",
+    "KeywordContainsEvaluator",
+    "JsonValidityEvaluator",
 ]

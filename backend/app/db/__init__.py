@@ -1,10 +1,11 @@
-"""Database storage and repositories for EvalForge20."""
+"""Database connection and session lifecycle for EvalForge20."""
 
-from app.storage.database import get_db_session, init_db
-from app.storage.repositories import EvaluationRepository
+from backend.app.db.database import Base, SessionLocal, engine, get_db, init_db
 
 __all__ = [
-    "get_db_session",
+    "Base",
+    "SessionLocal",
+    "engine",
+    "get_db",
     "init_db",
-    "EvaluationRepository",
 ]

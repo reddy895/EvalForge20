@@ -47,3 +47,23 @@ def test_get_model_profile_not_found():
     """Verify 404 on nonexistent model."""
     resp = client.get("/v1/models/nonexistent-model-xyz")
     assert resp.status_code == 404
+
+
+def test_mistral_catalog_and_profile():
+    """Verify Mistral 7B and NeMo 12B exist with verified Apache 2.0 license."""
+    resp = client.get("/v1/models?query=mistral")
+    assert resp.status_code == 200
+    models = resp.json()
+    assert len(models) >= 2
+    ids = [m["id"] for m in models]
+    assert "mistral-7b-instruct-v0.3" in ids
+    assert "mistral-nemo-12b-instruct" in ids
+
+    profile_resp = client.get("/v1/models/mistral-7b-instruct-v0.3")
+    assert profile_resp.status_code == 200
+    p = profile_resp.json()
+    assert p["provider"] == "Mistral AI"
+    assert p["license"] == "Apache 2.0"
+    assert p["supports_tools"] is True
+    assert any(b["benchmark_name"] == "MMLU" for b in p["benchmarks"])
+

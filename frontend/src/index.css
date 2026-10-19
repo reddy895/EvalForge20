@@ -1,4 +1,3 @@
-/* EvalForge20 Main CSS Entrypoint with Tailwind CSS v4 */
 @import "tailwindcss";
 
 @theme {
@@ -8,6 +7,7 @@
   --color-burnt-orange: #D9823B;
   --color-muted-gray: #A6A49D;
   --color-soft-border: #41413B;
+
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -19,62 +19,38 @@
 
 @import './styles/tokens.css';
 @import './styles/typography.css';
-@import './styles/layout.css';
-@import './styles/reset.css';
 
-/* Layout Containers & Sections */
-.container-custom {
-  width: 100%;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 24px;
-  padding-right: 24px;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-.section-container {
-  padding-top: 80px;
-  padding-bottom: 80px;
-  position: relative;
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
 }
 
-@media (max-width: 768px) {
-  .section-container {
-    padding-top: 56px;
-    padding-bottom: 56px;
-  }
-  .container-custom {
-    padding-left: 16px;
-    padding-right: 16px;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
 
-/* Alternating Light Ivory Section Style */
-.ivory-section {
-  background-color: var(--ivory-bg);
-  color: var(--ivory-text-primary);
+body {
+  min-height: 100vh;
+  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
-.ivory-section .section-title {
-  color: var(--ivory-text-primary);
-}
-
-.ivory-section .section-subtitle {
-  color: var(--ivory-text-secondary);
-}
-
-/* Glassmorphism-free Crisp Card Surface */
-.card-surface {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
-}
-
-.card-surface:hover {
-  border-color: var(--accent-border);
-  box-shadow: var(--shadow-md);
+/* Accessible focus ring */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
 /* Custom Scrollbar */

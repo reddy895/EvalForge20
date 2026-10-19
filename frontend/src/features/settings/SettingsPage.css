@@ -1,0 +1,196 @@
+/* EvalForge20 System Settings & Ollama Daemon Stylesheet */
+
+.settings-page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.settings-header-bar {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.settings-header-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.01em;
+}
+
+.settings-header-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Settings Section Card */
+.settings-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-default);
+  flex-wrap: wrap;
+}
+
+.card-title-group h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.card-endpoint-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.card-endpoint-text span {
+  color: var(--text-primary);
+}
+
+/* Offline Banner */
+.offline-warning-banner {
+  background-color: rgba(229, 139, 69, 0.08);
+  border: 1px solid rgba(229, 139, 69, 0.3);
+  border-radius: var(--radius-xs);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.warning-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+.warning-banner-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.terminal-command-box {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+}
+
+.terminal-command-box::before {
+  content: "$ ";
+  color: var(--accent-primary);
+  margin-right: 6px;
+  user-select: none;
+}
+
+/* Installed Models List */
+.installed-models-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.installed-models-list {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.installed-model-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.installed-model-item:last-child {
+  border-bottom: none;
+}
+
+.model-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.model-item-size {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 10px;
+}
+
+/* Model Pull Form */
+.model-pull-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.pull-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.pull-input {
+  flex: 1;
+  height: 38px;
+  padding: 0 12px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.pull-input:focus {
+  border-color: var(--accent-primary);
+}
+
+/* Hardware Profile Grid */
+.hardware-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .hardware-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

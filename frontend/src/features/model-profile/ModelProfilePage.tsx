@@ -15,6 +15,7 @@ import { api } from '../../services/api';
 import type { ModelProfile } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import './ModelProfilePage.css';
 
 interface ModelProfilePageProps {
   modelId: string;

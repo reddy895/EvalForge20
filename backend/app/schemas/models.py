@@ -131,3 +131,20 @@ class OllamaStatusReport(BaseModel):
     latency_ms: float | None = None
     error_message: str | None = None
     setup_instructions: list[str] = Field(default_factory=list)
+
+
+class OllamaGenerateRequest(BaseModel):
+    model: str = Field(..., description="Model identifier, e.g. 'qwen2.5:3b' or 'mock-model-v1'")
+    prompt: str = Field(..., description="Prompt string for inference")
+    temperature: float = Field(0.0, ge=0.0, le=2.0, description="Sampling temperature")
+
+
+class OllamaGenerateResponse(BaseModel):
+    model: str
+    output: str
+    latency_ms: float
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    is_success: bool = True
+

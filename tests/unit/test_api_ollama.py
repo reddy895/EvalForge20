@@ -78,3 +78,44 @@ def test_ollama_models_endpoint(client: TestClient, monkeypatch: pytest.MonkeyPa
     assert len(data) == 1
     assert data[0]["name"] == "qwen2.5:3b"
     assert data[0]["parameter_size"] == "3B"
+
+
+def test_ollama_pull_endpoint_success(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    """Test POST /v1/ollama/models/pull successfully triggers download."""
+    import httpx
+
+    class MockResponse:
+        status_code = 200
+
+        def json(self):
+            return {"status": "success"}
+
+    async def mock_post(self, url, **kwargs):
+        return MockResponse()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+
+    response = client.post("/v1/ollama/models/pull", json={"model": "qwen2.5:3b"})
+    assert response.status_code == 202
+    data = response.json()
+    assert data["model"] == "qwen2.5:3b"
+    assert data["status"] == "initiated"
+
+
+def test_ollama_pull_endpoint_empty_model(client: TestClient):
+    """Test POST /v1/ollama/models/pull with empty model tag raises 422."""
+    response = client.post("/v1/ollama/models/pull", json={"model": "   "})
+    assert response.status_code == 422
+
+
+def test_ollama_pull_endpoint_connect_error(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    """Test POST /v1/ollama/models/pull returns 503 when Ollama is unreachable."""
+    import httpx
+
+    async def mock_post(self, url, **kwargs):
+        raise httpx.ConnectError("Connection refused")
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+
+    response = client.post("/v1/ollama/models/pull", json={"model": "qwen2.5:3b"})
+    assert response.status_code == 503

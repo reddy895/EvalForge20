@@ -4,7 +4,7 @@ import time
 from typing import Any
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 
 class OllamaDiagnosticReport(BaseModel):
@@ -29,20 +29,33 @@ class OllamaDiagnosticReport(BaseModel):
         default_factory=list, description="Actionable setup steps"
     )
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def connected(self) -> bool:
-        """Alias for is_reachable for frontend compatibility."""
+        """Serialized alias for is_reachable -- consumed by frontend status indicator."""
         return self.is_reachable
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def models(self) -> list[str]:
-        """Alias for installed_models for frontend compatibility."""
+        """Serialized alias for installed_models -- consumed by frontend model picker."""
         return self.installed_models
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def models_count(self) -> int:
-        """Count of installed models."""
+        """Serialized count of locally installed models."""
         return len(self.installed_models)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def status_label(self) -> str:
+        """Human-readable status label: online | no_models_installed | offline."""
+        if not self.is_reachable:
+            return "offline"
+        if not self.installed_models:
+            return "no_models_installed"
+        return "online"
 
 
 def get_ollama_setup_instructions(base_url: str = "http://localhost:11434") -> list[str]:
@@ -142,5 +155,5 @@ async def diagnose_ollama(
         )
 
 
-# Convenient alias
+# Convenient alias used throughout the codebase
 check_ollama_status = diagnose_ollama

@@ -352,7 +352,9 @@ class ModelCatalogService:
                 base_url=settings.ollama_base_url, timeout_seconds=1.5
             )
             ollama_online = ollama_status.is_reachable
-            installed_names = {m.name for m in ollama_status.models}
+            installed_names = {
+                m.name if hasattr(m, "name") else str(m) for m in (ollama_status.models or [])
+            }
 
             for model in list(models_map.values()):
                 if model.provider == "ollama":
@@ -361,18 +363,24 @@ class ModelCatalogService:
 
             # Add any installed Ollama models not in static catalog
             if ollama_online:
-                for om in ollama_status.models:
-                    model_id = f"ollama/{om.name}"
+                for om in ollama_status.models or []:
+                    model_name = om.name if hasattr(om, "name") else str(om)
+                    model_id = f"ollama/{model_name}"
                     if model_id not in models_map:
+                        context_length = getattr(om, "context_length", 8192)
+                        param_size = getattr(om, "parameter_size", None)
+                        quant = getattr(om, "quantization_level", None)
+                        family = getattr(om, "family", None)
+                        size_b = getattr(om, "size_bytes", None)
                         models_map[model_id] = CatalogModel(
                             id=model_id,
-                            model_identifier=om.name,
+                            model_identifier=model_name,
                             provider="ollama",
-                            display_name=f"{om.name} (Local)",
+                            display_name=f"{model_name} (Local)",
                             is_local=True,
                             is_available=True,
                             is_installed=True,
-                            context_window=om.context_length or 8192,
+                            context_window=context_length or 8192,
                             modalities=["text->text"],
                             supports_tools=True,
                             supports_structured_output=True,
@@ -387,10 +395,10 @@ class ModelCatalogService:
                                 assumptions="Locally installed model discovered from running daemon.",
                             ),
                             metadata={
-                                "parameter_size": om.parameter_size,
-                                "quantization_level": om.quantization_level,
-                                "family": om.family,
-                                "size_bytes": om.size_bytes,
+                                "parameter_size": param_size,
+                                "quantization_level": quant,
+                                "family": family,
+                                "size_bytes": size_b,
                             },
                         )
         except Exception:

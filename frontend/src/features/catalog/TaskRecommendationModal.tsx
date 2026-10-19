@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { api } from '../../services/api';
 import type { TaskRecommendationResponse } from '../../types';
+import './TaskRecommendationModal.css';
 
 interface TaskRecommendationModalProps {
   isOpen: boolean;

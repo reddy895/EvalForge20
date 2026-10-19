@@ -71,6 +71,46 @@ TASK_CRITERIA_MAP: dict[str, dict] = {
         ],
         "weights": {"MMLU": 0.5, "context_window": 0.3, "latency": 0.2},
     },
+    "mathematics": {
+        "title": "Mathematical Olympiad & Quantitative Proofs",
+        "primary_benchmark": "MATH & GSM8K",
+        "criteria": [
+            "Accuracy on MATH competition benchmark and GSM8K multi-step arithmetic",
+            "Precision of algebraic manipulation, symbolic calculation, and proof steps",
+            "Absence of numerical and calculation hallucinations",
+        ],
+        "weights": {"MATH": 0.5, "GSM8K": 0.4, "MMLU": 0.1},
+    },
+    "extraction": {
+        "title": "Entity Extraction & Document Parsing",
+        "primary_benchmark": "Structured Output Adherence",
+        "criteria": [
+            "Zero-drift key-value and typed entity extraction from raw text",
+            "Constrained structured decoding support without hallucinating missing fields",
+            "Context window retention for large input documents",
+        ],
+        "weights": {"supports_structured_output": 0.6, "context_window": 0.2, "latency": 0.2},
+    },
+    "multilingual": {
+        "title": "Multilingual Translation & Cross-Lingual Reasoning",
+        "primary_benchmark": "Cross-Lingual MMLU",
+        "criteria": [
+            "Multilingual comprehension across European, Asian, and regional languages",
+            "High-capacity vocabulary tokenizer with low compression overhead",
+            "Cultural context and idiom translation preservation",
+        ],
+        "weights": {"MMLU": 0.5, "HumanEval": 0.3, "context_window": 0.2},
+    },
+    "local_edge": {
+        "title": "Edge & Low-Resource Commodity Hardware Execution",
+        "primary_benchmark": "RAM Feasibility & Latency",
+        "criteria": [
+            "Fits comfortably within <= 8GB system RAM without GPU offloading",
+            "Sub-30ms prompt ingestion latency on standard laptop CPU",
+            "High reasoning density per active billion parameters",
+        ],
+        "weights": {"HumanEval": 0.4, "latency": 0.3, "GSM8K": 0.3},
+    },
 }
 
 
@@ -119,7 +159,7 @@ class RecommendationService:
                     evidence_points.append(f"{b.benchmark_name}: {b.score}% ({b.source})")
 
             # 2. Capability matches
-            if matched_key == "structured_json" and p.supports_structured_output:
+            if matched_key in ("structured_json", "extraction") and p.supports_structured_output:
                 base_score += 15.0
                 evidence_points.append(
                     "Native structured output and constrained JSON support verified"
@@ -127,10 +167,18 @@ class RecommendationService:
             if matched_key in ("agent", "coding") and p.supports_tools:
                 base_score += 10.0
                 evidence_points.append("Verified tool use / function calling support")
-            if matched_key == "rag" and p.context_window >= 32768:
+            if (
+                matched_key in ("rag", "summarization", "extraction", "multilingual")
+                and p.context_window >= 32768
+            ):
                 base_score += 15.0
                 evidence_points.append(
-                    f"Extended context window of {p.context_window:,} tokens supports large document RAG"
+                    f"Extended context window of {p.context_window:,} tokens supports large document workflows"
+                )
+            if matched_key == "local_edge" and p.is_local and p.hardware.min_ram_gb <= 8.0:
+                base_score += 20.0
+                evidence_points.append(
+                    f"Lightweight edge profile: requires only {p.hardware.min_ram_gb}GB RAM"
                 )
 
             # 3. Hardware check
@@ -176,7 +224,10 @@ class RecommendationService:
                     is_installed=is_installed,
                     hardware_fit=fit_label,
                     recommendation_reason=reason,
-                    key_evidence=evidence_points or [f"Trained for {matched_key} workloads"],
+                    key_evidence=evidence_points
+                    or [
+                        "Insufficient empirical benchmark data published for this specific task; ranking estimated from architectural scale and baseline modality support."
+                    ],
                     important_tradeoffs=tradeoffs,
                     evidence_source="Verified Technical Report & Published Benchmark",
                 )

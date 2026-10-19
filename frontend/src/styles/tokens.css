@@ -1,7 +1,7 @@
 /* EvalForge20 Design Tokens — Graphite × Deep Charcoal × Warm Ivory × Burnt Orange */
 
 :root {
-  /* Core Canonical Palette */
+  /* Canonical Palette */
   --color-graphite: #242522;
   --color-charcoal: #191A18;
   --color-warm-ivory: #F5F0E7;
@@ -12,10 +12,10 @@
   /* Surfaces & Backgrounds */
   --bg-primary: #191A18;        /* Deep Charcoal main background */
   --bg-secondary: #242522;      /* Graphite elevated cards and containers */
-  --bg-tertiary: #2D2E2B;       /* Slightly lighter graphite for subtle hierarchy */
-  --bg-hover: #353632;          /* Hover surface */
-  --bg-active: #3D3E3A;         /* Active state surface */
-  --bg-inset: #131412;          /* Darker inset for inputs and terminal snippets */
+  --bg-tertiary: #2C2D2A;       /* Subtle tertiary graphite */
+  --bg-hover: #333430;          /* Hover surface */
+  --bg-active: #3C3D38;         /* Active state surface */
+  --bg-inset: #131412;          /* Inset for inputs and terminal snippets */
 
   /* Alternating Light Ivory Section Tokens */
   --ivory-bg: #F5F0E7;          /* Warm Ivory section background */
@@ -33,7 +33,7 @@
 
   /* Primary Accent — Burnt Orange */
   --accent-primary: #D9823B;
-  --accent-hover: #E3904B;
+  --accent-hover: #E5914C;
   --accent-active: #C4722D;
   --accent-subtle: rgba(217, 130, 59, 0.12);
   --accent-border: rgba(217, 130, 59, 0.4);
@@ -42,7 +42,7 @@
   /* Soft Borders */
   --border-default: #41413B;
   --border-subtle: #2C2D29;
-  --border-strong: #52524B;
+  --border-strong: #54544D;
   --border-focus: #D9823B;
 
   /* Semantic Feedback Tokens */

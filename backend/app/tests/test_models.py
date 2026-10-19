@@ -67,3 +67,23 @@ def test_mistral_catalog_and_profile():
     assert p["supports_tools"] is True
     assert any(b["benchmark_name"] == "MMLU" for b in p["benchmarks"])
 
+
+def test_gemini_catalog_and_profile():
+    """Verify Gemini 1.5 Flash and Pro exist with 1M+ context window."""
+    resp = client.get("/v1/models?query=gemini")
+    assert resp.status_code == 200
+    models = resp.json()
+    assert len(models) >= 2
+    ids = [m["id"] for m in models]
+    assert "gemini-1-5-flash" in ids
+    assert "gemini-1-5-pro" in ids
+
+    profile_resp = client.get("/v1/models/gemini-1-5-pro")
+    assert profile_resp.status_code == 200
+    p = profile_resp.json()
+    assert p["provider"] == "Google"
+    assert p["context_window"] == 2097152
+    assert p["is_local"] is False
+    assert any(b["benchmark_name"] == "GSM8K" for b in p["benchmarks"])
+
+

@@ -1,8 +1,0 @@
-{
-  "task_id": "structured_json",
-  "name": "JSON Schema & Key Extraction",
-  "category": "structured_json",
-  "description": "Validation of structured output against JSON syntax, required fields, and data type assertions.",
-  "evaluator": "json_validity",
-  "dataset_path": "benchmarks/datasets/structured_json.json"
-}

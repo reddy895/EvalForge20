@@ -1,8 +1,0 @@
-{
-  "task_id": "reasoning_math",
-  "name": "Mathematical & Logical Reasoning",
-  "category": "reasoning",
-  "description": "Deterministic evaluation of numerical calculation, step-by-step logic, and symbolic reasoning.",
-  "evaluator": "normalized_match",
-  "dataset_path": "benchmarks/datasets/reasoning_math.json"
-}

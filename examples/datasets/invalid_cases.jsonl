@@ -1,5 +1,0 @@
-{"id":"valid-001","input":"Valid line 1"}
-{This is not valid json
-{"input":"Missing ID field"}
-{"id":"","input":"Empty string ID"}
-{"id":"valid-002","input":12345}

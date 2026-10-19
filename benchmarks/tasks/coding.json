@@ -1,8 +1,0 @@
-{
-  "task_id": "coding_basics",
-  "name": "Python Function Syntheses",
-  "category": "coding",
-  "description": "Deterministic evaluation of basic Python function synthesis and algorithms with exact syntax assertions.",
-  "evaluator": "exact_match",
-  "dataset_path": "benchmarks/datasets/coding_basics.json"
-}

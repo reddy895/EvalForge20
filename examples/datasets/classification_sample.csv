@@ -1,6 +1,0 @@
-id,input,expected_output,category
-cls-001,"The product arrived earlier than expected and works wonderfully!","positive","sentiment"
-cls-002,"Customer support was completely unresponsive and rude.","negative","sentiment"
-cls-003,"The package contained three items as described in the manifest.","neutral","sentiment"
-cls-004,"Can you please refund my purchase order immediately?","refund_request","intent"
-cls-005,"How do I change my billing password?","account_help","intent"

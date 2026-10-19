@@ -3,7 +3,7 @@ import './Badge.css';
 
 export interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'success' | 'error' | 'warning' | 'info' | 'neutral' | 'accent' | 'danger';
+  variant?: 'success' | 'error' | 'warning' | 'info' | 'neutral' | 'accent' | 'danger' | 'task';
   className?: string;
   title?: string;
   showDot?: boolean;
@@ -20,24 +20,10 @@ export const Badge: React.FC<BadgeProps> = ({
 
   return (
     <span
-      className={`badge badge-${normalizedVariant} ${className} inline-flex items-center gap-1.5`}
+      className={`badge badge-${normalizedVariant} ${className}`}
       title={title}
     >
-      {showDot && (
-        <span
-          className={`badge-dot w-1.5 h-1.5 rounded-full ${
-            normalizedVariant === 'success'
-              ? 'bg-[#8BAF78]'
-              : normalizedVariant === 'error'
-              ? 'bg-[#D97767]'
-              : normalizedVariant === 'warning'
-              ? 'bg-[#DE9E4E]'
-              : normalizedVariant === 'accent'
-              ? 'bg-[#E58B45]'
-              : 'bg-[#A5A59A]'
-          }`}
-        />
-      )}
+      {showDot && <span className="badge-dot" />}
       {children}
     </span>
   );

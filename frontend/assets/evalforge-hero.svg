@@ -1,0 +1,49 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="430" viewBox="0 0 1000 430">
+  <defs>
+    <pattern id="whiteDots" width="7" height="7" patternUnits="userSpaceOnUse">
+      <circle cx="3.5" cy="3.5" r="2.1" fill="#F5F0F5"/>
+    </pattern>
+    <pattern id="pinkDots" width="7" height="7" patternUnits="userSpaceOnUse">
+      <circle cx="3.5" cy="3.5" r="2.1" fill="#F5B9DB"/>
+    </pattern>
+    <mask id="whiteMask">
+      <rect width="1000" height="430" fill="black"/>
+      <text x="500" y="175" text-anchor="middle"
+        font-family="monospace" font-size="100" font-weight="bold"
+        textLength="700" lengthAdjust="spacingAndGlyphs" fill="white">EVALFORGE20</text>
+    </mask>
+    <mask id="pinkMask">
+      <rect width="1000" height="430" fill="black"/>
+      <text x="500" y="270" text-anchor="middle"
+        font-family="monospace" font-size="86" font-weight="bold"
+        textLength="650" lengthAdjust="spacingAndGlyphs" fill="white">AI EVALS</text>
+    </mask>
+  </defs>
+
+  <rect width="1000" height="430" rx="16" fill="#111113"/>
+
+  <g opacity="0">
+    <animate attributeName="opacity" from="0" to="1" dur="1.8s" fill="freeze"/>
+    <animateTransform attributeName="transform" type="translate"
+      from="0 22" to="0 0" dur="1.8s" fill="freeze"/>
+
+    <rect width="1000" height="430" fill="url(#whiteDots)" mask="url(#whiteMask)"/>
+    <rect width="1000" height="430" fill="url(#pinkDots)" mask="url(#pinkMask)"/>
+
+    <text x="775" y="105" text-anchor="middle"
+      font-family="cursive" font-size="37" font-style="italic"
+      font-weight="bold" fill="#F5B9DB">intelligence, measured</text>
+
+    <text x="500" y="325" text-anchor="middle"
+      font-family="monospace" font-size="19" letter-spacing="2"
+      fill="#E5DDE5">MODELS  /  AGENTS  /  BENCHMARKS</text>
+
+    <line x1="260" y1="355" x2="740" y2="355"
+      stroke="#F5B9DB" stroke-opacity="0.55"/>
+
+    <text x="500" y="390" text-anchor="middle"
+      font-family="monospace" font-size="14" letter-spacing="3"
+      fill="#A9A0AA">OPEN SOURCE AI EVALUATION</text>
+  </g>
+</svg>

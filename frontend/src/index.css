@@ -71,3 +71,18 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* Subtle Technical Background Grid & Ambient Ember */
+.bg-tech-grid {
+  background-image: 
+    radial-gradient(circle at 50% -10%, rgba(217, 130, 59, 0.14) 0%, transparent 65%),
+    radial-gradient(rgba(217, 130, 59, 0.07) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #F5F0E7 30%, #D9823B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+

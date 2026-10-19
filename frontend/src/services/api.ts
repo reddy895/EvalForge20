@@ -14,18 +14,28 @@ import type {
   ModelComparisonResult,
 } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL !== undefined
+  ? import.meta.env.VITE_API_BASE_URL
+  : '';
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      ...(options.headers || {}),
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(options.headers || {}),
+      },
+    });
+  } catch (netErr: any) {
+    throw new Error(
+      `FastAPI backend is unreachable (${netErr.message || 'connection failed'}). ` +
+      `Ensure backend is running on port 8000: 'make dev-backend' or 'python3 -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000'`
+    );
+  }
 
   if (!res.ok) {
     let errMsg = `HTTP ${res.status}: ${res.statusText}`;
@@ -238,6 +248,31 @@ export const api = {
   // Health
   getHealth: (): Promise<{ status: string; app: string; version: string }> => {
     return request('/health');
+  },
+
+  checkBackendHealth: async (): Promise<{
+    is_connected: boolean;
+    latency_ms?: number;
+    app?: string;
+    version?: string;
+    error?: string;
+  }> => {
+    const t0 = performance.now();
+    try {
+      const res = await request<{ status: string; app: string; version: string }>('/health');
+      const latency = Math.round(performance.now() - t0);
+      return {
+        is_connected: res.status === 'ok' || res.status === 'healthy',
+        latency_ms: latency,
+        app: res.app,
+        version: res.version,
+      };
+    } catch (err: any) {
+      return {
+        is_connected: false,
+        error: err.message,
+      };
+    }
   },
 };
 

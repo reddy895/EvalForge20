@@ -1,72 +1,81 @@
-/* EvalForge20 Button Component Styles */
+/* EvalForge20 Rounded Button Stylesheet */
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-xs);
+  gap: 8px;
   font-family: var(--font-sans);
-  font-weight: var(--font-weight-medium);
-  border-radius: var(--radius-xs);
+  font-weight: 500;
+  border-radius: var(--radius-full);
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  transition: all var(--transition-fast);
   border: 1px solid transparent;
+  outline: none;
+  line-height: 1;
 }
 
 .btn:disabled,
 .btn.loading {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;
 }
 
 /* Button Sizes */
 .btn-sm {
-  height: 26px;
-  padding: 0 var(--space-sm);
-  font-size: var(--font-size-xs);
+  height: 32px;
+  padding: 0 14px;
+  font-size: 12px;
 }
 
 .btn-md {
-  height: 32px;
-  padding: 0 var(--space-md);
-  font-size: var(--font-size-sm);
+  height: 40px;
+  padding: 0 18px;
+  font-size: 13px;
 }
 
 .btn-lg {
-  height: 38px;
-  padding: 0 var(--space-base);
-  font-size: var(--font-size-base);
+  height: 46px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .btn-icon-only {
   padding: 0;
+  border-radius: 50%;
 }
 
-.btn-icon-only.btn-sm { width: 26px; }
-.btn-icon-only.btn-md { width: 32px; }
-.btn-icon-only.btn-lg { width: 38px; }
+.btn-icon-only.btn-sm { width: 32px; }
+.btn-icon-only.btn-md { width: 40px; }
+.btn-icon-only.btn-lg { width: 46px; }
 
-/* Button Variants */
+/* Primary — Burnt Orange with Dark Charcoal text */
 .btn-primary {
   background-color: var(--accent-primary);
-  color: #171816;
-  border-color: var(--accent-border);
-  font-weight: var(--font-weight-semibold);
+  color: var(--color-charcoal);
+  border-color: var(--accent-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
   background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(217, 130, 59, 0.25);
 }
 
 .btn-primary:active:not(:disabled) {
   background-color: var(--accent-active);
+  transform: translateY(0);
 }
 
+/* Secondary — Graphite Surface with Warm Ivory text */
 .btn-secondary {
-  background-color: var(--bg-elevated);
+  background-color: var(--bg-secondary);
   border-color: var(--border-default);
   color: var(--text-primary);
 }
@@ -74,12 +83,16 @@
 .btn-secondary:hover:not(:disabled) {
   background-color: var(--bg-hover);
   border-color: var(--border-strong);
+  color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
 .btn-secondary:active:not(:disabled) {
   background-color: var(--bg-active);
+  transform: translateY(0);
 }
 
+/* Outline — Transparent with Soft Border */
 .btn-outline {
   background-color: transparent;
   border-color: var(--border-default);
@@ -87,10 +100,17 @@
 }
 
 .btn-outline:hover:not(:disabled) {
-  background-color: var(--bg-hover);
-  border-color: var(--border-strong);
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: var(--text-secondary);
+  transform: translateY(-1px);
 }
 
+.btn-outline:active:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(0);
+}
+
+/* Ghost — Borderless Minimal Action */
 .btn-ghost {
   background-color: transparent;
   border-color: transparent;
@@ -102,26 +122,45 @@
   color: var(--text-primary);
 }
 
+/* Danger Variant */
 .btn-danger {
-  background-color: #241614;
+  background-color: rgba(214, 109, 96, 0.15);
   border-color: var(--status-error-border);
   color: var(--status-error);
 }
 
 .btn-danger:hover:not(:disabled) {
-  background-color: #2e1b18;
+  background-color: rgba(214, 109, 96, 0.25);
+  border-color: var(--status-error);
 }
 
-/* Spinner for loading state */
-.btn-spinner {
-  width: 13px;
-  height: 13px;
+/* Focus Visible State */
+.btn:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Icons */
+.btn-icon-left,
+.btn-icon-right {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Spinner inside button */
+.btn .spinner {
+  width: 14px;
+  height: 14px;
   border: 2px solid currentColor;
-  border-right-color: transparent;
+  border-top-color: transparent;
   border-radius: 50%;
-  animation: btn-spin 0.6s linear infinite;
+  animation: spin 0.75s linear infinite;
+  display: inline-block;
 }
 
-@keyframes btn-spin {
-  to { transform: rotate(360deg); }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

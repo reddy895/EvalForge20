@@ -1,230 +1,255 @@
-# EvalForge20 — Local-First LLM Model Intelligence & Evaluation Platform
+ <div align="center">
 
-[![CI](https://github.com/reddy895/EvalForge20/actions/workflows/ci.yml/badge.svg)](https://github.com/reddy895/EvalForge20/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Python: 3.11+](https://img.shields.io/badge/Python-3.11%2B-informational.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-green.svg)](https://fastapi.tiangolo.com)
-[![React: 19](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev)
-[![Ollama](https://img.shields.io/badge/Ollama-Local%20First-orange.svg)](https://ollama.com)
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:151515,50:252525,100:FF6B4A&height=200&section=header&text=EvalForge20&fontSize=60&fontColor=F5F0E8&animation=fadeIn&fontAlignY=38&desc=Evaluate%20Models.%20Benchmark%20Agents.%20Build%20Better%20AI.&descSize=16&descAlignY=60" width="100%" alt="EvalForge20 animated header"/>
 
-> **Which AI model is best for my task, and what evidence supports that recommendation?**
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=18&duration=3000&pause=900&color=FF795E&center=true&vCenter=true&width=650&lines=Open-source+LLM+evaluation+platform;Benchmark+local+and+cloud+models;Test+AI+agents+with+reproducible+experiments;Built+for+developers%2C+by+developers" alt="Animated project tagline"/>
 
-EvalForge20 is a local-first model intelligence and evaluation platform designed for AI engineers, researchers, and developers. It replaces speculative marketing claims with measured benchmark evidence, transparent task-specific recommendations, and reproducible local evaluations powered by [Ollama](https://ollama.com).
+<br/>
+
+[![GitHub stars](https://img.shields.io/github/stars/reddy895/EvalForge20?style=for-the-badge&color=242424&logo=github)](https://github.com/reddy895/EvalForge20/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/reddy895/EvalForge20?style=for-the-badge&color=242424&logo=github)](https://github.com/reddy895/EvalForge20/forks)
+[![License](https://img.shields.io/github/license/reddy895/EvalForge20?style=for-the-badge&color=FF6B4A)](LICENSE)
+[![Issues](https://img.shields.io/github/issues/reddy895/EvalForge20?style=for-the-badge&color=242424)](https://github.com/reddy895/EvalForge20/issues)
+
+<br/>
+
+**One platform. Multiple models. Reproducible evaluations.**
+
+[Explore the Repository](https://github.com/reddy895/EvalForge20) · [Report a Bug](https://github.com/reddy895/EvalForge20/issues) · [Request a Feature](https://github.com/reddy895/EvalForge20/issues)
+
+</div>
 
 ---
 
-## Architecture Overview
+## `01` — The idea
+
+AI models are released every day. AI agents are becoming increasingly capable. But comparing them fairly is still harder than it should be.
+
+Which model follows instructions better? Which one produces more accurate answers? Which agent completes a task reliably? How much latency and computational cost does each evaluation require?
+
+**EvalForge20 is an open-source platform designed to make those comparisons measurable, reproducible, and accessible.**
+
+Instead of relying on marketing claims or isolated examples, developers can build evaluation datasets, execute experiments, compare results, and understand how models and agents perform under consistent conditions.
+
+## `02` — What makes it different?
+
+<table>
+<tr>
+<td width="50%">
+
+### 🧠 Model evaluation
+
+Evaluate LLM outputs for correctness, relevance, instruction following, consistency, and other task-specific criteria.
+
+</td>
+<td width="50%">
+
+### 🤖 Agent evaluation
+
+Test AI agents on task completion, tool usage, execution success, and multi-step workflows.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🖥️ Local-first execution
+
+Support local model workflows through Ollama, reducing dependence on paid APIs and external evaluation platforms.
+
+</td>
+<td width="50%">
+
+### 📊 Evidence-driven comparison
+
+Organize experiment results into comparable metrics, execution traces, latency measurements, and reports.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🔬 Reproducible experiments
+
+Reuse datasets, evaluation configurations, and test cases to compare models under consistent conditions.
+
+</td>
+<td width="50%">
+
+### 🧩 Extensible architecture
+
+Build a modular evaluation engine that can support new model providers, metrics, datasets, and agent frameworks.
+
+</td>
+</tr>
+</table>
+
+## `03` — How it works
 
 ```mermaid
-graph TD
-    subgraph Browser ["Frontend (React 19 + TypeScript + Vite)"]
-        UI_Nav["Minimal Navigation (5 Views)"]
-        UI_Catalog["Model Discovery & Search"]
-        UI_Profile["Model Profiles & Sourced Specs"]
-        UI_Compare["Side-by-Side Comparison Matrix"]
-        UI_Eval["Local Evaluation Runner"]
-        UI_History["Persisted History & Case Inspector"]
-        UI_Settings["Daemon Diagnostics & Hardware Profile"]
-    end
+flowchart TD
+    A["Evaluation Dataset"] --> B["Experiment Configuration"]
+    B --> C["EvalForge20 Engine"]
 
-    subgraph Backend ["Backend (FastAPI + Pydantic + SQLAlchemy)"]
-        API_Gateway["FastAPI Gateway (/v1)"]
-        Catalog_Svc["Model Catalog Service"]
-        Rec_Engine["Transparent Recommendation Engine"]
-        Comp_Svc["Model Comparison Service"]
-        Bench_Svc["Benchmark & Case Evaluator"]
-        Ollama_Svc["Ollama Inference Adapter"]
-        Repo["Evaluation Repository Layer"]
-    end
+    C --> D["Local Models"]
+    C --> E["Cloud Models"]
+    C --> F["AI Agents"]
 
-    subgraph Local_Inference ["Inference & Storage"]
-        Ollama_Daemon["Ollama Daemon (http://localhost:11434)"]
-        SQLite_DB[("SQLite Database (evalforge20.db)")]
-        Local_Datasets[("Local Datasets (benchmarks/datasets/)")]
-    end
+    D --> G["Evaluation Pipeline"]
+    E --> G
+    F --> G
 
-    UI_Nav --> UI_Catalog & UI_Profile & UI_Compare & UI_Eval & UI_History & UI_Settings
-    UI_Catalog & UI_Profile --> API_Gateway
-    UI_Compare & UI_Eval & UI_History & UI_Settings --> API_Gateway
+    G --> H["Metrics & Validation"]
+    H --> I["Results Store"]
+    I --> J["Comparison Dashboard"]
+    I --> K["Reports & Exports"]
 
-    API_Gateway --> Catalog_Svc
-    API_Gateway --> Rec_Engine
-    API_Gateway --> Comp_Svc
-    API_Gateway --> Bench_Svc
-    API_Gateway --> Ollama_Svc
-
-    Ollama_Svc <--> Ollama_Daemon
-    Bench_Svc --> Ollama_Svc
-    Bench_Svc --> Local_Datasets
-    Bench_Svc --> Repo
-    Repo <--> SQLite_DB
+    style C fill:#FF6B4A,color:#151515,stroke:#FF6B4A
+    style G fill:#252525,color:#F5F0E8,stroke:#FF6B4A
+    style J fill:#252525,color:#F5F0E8,stroke:#FF6B4A
 ```
 
----
+The intended workflow is straightforward:
 
-## What Makes EvalForge20 Different
+1. Create or import an evaluation dataset.
+2. Select a model, agent, or group of candidates.
+3. Configure metrics and evaluation parameters.
+4. Execute the experiment.
+5. Inspect outputs, failures, latency, and scores.
+6. Compare results and export findings.
 
-1. **Local-First & Offline Resilience**: No mandatory cloud accounts or API keys. If your machine is disconnected, the platform continues to browse cached metadata, view stored runs, and run deterministic mock evaluations.
-2. **Evidence-Based Recommendations**: Answers questions like *"Which model is best for coding on 16GB RAM?"* with transparent weighted scores, cited technical reports, and documented trade-offs.
-3. **No Synthetic Benchmarks**: Displays verified published scores (HumanEval, GSM8K, MMLU) with sources and clear distinctions between published numbers and local empirical measurements.
-4. **Ollama Integration**: Detects installed models dynamically, checks daemon health, inspects context sizes, and executes evaluations against real local weights.
-5. **Deterministic Evaluation**: Tests exact Python function syntax, JSON schema constraints, and numeric reasoning without non-deterministic flakiness.
+## `04` — Evaluation dimensions
 
----
+| Dimension | What it measures |
+|---|---|
+| Accuracy | Whether outputs match expected answers or ground truth |
+| Instruction following | Whether a model follows the requested constraints |
+| Relevance | How well the response addresses the task |
+| Consistency | Whether similar inputs produce dependable results |
+| Latency | How long an execution takes |
+| Token usage | How many tokens are consumed, where measurable |
+| Cost | Estimated inference cost when provider pricing and usage data are available |
+| Tool execution | Whether an agent selects and uses tools correctly |
+| Task completion | Whether an agent achieves the required outcome |
+| Reliability | Failures, timeouts, invalid outputs, and execution success rates |
 
-## Tech Stack
+*The available metrics depend on the evaluation method, model provider, dataset, and implementation. These dimensions describe the intended scope, not a claim that every metric is already implemented.*
 
-| Layer | Technology | Key Capabilities |
-| :--- | :--- | :--- |
-| **Frontend** | React 19, TypeScript, Vite | Fast HMR, minimal navigation, Graphite & Burnt Orange aesthetic |
-| **Backend** | Python 3.11+, FastAPI, Pydantic v2 | High-performance async routing, typed schemas, CORS isolation |
-| **Database** | SQLAlchemy 2.0, SQLite | Embedded persistence with migration-ready relational schema |
-| **Inference** | Ollama Engine | Direct local inference via `http://localhost:11434` |
-| **Testing** | Pytest, Vitest, Testing Library | End-to-end integration tests, unit verification, CI automations |
+## `05` — Technology direction
 
----
+<div align="center">
 
-## Directory Structure
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-111111?style=flat-square&logo=ollama&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Open Source](https://img.shields.io/badge/Open%20Source-FF6B4A?style=flat-square&logo=opensourceinitiative&logoColor=white)
 
-```text
-EvalForge20/
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── app/                    # App shell, routing, minimal navigation
-│   │   ├── components/             # Reusable UI primitives (Button, Badge, Modal)
-│   │   ├── features/
-│   │   │   ├── catalog/            # Discovery, search, filters, recommendation modal
-│   │   │   ├── model-profile/      # Comprehensive sourced model profiles
-│   │   │   ├── comparison/         # 2-4 model side-by-side technical matrix
-│   │   │   ├── evaluations/        # Local runner & audit history inspector
-│   │   │   └── settings/           # Ollama diagnostics & hardware profile
-│   │   ├── services/               # Centralized typed API client
-│   │   ├── types/                  # Shared TypeScript interfaces
-│   │   └── styles/                 # Graphite & Burnt Orange design tokens
-│   ├── package.json
-│   └── vite.config.ts
-├── backend/
-│   ├── app/
-│   │   ├── api/routes/             # Modular versioned routes (/v1/models, /v1/evaluations...)
-│   │   ├── core/                   # Config, structured logging, typed errors
-│   │   ├── db/                     # SQLite engine, sessions, schema init
-│   │   ├── evaluators/             # ExactMatch, NormalizedMatch, JsonValidity
-│   │   ├── models/                 # SQLAlchemy ORM entities
-│   │   ├── repositories/           # Data access repository layer
-│   │   ├── schemas/                # Pydantic validation schemas
-│   │   ├── services/               # ModelCatalog, OllamaService, Recommendations
-│   │   └── tests/                  # Backend unit & integration test suite
-│   ├── requirements.txt
-│   └── .env.example
-├── benchmarks/
-│   ├── datasets/                   # Test case suites (coding, JSON, reasoning)
-│   ├── tasks/                      # Declarative task definitions
-│   └── README.md
-├── tests/                          # Root integration & end-to-end tests
-├── Makefile                        # Unified build, test, and run workflow
-└── README.md
-```
+</div>
 
----
+The platform is being designed around a Python-first evaluation backend, local inference through Ollama, and a modular frontend for experiment management and result visualization.
 
-## Quickstart & Installation
+- **Evaluation engine:** Python
+- **Local inference:** Ollama-compatible models
+- **Model integrations:** Local and cloud provider adapters
+- **Interface:** React and TypeScript frontend
+- **Experiment data:** Structured datasets, results, and execution records
+- **Architecture:** Modular components with room for additional providers and evaluators
+
+*The exact implementation and dependencies should be verified against the current repository as development progresses.*
+
+## `06` — Getting started
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 20+
-- (Optional for live inference) [Ollama](https://ollama.com) installed and running
 
-### 1. Clone the Repository
+- Python 3.10 or later, subject to the project's dependency requirements
+- Git
+- Ollama for local inference
+- Node.js and npm if running the frontend
+
+### Clone the repository
+
 ```bash
 git clone https://github.com/reddy895/EvalForge20.git
 cd EvalForge20
 ```
 
-### 2. Quick Setup via Makefile
-```bash
-# Install both backend and frontend dependencies
-make install
+### Set up Ollama
 
-# Run all automated tests
-make test
-```
+Install Ollama from [ollama.com](https://ollama.com/) and download a model compatible with your machine.
 
-### 3. Start the Backend (Port 8000)
-```bash
-make dev-backend
-# Or directly:
-python3 -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-API documentation is available at `http://localhost:8000/docs`.
-
-### 4. Start the Frontend (Port 5173)
-```bash
-make dev-frontend
-# Or directly:
-cd frontend && npm run dev
-```
-Open `http://localhost:5173` in your browser.
-
----
-
-## Ollama Setup & Local Inference
-
-1. **Install Ollama**:
-   ```bash
-   curl -fsSL https://ollama.com/install.sh | sh
-   ```
-2. **Start the daemon**:
-   ```bash
-   ollama serve
-   ```
-3. **Pull models**:
-   ```bash
-   ollama pull qwen2.5:3b
-   ollama pull llama3.2:3b
-   ```
-4. **Offline Mode**: If Ollama is not running, EvalForge20 automatically switches to offline mode. You can still browse the full catalog, view stored evaluations, and run benchmarks using the built-in `deterministic-mock-v1` target.
-
----
-
-## How Evaluations Work
-
-1. **Select Model**: Choose an installed Ollama model (e.g. `llama3.2:3b`) or the deterministic test target.
-2. **Select Task**: Choose from:
-   - `Python Function Syntheses` (`coding_basics`): Syntax and algorithmic correctness.
-   - `JSON Schema & Extraction` (`structured_json`): Valid JSON output with required keys.
-   - `Mathematical Reasoning` (`reasoning_math`): Multi-step arithmetic verification.
-3. **Execute**: The backend runs the evaluation, measures latency per case, executes deterministic assertions, and persists the result to SQLite.
-4. **Inspect**: Examine individual prompts, expected values, actual outputs, and pass/fail statuses in the Case Assertions table.
-
----
-
-## Recommendation Engine
-
-EvalForge20 maps user tasks to multi-dimensional criteria:
-- **Coding**: HumanEval Pass@1, tool-calling reliability, structured output, memory fit.
-- **Reasoning**: GSM8K score, MMLU score, context length.
-- **Hardware Constraints**: Compares user RAM/VRAM against required memory footprints (4-bit quantized GGUF execution).
-
-Recommendations provide transparent scores (0–100), key evidence citations, and trade-off summaries.
-
----
-
-## Testing
+For example:
 
 ```bash
-# Backend pytest suite (23 tests)
-pytest tests/ backend/app/tests/ -v
-
-# Frontend vitest suite (20 tests)
-cd frontend && npm test
-
-# Frontend production bundle compilation
-cd frontend && npm run build
+ollama pull llama3.2
+ollama run llama3.2
 ```
+
+Keep in mind that model size and inference speed depend on available memory and hardware.
+
+### Run the application
+
+The backend and frontend setup commands depend on the current repository structure. Once their entry points and dependency files are finalized, add the exact installation and launch commands here.
+
+## `07` — Project roadmap
+
+- [ ] Establish a modular Python evaluation engine
+- [ ] Integrate local models through Ollama
+- [ ] Add cloud model provider adapters
+- [ ] Create reusable evaluation datasets
+- [ ] Implement core LLM evaluation metrics
+- [ ] Add AI agent evaluation and execution traces
+- [ ] Build model and experiment comparison views
+- [ ] Add result persistence and exportable reports
+- [ ] Improve reproducibility and experiment configuration
+- [ ] Expand documentation, examples, and contribution guidelines
+
+Follow the repository's [Issues](https://github.com/reddy895/EvalForge20/issues) and [Pull Requests](https://github.com/reddy895/EvalForge20/pulls) to track actual progress.
+
+## `08` — Why open source?
+
+Evaluation tooling should not be restricted to developers with expensive API subscriptions or proprietary platforms.
+
+EvalForge20 aims to make experimentation more accessible through local inference, extensible integrations, transparent evaluation logic, and community-driven development.
+
+The long-term goal is to help developers make better-informed decisions about which models and agents to use, based on evidence rather than hype.
+
+## `09` — Contributing
+
+Contributions are welcome.
+
+You can help by:
+
+- Adding evaluation metrics and datasets.
+- Improving model and agent integrations.
+- Building reproducible test cases.
+- Improving the comparison interface.
+- Reporting bugs and suggesting features.
+- Improving documentation and examples.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Implement and test your changes.
+4. Submit a pull request with a clear explanation.
+
+For bugs or feature requests, use the [GitHub Issues page](https://github.com/reddy895/EvalForge20/issues).
+
+## `10` — License
+
+EvalForge20 is intended to be an open-source project. See the repository's [`LICENSE`](LICENSE) file for the applicable terms.
+
+If a license has not yet been added, choose and commit one before claiming a specific license.
 
 ---
 
-## License
+<div align="center">
 
-MIT License. See [LICENSE](LICENSE) for details.
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:FF6B4A,100:151515&height=110&section=footer" width="100%" alt="Animated footer"/>
+
+**Less hype. More evidence. Better AI decisions.**
+
+Built for the people who want to understand what AI can actually do.
+
+<sub>EvalForge20 · Open-source AI evaluation</sub>
+
+</div>

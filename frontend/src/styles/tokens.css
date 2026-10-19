@@ -1,82 +1,88 @@
-/* EvalForge20 Design Tokens — Graphite × Ivory × Burnt Orange */
+/* EvalForge20 Design Tokens — Graphite × Deep Charcoal × Warm Ivory × Burnt Orange */
 
 :root {
-  /* Color Palette — Graphite Theme */
-  --bg-primary: #171816;
-  --bg-secondary: #20211E;
-  --bg-elevated: #272823;
-  --bg-hover: #2E2F29;
-  --bg-active: #353630;
-  --bg-subtle: #1C1D1A;
-  --bg-inset: #131412;
+  /* Core Canonical Palette */
+  --color-graphite: #242522;
+  --color-charcoal: #191A18;
+  --color-warm-ivory: #F5F0E7;
+  --color-burnt-orange: #D9823B;
+  --color-muted-gray: #A6A49D;
+  --color-soft-border: #41413B;
+
+  /* Surfaces & Backgrounds */
+  --bg-primary: #191A18;        /* Deep Charcoal main background */
+  --bg-secondary: #242522;      /* Graphite elevated cards and containers */
+  --bg-tertiary: #2D2E2B;       /* Slightly lighter graphite for subtle hierarchy */
+  --bg-hover: #353632;          /* Hover surface */
+  --bg-active: #3D3E3A;         /* Active state surface */
+  --bg-inset: #131412;          /* Darker inset for inputs and terminal snippets */
+
+  /* Alternating Light Ivory Section Tokens */
+  --ivory-bg: #F5F0E7;          /* Warm Ivory section background */
+  --ivory-surface: #FCFAF6;     /* Light ivory elevated card surface */
+  --ivory-text-primary: #191A18;/* Charcoal typography on light ivory */
+  --ivory-text-secondary: #63615A;/* Muted typography on light ivory */
+  --ivory-border: #DDD7CA;      /* Subtle border on light ivory */
+  --ivory-hover: #EBE5DB;       /* Hover state on light ivory */
 
   /* Typography Colors */
-  --text-primary: #F0EEE6;
-  --text-secondary: #A5A59A;
-  --text-muted: #727368;
-  --text-inverse: #171816;
+  --text-primary: #F5F0E7;      /* Warm Ivory primary text on dark surfaces */
+  --text-secondary: #A6A49D;    /* Muted Gray secondary text */
+  --text-muted: #78766F;        /* Subtle tertiary text */
+  --text-inverse: #191A18;      /* Deep Charcoal for text on orange/ivory */
 
   /* Primary Accent — Burnt Orange */
-  --accent-primary: #E58B45;
-  --accent-hover: #D67B35;
-  --accent-active: #C26B28;
-  --accent-subtle: rgba(229, 139, 69, 0.12);
-  --accent-border: #8D5428;
-  --accent-text: #F5A362;
+  --accent-primary: #D9823B;
+  --accent-hover: #E3904B;
+  --accent-active: #C4722D;
+  --accent-subtle: rgba(217, 130, 59, 0.12);
+  --accent-border: rgba(217, 130, 59, 0.4);
+  --accent-text: #F0A05E;
 
-  /* 1px Technical Borders */
-  --border-default: #393A33;
-  --border-subtle: #282924;
-  --border-strong: #4B4C43;
-  --border-focus: #E58B45;
+  /* Soft Borders */
+  --border-default: #41413B;
+  --border-subtle: #2C2D29;
+  --border-strong: #52524B;
+  --border-focus: #D9823B;
 
   /* Semantic Feedback Tokens */
-  --status-success: #8BAF78;
-  --status-success-bg: rgba(139, 175, 120, 0.12);
-  --status-success-border: #4D683E;
+  --status-success: #7EA96E;
+  --status-success-bg: rgba(126, 169, 110, 0.12);
+  --status-success-border: rgba(126, 169, 110, 0.35);
 
-  --status-error: #D97767;
-  --status-error-bg: rgba(217, 119, 103, 0.12);
-  --status-error-border: #7B3E34;
+  --status-error: #D66D60;
+  --status-error-bg: rgba(214, 109, 96, 0.12);
+  --status-error-border: rgba(214, 109, 96, 0.35);
 
-  --status-warning: #DE9E4E;
-  --status-warning-bg: rgba(222, 158, 78, 0.12);
-  --status-warning-border: #785323;
+  --status-warning: #D99D4B;
+  --status-warning-bg: rgba(217, 157, 75, 0.12);
+  --status-warning-border: rgba(217, 157, 75, 0.35);
 
-  --status-info: #A5A59A;
-  --status-info-bg: rgba(165, 165, 154, 0.12);
-  --status-info-border: #4E4F47;
+  --status-info: #A6A49D;
+  --status-info-bg: rgba(166, 164, 157, 0.12);
+  --status-info-border: rgba(166, 164, 157, 0.3);
 
-  /* Warm Ivory Accent Tokens (for reports and export previews) */
-  --ivory-bg: #FAF8F2;
-  --ivory-surface: #FFFFFF;
-  --ivory-text: #1A1B18;
-  --ivory-text-secondary: #5E6056;
-  --ivory-border: #DDD9CD;
-  --ivory-accent: #C26B28;
+  /* Geometry & Soft Rounded Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
 
-  /* Geometry & Radii — Sharp & Restrained */
-  --radius-none: 0px;
-  --radius-xs: 2px;
-  --radius-sm: 3px;
-  --radius-md: 4px;
-  --radius-lg: 6px;
+  /* Typography Font Stacks */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, Consolas, monospace;
 
-  /* Shadows — Minimalist, flat, strict, no glow */
-  --shadow-none: none;
-  --shadow-elevation: 0 1px 3px rgba(0, 0, 0, 0.35);
-  --shadow-menu: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.7);
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Complexity Band Colors */
-  --complexity-low: #8BAF78;
-  --complexity-low-bg: rgba(139, 175, 120, 0.12);
-  --complexity-med: #DE9E4E;
-  --complexity-med-bg: rgba(222, 158, 78, 0.12);
-  --complexity-high: #D97767;
-  --complexity-high-bg: rgba(217, 119, 103, 0.12);
-
-  /* Transitions — Fast and purposeful micro-transitions */
-  --transition-fast: 120ms ease-out;
-  --transition-base: 180ms ease-out;
+  /* Restrained Soft Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.4);
+  --shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.45);
 }

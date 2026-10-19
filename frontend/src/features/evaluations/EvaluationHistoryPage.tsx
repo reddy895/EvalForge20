@@ -3,6 +3,8 @@ import type { EvaluationRun } from '../../types';
 import { api } from '../../services/api';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import './EvaluationHistoryPage.css';
+import './LocalEvaluationPage.css';
 
 interface EvaluationHistoryPageProps {
   onNewEvaluation: () => void;
@@ -49,48 +51,46 @@ export const EvaluationHistoryPage: React.FC<EvaluationHistoryPageProps> = ({
 
   if (loading) {
     return (
-      <div className="py-16 text-center text-[#A5A59A]">
-        Loading persisted evaluation history...
+      <div className="page-container loading-state">
+        <span className="spinner" />
+        <p>Loading persisted evaluation history...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="page-container history-page-container">
       {/* Header */}
-      <div className="border-b border-[#393A33] pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="history-header-bar">
         <div>
-          <h1 className="text-2xl font-bold text-[#F0EEE6] tracking-tight">Evaluation History</h1>
-          <p className="text-sm text-[#A5A59A] mt-1">
+          <h1 className="history-header-title">Evaluation History</h1>
+          <p className="history-header-subtitle">
             Audit trail of all benchmark executions, exact test cases, latency measurements, and pass rates.
           </p>
         </div>
-        <Button variant="primary" onClick={onNewEvaluation}>
+        <Button variant="primary" size="sm" onClick={onNewEvaluation}>
           + Run New Evaluation
         </Button>
       </div>
 
-      {error && (
-        <div className="p-4 bg-red-950/40 border border-red-800/60 rounded text-sm text-red-300">
-          {error}
-        </div>
-      )}
+      {error && <div className="error-banner">{error}</div>}
 
       {runs.length === 0 ? (
-        <div className="bg-[#20211E] border border-[#393A33] rounded-lg p-12 text-center space-y-4">
-          <p className="text-[#A5A59A]">No evaluations recorded in database yet.</p>
-          <Button variant="primary" onClick={onNewEvaluation}>
+        <div className="empty-state">
+          <h3>No evaluations recorded in database yet</h3>
+          <p>Run your first benchmark against a local Ollama model or catalog double.</p>
+          <Button variant="primary" onClick={onNewEvaluation} style={{ marginTop: '14px' }}>
             Launch First Local Evaluation
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="history-layout-grid">
           {/* Runs Sidebar List */}
-          <div className="space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-[#A5A59A]">
+          <div className="history-sidebar">
+            <h2 className="history-section-title">
               Historical Runs ({runs.length})
             </h2>
-            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+            <div className="history-runs-list">
               {runs.map((r) => {
                 const isSelected = selectedRun?.id === r.id;
                 const passRate = ((r.metrics?.pass_rate || 0) * 100).toFixed(0);
@@ -98,24 +98,20 @@ export const EvaluationHistoryPage: React.FC<EvaluationHistoryPageProps> = ({
                   <div
                     key={r.id}
                     onClick={() => setSelectedRun(r)}
-                    className={`p-4 rounded border transition-colors cursor-pointer text-left ${
-                      isSelected
-                        ? 'bg-[#20211E] border-[#E58B45]'
-                        : 'bg-[#171816] border-[#393A33] hover:border-[#A5A59A]/50'
-                    }`}
+                    className={`history-run-card ${isSelected ? 'selected' : ''}`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-sm text-[#F0EEE6] truncate max-w-[160px]">
+                    <div className="run-card-header">
+                      <span className="run-model-name font-mono">
                         {r.model_id}
                       </span>
-                      <Badge variant={r.status === 'completed' ? 'success' : 'danger'}>
+                      <Badge variant={r.status === 'completed' ? 'success' : 'error'}>
                         {passRate}%
                       </Badge>
                     </div>
-                    <p className="text-xs text-[#A5A59A] mt-1 truncate">
+                    <p className="run-benchmark-name">
                       {r.benchmark_name}
                     </p>
-                    <div className="flex items-center justify-between text-[11px] text-[#A5A59A] mt-2 pt-2 border-t border-[#393A33]/50">
+                    <div className="run-card-footer font-mono">
                       <span>{r.metrics?.total_cases || 0} cases</span>
                       <span>{new Date(r.created_at).toLocaleDateString()}</span>
                     </div>
@@ -126,40 +122,38 @@ export const EvaluationHistoryPage: React.FC<EvaluationHistoryPageProps> = ({
           </div>
 
           {/* Run Detail Inspection */}
-          <div className="lg:col-span-2">
+          <div>
             {selectedRun ? (
-              <div className="bg-[#20211E] border border-[#393A33] rounded-lg p-6 space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#393A33] gap-4">
-                  <div>
-                    <h3 className="text-lg font-bold text-[#F0EEE6]">
-                      {selectedRun.benchmark_name}
-                    </h3>
-                    <p className="text-xs text-[#A5A59A] mt-1 font-mono">
+              <div className="history-detail-card">
+                <div className="detail-top-bar">
+                  <div className="detail-title-group">
+                    <h3>{selectedRun.benchmark_name}</h3>
+                    <p className="detail-meta-text font-mono">
                       Run ID: {selectedRun.id} &bull; Executed at: {new Date(selectedRun.created_at).toLocaleString()}
                     </p>
                   </div>
-                  <Button variant="secondary" size="sm" onClick={handleExportJson}>
+                  <Button variant="outline" size="sm" onClick={handleExportJson}>
                     Export JSON
                   </Button>
                 </div>
 
                 {/* Score Summary Metrics */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-[#171816] p-3 rounded border border-[#393A33]">
-                    <span className="block text-xs uppercase text-[#A5A59A]">Pass Rate</span>
-                    <span className="text-xl font-bold text-[#E58B45]">
+                <div className="metrics-stats-row">
+                  <div className="stat-metric-card">
+                    <span className="metric-card-label">Pass Rate</span>
+                    <span className="metric-card-val accent font-mono">
                       {((selectedRun.metrics.pass_rate || 0) * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <div className="bg-[#171816] p-3 rounded border border-[#393A33]">
-                    <span className="block text-xs uppercase text-[#A5A59A]">Cases Passed</span>
-                    <span className="text-xl font-bold text-[#F0EEE6]">
+                  <div className="stat-metric-card">
+                    <span className="metric-card-label">Cases Passed</span>
+                    <span className="metric-card-val font-mono">
                       {selectedRun.metrics.passed_cases || 0} / {selectedRun.metrics.total_cases || 0}
                     </span>
                   </div>
-                  <div className="bg-[#171816] p-3 rounded border border-[#393A33]">
-                    <span className="block text-xs uppercase text-[#A5A59A]">Mean Latency</span>
-                    <span className="text-xl font-bold text-[#F0EEE6]">
+                  <div className="stat-metric-card">
+                    <span className="metric-card-label">Mean Latency</span>
+                    <span className="metric-card-val font-mono">
                       {selectedRun.metrics.avg_latency_ms ? `${selectedRun.metrics.avg_latency_ms.toFixed(0)}ms` : 'N/A'}
                     </span>
                   </div>
@@ -167,40 +161,40 @@ export const EvaluationHistoryPage: React.FC<EvaluationHistoryPageProps> = ({
 
                 {/* Case Assertions */}
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-[#A5A59A] mb-3">
+                  <div className="assertions-section-title">
                     Case Results ({selectedRun.case_results.length})
-                  </h4>
-                  <div className="overflow-x-auto border border-[#393A33] rounded">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead className="bg-[#171816] text-[#A5A59A] border-b border-[#393A33]">
+                  </div>
+                  <div className="assertions-table-wrapper">
+                    <table className="assertions-table">
+                      <thead>
                         <tr>
-                          <th className="py-2.5 px-3">Status</th>
-                          <th className="py-2.5 px-3">Case ID</th>
-                          <th className="py-2.5 px-3">Prompt</th>
-                          <th className="py-2.5 px-3">Expected</th>
-                          <th className="py-2.5 px-3">Actual</th>
-                          <th className="py-2.5 px-3">Latency</th>
+                          <th>Status</th>
+                          <th>Case ID</th>
+                          <th>Prompt</th>
+                          <th>Expected</th>
+                          <th>Actual</th>
+                          <th>Latency</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#393A33]">
+                      <tbody>
                         {selectedRun.case_results.map((c) => (
-                          <tr key={c.case_id} className="hover:bg-[#171816]/50">
-                            <td className="py-2.5 px-3">
-                              <Badge variant={c.passed ? 'success' : 'danger'}>
+                          <tr key={c.case_id}>
+                            <td>
+                              <Badge variant={c.passed ? 'success' : 'error'}>
                                 {c.passed ? 'PASS' : 'FAIL'}
                               </Badge>
                             </td>
-                            <td className="py-2.5 px-3 font-mono text-[#A5A59A]">{c.case_id}</td>
-                            <td className="py-2.5 px-3 text-[#F0EEE6] max-w-xs truncate" title={c.prompt}>
+                            <td className="font-mono" style={{ color: 'var(--text-muted)' }}>{c.case_id}</td>
+                            <td style={{ color: 'var(--text-primary)', maxWidth: '240px', wordBreak: 'break-word' }} title={c.prompt}>
                               {c.prompt}
                             </td>
-                            <td className="py-2.5 px-3 font-mono text-emerald-400 max-w-xs truncate" title={c.expected_output || undefined}>
+                            <td className="font-mono cell-expected" style={{ maxWidth: '200px', wordBreak: 'break-word' }} title={c.expected_output || undefined}>
                               {c.expected_output}
                             </td>
-                            <td className="py-2.5 px-3 font-mono text-[#F0EEE6] max-w-xs truncate" title={c.actual_output || undefined}>
+                            <td className="font-mono cell-actual" style={{ maxWidth: '240px', wordBreak: 'break-word' }} title={c.actual_output || undefined}>
                               {c.actual_output || '<empty>'}
                             </td>
-                            <td className="py-2.5 px-3 text-[#A5A59A] whitespace-nowrap">
+                            <td className="cell-latency font-mono">
                               {c.latency_ms ? `${c.latency_ms.toFixed(0)} ms` : '-'}
                             </td>
                           </tr>
@@ -211,7 +205,7 @@ export const EvaluationHistoryPage: React.FC<EvaluationHistoryPageProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="bg-[#20211E] border border-[#393A33] rounded-lg p-12 text-center text-[#A5A59A]">
+              <div className="empty-detail-box">
                 Select a run from the list to view detailed case results.
               </div>
             )}

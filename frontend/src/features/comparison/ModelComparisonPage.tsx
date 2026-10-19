@@ -3,6 +3,7 @@ import { Scale, X, Sparkles, AlertCircle } from 'lucide-react';
 import { api } from '../../services/api';
 import type { ModelComparisonResult, ModelSummary } from '../../types';
 import { Button } from '../../components/ui/Button';
+import './ModelComparisonPage.css';
 
 interface ModelComparisonPageProps {
   selectedModelIds?: string[];

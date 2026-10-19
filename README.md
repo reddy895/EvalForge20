@@ -1,8 +1,20 @@
  <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:151515,50:252525,100:FF6B4A&height=200&section=header&text=EvalForge20&fontSize=60&fontColor=F5F0E8&animation=fadeIn&fontAlignY=38&desc=Evaluate%20Models.%20Benchmark%20Agents.%20Build%20Better%20AI.&descSize=16&descAlignY=60" width="100%" alt="EvalForge20 animated header"/>
+<img src="assets/evalforge-hero.svg" width="100%" alt="EvalForge20 — AI Evaluation Platform"/>
 
-<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=18&duration=3000&pause=900&color=FF795E&center=true&vCenter=true&width=650&lines=Open-source+LLM+evaluation+platform;Benchmark+local+and+cloud+models;Test+AI+agents+with+reproducible+experiments;Built+for+developers%2C+by+developers" alt="Animated project tagline"/>
+**An open-source platform for evaluating LLMs and AI agents.**
+
+<br/>
+
+[![Python](https://img.shields.io/badge/Python-181818?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Ollama](https://img.shields.io/badge/Ollama-181818?style=flat-square&logo=ollama&logoColor=white)](https://ollama.com)
+[![Open Source](https://img.shields.io/badge/Open%20Source-FFB7D5?style=flat-square)](https://github.com/reddy895/EvalForge20)
+
+<br/>
+
+[Explore the project](https://github.com/reddy895/EvalForge20) · [Report an issue](https://github.com/reddy895/EvalForge20/issues)
+
+</div>
 
 <br/>
 

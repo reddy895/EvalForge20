@@ -77,6 +77,6 @@ ignore = [
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = "-ra -q"
-testpaths = ["tests"]
-asyncio_mode = "auto"
+testpaths = ["tests", "backend/app/tests"]
+pythonpath = ["."]
 python_files = ["test_*.py"]

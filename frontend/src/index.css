@@ -1,7 +1,97 @@
 /* EvalForge20 Main CSS Entrypoint with Tailwind CSS v4 */
 @import "tailwindcss";
 
+@theme {
+  --color-graphite: #242522;
+  --color-charcoal: #191A18;
+  --color-warm-ivory: #F5F0E7;
+  --color-burnt-orange: #D9823B;
+  --color-muted-gray: #A6A49D;
+  --color-soft-border: #41413B;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+}
+
 @import './styles/tokens.css';
 @import './styles/typography.css';
 @import './styles/layout.css';
 @import './styles/reset.css';
+
+/* Layout Containers & Sections */
+.container-custom {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.section-container {
+  padding-top: 80px;
+  padding-bottom: 80px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .section-container {
+    padding-top: 56px;
+    padding-bottom: 56px;
+  }
+  .container-custom {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Alternating Light Ivory Section Style */
+.ivory-section {
+  background-color: var(--ivory-bg);
+  color: var(--ivory-text-primary);
+}
+
+.ivory-section .section-title {
+  color: var(--ivory-text-primary);
+}
+
+.ivory-section .section-subtitle {
+  color: var(--ivory-text-secondary);
+}
+
+/* Glassmorphism-free Crisp Card Surface */
+.card-surface {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.card-surface:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-md);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

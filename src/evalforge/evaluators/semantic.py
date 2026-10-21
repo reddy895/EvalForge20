@@ -2,7 +2,7 @@
 
 import re
 import string
-from typing import Any, List, Optional, Set
+from typing import Any
 
 from src.evalforge.evaluators.base import BaseEvaluator, MetricResult
 
@@ -18,13 +18,13 @@ class SemanticSimilarityEvaluator(BaseEvaluator):
     is_deterministic = True
 
     @staticmethod
-    def get_ngrams(tokens: List[str], n: int) -> Set[str]:
+    def get_ngrams(tokens: list[str], n: int) -> set[str]:
         if len(tokens) < n:
             return set(tokens)
         return {" ".join(tokens[i : i + n]) for i in range(len(tokens) - n + 1)}
 
     @staticmethod
-    def clean_tokens(text: str) -> List[str]:
+    def clean_tokens(text: str) -> list[str]:
         clean = text.lower()
         clean = "".join(ch for ch in clean if ch not in set(string.punctuation))
         return re.findall(r"\w+", clean)
@@ -32,8 +32,8 @@ class SemanticSimilarityEvaluator(BaseEvaluator):
     async def evaluate(
         self,
         prediction: str,
-        reference: Optional[str] = None,
-        context: Optional[str] = None,
+        reference: str | None = None,
+        context: str | None = None,
         threshold: float = 0.65,
         **kwargs: Any,
     ) -> MetricResult:

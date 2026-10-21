@@ -1,7 +1,8 @@
 """Dataset and TestCase SQLAlchemy ORM models."""
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,11 +13,11 @@ class Dataset(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "datasets"
 
     name: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    tags_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    tags_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    test_cases: Mapped[List["TestCase"]] = relationship(
+    test_cases: Mapped[list["TestCase"]] = relationship(
         "TestCase",
         back_populates="dataset",
         cascade="all, delete-orphan",
@@ -25,7 +26,7 @@ class Dataset(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
 
     @property
-    def tags(self) -> List[str]:
+    def tags(self) -> list[str]:
         if not self.tags_json:
             return []
         try:
@@ -34,7 +35,7 @@ class Dataset(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             return []
 
     @tags.setter
-    def tags(self, value: List[str]) -> None:
+    def tags(self, value: list[str]) -> None:
         self.tags_json = json.dumps(value)
 
 
@@ -49,16 +50,16 @@ class TestCase(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         nullable=False,
     )
     prompt: Mapped[str] = mapped_column(Text, nullable=False)
-    expected_output: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    context: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    tags_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    metadata_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    evaluator_config_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    expected_output: Mapped[str | None] = mapped_column(Text, nullable=True)
+    context: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tags_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    evaluator_config_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     dataset: Mapped["Dataset"] = relationship("Dataset", back_populates="test_cases")
 
     @property
-    def tags(self) -> List[str]:
+    def tags(self) -> list[str]:
         if not self.tags_json:
             return []
         try:
@@ -67,11 +68,11 @@ class TestCase(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             return []
 
     @tags.setter
-    def tags(self, value: List[str]) -> None:
+    def tags(self, value: list[str]) -> None:
         self.tags_json = json.dumps(value)
 
     @property
-    def metadata_dict(self) -> Dict[str, Any]:
+    def metadata_dict(self) -> dict[str, Any]:
         if not self.metadata_json:
             return {}
         try:
@@ -80,11 +81,11 @@ class TestCase(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             return {}
 
     @metadata_dict.setter
-    def metadata_dict(self, value: Dict[str, Any]) -> None:
+    def metadata_dict(self, value: dict[str, Any]) -> None:
         self.metadata_json = json.dumps(value)
 
     @property
-    def evaluator_config(self) -> Dict[str, Any]:
+    def evaluator_config(self) -> dict[str, Any]:
         if not self.evaluator_config_json:
             return {}
         try:
@@ -93,5 +94,5 @@ class TestCase(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             return {}
 
     @evaluator_config.setter
-    def evaluator_config(self, value: Dict[str, Any]) -> None:
+    def evaluator_config(self, value: dict[str, Any]) -> None:
         self.evaluator_config_json = json.dumps(value)

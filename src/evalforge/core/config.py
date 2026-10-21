@@ -1,8 +1,8 @@
 """Application configuration using Pydantic Settings."""
 
 from functools import lru_cache
-from typing import List
-from pydantic import Field, field_validator
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     MAX_CASES_PER_DATASET: int = 2000
 
     # CORS
-    CORS_ORIGINS: List[str] = [
+    CORS_ORIGINS: list[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
@@ -50,7 +50,7 @@ class Settings(BaseSettings):
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: object) -> List[str]:
+    def assemble_cors_origins(cls, v: object) -> list[str]:
         if isinstance(v, str):
             return [i.strip() for i in v.split(",") if i.strip()]
         if isinstance(v, list):

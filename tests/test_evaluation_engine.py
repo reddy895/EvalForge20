@@ -3,6 +3,7 @@
 import asyncio
 import time
 import uuid
+
 import pytest
 from starlette.testclient import TestClient
 
@@ -19,7 +20,9 @@ from src.evalforge.storage.models.dataset import Dataset, TestCase
 async def test_dataset_snapshot_immutability() -> None:
     ds = Dataset(name="Snapshot Test", version=1)
     ds.tags = ["freeze"]
-    tc = TestCase(id="tc-1", dataset_id="ds-1", prompt="Initial prompt", expected_output="Initial target")
+    tc = TestCase(
+        id="tc-1", dataset_id="ds-1", prompt="Initial prompt", expected_output="Initial target"
+    )
     ds.test_cases = [tc]
 
     snapshot = create_dataset_snapshot(ds)
@@ -59,9 +62,7 @@ async def test_bounded_concurrency_pool() -> None:
 
 @pytest.mark.asyncio
 async def test_case_runner_execution() -> None:
-    mock_p = MockProvider(
-        canned_responses={"capital": "Paris", "add": "4"}
-    )
+    mock_p = MockProvider(canned_responses={"capital": "Paris", "add": "4"})
     config = EvaluationConfig(metrics=["exact_match", "token_f1"])
     runner = CaseRunner(provider=mock_p, model_id="mock-llama-3.1-8b", config=config)
 
@@ -153,8 +154,7 @@ def test_evaluation_cancellation_flow() -> None:
             json={
                 "name": f"Cancel Test Suite {unique_suffix}",
                 "cases": [
-                    {"prompt": f"Slow task {i}", "expected_output": "done"}
-                    for i in range(10)
+                    {"prompt": f"Slow task {i}", "expected_output": "done"} for i in range(10)
                 ],
             },
         )

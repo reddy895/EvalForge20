@@ -1,7 +1,6 @@
 """Comparison report generator producing grounded summaries and audit metadata."""
 
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
 
 from src.evalforge.experiments.snapshot import DatasetSnapshot
 from src.evalforge.schemas.benchmark import (
@@ -17,8 +16,8 @@ def generate_comparison_response(
     name: str,
     snapshot: DatasetSnapshot,
     config: EvaluationConfig,
-    matrix: List[ModelComparisonMetrics],
-    created_at: Optional[datetime] = None,
+    matrix: list[ModelComparisonMetrics],
+    created_at: datetime | None = None,
 ) -> BenchmarkComparisonResponse:
     """Construct verified comparison response with complete reproducibility provenance."""
     repro = ReproducibilityMetadata(
@@ -28,12 +27,12 @@ def generate_comparison_response(
         metrics_evaluated=config.metrics,
         temperature=config.temperature,
         concurrency=config.concurrency,
-        executed_at=datetime.now(timezone.utc).isoformat(),
+        executed_at=datetime.now(UTC).isoformat(),
     )
 
     eval_ids = [m.evaluation_id for m in matrix]
     model_ids = [m.model_id for m in matrix]
-    created_iso = (created_at or datetime.now(timezone.utc)).isoformat()
+    created_iso = (created_at or datetime.now(UTC)).isoformat()
 
     return BenchmarkComparisonResponse(
         id=comparison_id,

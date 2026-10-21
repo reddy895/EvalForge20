@@ -1,6 +1,7 @@
 """Registry managing inference provider lifecycle and dynamic lookup."""
 
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 from src.evalforge.core.errors import ProviderError
 from src.evalforge.providers.base import BaseProvider
@@ -12,8 +13,8 @@ class ProviderRegistry:
     """Central registry for registering and resolving inference providers."""
 
     def __init__(self) -> None:
-        self._providers: Dict[str, BaseProvider] = {}
-        self._factories: Dict[str, Callable[[], BaseProvider]] = {}
+        self._providers: dict[str, BaseProvider] = {}
+        self._factories: dict[str, Callable[[], BaseProvider]] = {}
         self._init_defaults()
 
     def _init_defaults(self) -> None:
@@ -45,13 +46,13 @@ class ProviderRegistry:
             provider=name,
         )
 
-    def list_names(self) -> List[str]:
+    def list_names(self) -> list[str]:
         """List all registered provider names."""
-        return sorted(list(set(self._providers.keys()) | set(self._factories.keys())))
+        return sorted(set(self._providers.keys()) | set(self._factories.keys()))
 
-    async def list_status(self) -> List[Dict[str, Any]]:
+    async def list_status(self) -> list[dict[str, Any]]:
         """Check and return status for all registered providers."""
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         for name in self.list_names():
             provider = self.get(name)
             healthy = False
@@ -75,7 +76,7 @@ class ProviderRegistry:
         self._providers.clear()
 
 
-_registry_instance: Optional[ProviderRegistry] = None
+_registry_instance: ProviderRegistry | None = None
 
 
 def get_provider_registry() -> ProviderRegistry:

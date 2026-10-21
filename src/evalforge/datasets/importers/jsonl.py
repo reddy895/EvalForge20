@@ -1,15 +1,14 @@
 """Robust JSONL dataset importer with validation and line-level error isolation."""
 
 import json
-from typing import List, Tuple
 
 from src.evalforge.schemas.dataset import RowImportError, TestCaseCreate
 
 
-def parse_jsonl_content(content: str) -> Tuple[List[TestCaseCreate], List[RowImportError]]:
+def parse_jsonl_content(content: str) -> tuple[list[TestCaseCreate], list[RowImportError]]:
     """Parse JSONL lines into validated TestCaseCreate models, isolating corrupt rows."""
-    valid_cases: List[TestCaseCreate] = []
-    errors: List[RowImportError] = []
+    valid_cases: list[TestCaseCreate] = []
+    errors: list[RowImportError] = []
 
     lines = content.splitlines()
     for line_idx, raw_line in enumerate(lines, start=1):

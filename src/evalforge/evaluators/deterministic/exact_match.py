@@ -2,7 +2,7 @@
 
 import re
 import string
-from typing import Any, Optional
+from typing import Any
 
 from src.evalforge.evaluators.base import BaseEvaluator, MetricResult
 
@@ -17,8 +17,8 @@ class ExactMatchEvaluator(BaseEvaluator):
     async def evaluate(
         self,
         prediction: str,
-        reference: Optional[str] = None,
-        context: Optional[str] = None,
+        reference: str | None = None,
+        context: str | None = None,
         **kwargs: Any,
     ) -> MetricResult:
         if reference is None:
@@ -69,8 +69,8 @@ class NormalizedExactMatchEvaluator(BaseEvaluator):
     async def evaluate(
         self,
         prediction: str,
-        reference: Optional[str] = None,
-        context: Optional[str] = None,
+        reference: str | None = None,
+        context: str | None = None,
         **kwargs: Any,
     ) -> MetricResult:
         if reference is None:

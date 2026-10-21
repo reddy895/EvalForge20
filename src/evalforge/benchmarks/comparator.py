@@ -1,7 +1,5 @@
 """Multi-model benchmark comparator running identical dataset snapshots."""
 
-from typing import Dict, List, Tuple
-
 from src.evalforge.core.logging import get_logger
 from src.evalforge.experiments.case_runner import CaseRunner
 from src.evalforge.experiments.concurrency import BoundedConcurrencyPool
@@ -25,7 +23,7 @@ class MultiModelComparator:
         model_id: str,
         snapshot: DatasetSnapshot,
         evaluation_id: str,
-    ) -> List[CaseResult]:
+    ) -> list[CaseResult]:
         """Run all test cases in the snapshot against the specified model."""
         runner = CaseRunner(
             provider=self.provider,

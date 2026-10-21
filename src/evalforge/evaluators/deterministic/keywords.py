@@ -1,7 +1,7 @@
 """Keyword and required/prohibited phrase matching evaluator."""
 
 import re
-from typing import Any, List, Optional
+from typing import Any
 
 from src.evalforge.evaluators.base import BaseEvaluator, MetricResult
 
@@ -16,11 +16,11 @@ class KeywordEvaluator(BaseEvaluator):
     async def evaluate(
         self,
         prediction: str,
-        reference: Optional[str] = None,
-        context: Optional[str] = None,
-        required_keywords: Optional[List[str]] = None,
-        prohibited_keywords: Optional[List[str]] = None,
-        any_keywords: Optional[List[str]] = None,
+        reference: str | None = None,
+        context: str | None = None,
+        required_keywords: list[str] | None = None,
+        prohibited_keywords: list[str] | None = None,
+        any_keywords: list[str] | None = None,
         case_sensitive: bool = False,
         **kwargs: Any,
     ) -> MetricResult:
@@ -33,15 +33,15 @@ class KeywordEvaluator(BaseEvaluator):
         text = prediction if case_sensitive else prediction.lower()
 
         # Check prohibited keywords
-        found_prohibited: List[str] = []
+        found_prohibited: list[str] = []
         for term in proh:
             pattern = re.escape(term)
             if re.search(r"\b" + pattern + r"\b", text, flags=flags):
                 found_prohibited.append(term)
 
         # Check required keywords
-        missing_required: List[str] = []
-        found_required: List[str] = []
+        missing_required: list[str] = []
+        found_required: list[str] = []
         for term in req:
             pattern = re.escape(term)
             if re.search(r"\b" + pattern + r"\b", text, flags=flags):
@@ -50,7 +50,7 @@ class KeywordEvaluator(BaseEvaluator):
                 missing_required.append(term)
 
         # Check any keywords
-        found_any: List[str] = []
+        found_any: list[str] = []
         for term in any_k:
             pattern = re.escape(term)
             if re.search(r"\b" + pattern + r"\b", text, flags=flags):

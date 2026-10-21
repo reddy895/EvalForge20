@@ -53,7 +53,7 @@ select = [
     "C4",  # flake8-comprehensions
     "UP",  # pyupgrade
 ]
-ignore = ["B008"]
+ignore = ["B008", "B904", "E501"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"

@@ -1,8 +1,7 @@
 """Abstract Base Provider interface and capability contracts."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from typing import Any
 
 from src.evalforge.providers.schemas import (
     InferenceRequest,
@@ -15,7 +14,7 @@ from src.evalforge.providers.schemas import (
 class BaseProvider(ABC):
     """Abstract interface that all inference providers (Ollama, Mock, Cloud) must implement."""
 
-    def __init__(self, name: str, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, name: str, config: dict[str, Any] | None = None):
         self.name = name
         self.config = config or {}
 
@@ -25,7 +24,7 @@ class BaseProvider(ABC):
         pass
 
     @abstractmethod
-    async def list_models(self) -> List[ModelInfo]:
+    async def list_models(self) -> list[ModelInfo]:
         """List locally or remotely available models."""
         pass
 
@@ -39,6 +38,6 @@ class BaseProvider(ABC):
         """Execute a text or structured inference request."""
         pass
 
-    async def close(self) -> None:
+    async def close(self) -> None:  # noqa: B027
         """Release underlying HTTP client or connection resources."""
         pass

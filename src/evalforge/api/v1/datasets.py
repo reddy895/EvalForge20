@@ -1,6 +1,5 @@
 """API endpoints for Dataset and TestCase management."""
 
-from typing import List, Optional
 from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile, status
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -104,7 +103,7 @@ async def list_datasets(
 async def import_dataset(
     name: str = Form(..., description="Dataset name to create"),
     format: str = Form("jsonl", description="Format: 'jsonl' or 'csv'"),
-    description: Optional[str] = Form(None, description="Optional description"),
+    description: str | None = Form(None, description="Optional description"),
     file: UploadFile = File(..., description="Uploaded dataset file"),
     db: AsyncSession = Depends(get_db),
 ) -> DatasetImportResponse:
@@ -226,15 +225,15 @@ async def delete_dataset(
 
 @datasets_router.post(
     "/{dataset_id}/cases",
-    response_model=List[TestCaseResponse],
+    response_model=list[TestCaseResponse],
     status_code=status.HTTP_201_CREATED,
     summary="Add test cases to dataset",
 )
 async def add_test_cases(
     dataset_id: str,
-    payload: List[TestCaseCreate],
+    payload: list[TestCaseCreate],
     db: AsyncSession = Depends(get_db),
-) -> List[TestCaseResponse]:
+) -> list[TestCaseResponse]:
     """Append one or more test cases to an existing dataset."""
     service = DatasetService(db)
     new_cases = await service.add_cases(dataset_id, payload)

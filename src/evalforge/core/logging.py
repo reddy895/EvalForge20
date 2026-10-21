@@ -4,27 +4,27 @@ import json
 import logging
 import sys
 from contextvars import ContextVar
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 # Context variables for asynchronous request and evaluation tracing
-request_id_ctx: ContextVar[Optional[str]] = ContextVar("request_id_ctx", default=None)
-evaluation_id_ctx: ContextVar[Optional[str]] = ContextVar("evaluation_id_ctx", default=None)
+request_id_ctx: ContextVar[str | None] = ContextVar("request_id_ctx", default=None)
+evaluation_id_ctx: ContextVar[str | None] = ContextVar("evaluation_id_ctx", default=None)
 
 
-def set_request_id(request_id: Optional[str]) -> None:
+def set_request_id(request_id: str | None) -> None:
     request_id_ctx.set(request_id)
 
 
-def get_request_id() -> Optional[str]:
+def get_request_id() -> str | None:
     return request_id_ctx.get()
 
 
-def set_evaluation_id(evaluation_id: Optional[str]) -> None:
+def set_evaluation_id(evaluation_id: str | None) -> None:
     evaluation_id_ctx.set(evaluation_id)
 
 
-def get_evaluation_id() -> Optional[str]:
+def get_evaluation_id() -> str | None:
     return evaluation_id_ctx.get()
 
 
@@ -32,8 +32,8 @@ class StructuredJsonFormatter(logging.Formatter):
     """Formats log records as serialized JSON dictionaries with contextual metadata."""
 
     def format(self, record: logging.LogRecord) -> str:
-        log_payload: Dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+        log_payload: dict[str, Any] = {
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -53,10 +53,28 @@ class StructuredJsonFormatter(logging.Formatter):
         # Attach extra fields passed in kwargs
         for key, value in record.__dict__.items():
             if key not in {
-                "args", "asctime", "created", "exc_info", "exc_text", "filename",
-                "funcName", "levelname", "levelno", "lineno", "module", "msecs",
-                "message", "msg", "name", "pathname", "process", "processName",
-                "relativeCreated", "stack_info", "thread", "threadName",
+                "args",
+                "asctime",
+                "created",
+                "exc_info",
+                "exc_text",
+                "filename",
+                "funcName",
+                "levelname",
+                "levelno",
+                "lineno",
+                "module",
+                "msecs",
+                "message",
+                "msg",
+                "name",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "stack_info",
+                "thread",
+                "threadName",
             }:
                 log_payload[key] = value
 
@@ -67,19 +85,19 @@ class ConsoleFormatter(logging.Formatter):
     """Clean colorized console formatter for local developer experience."""
 
     LEVEL_COLORS = {
-        logging.DEBUG: "\033[36m",    # Cyan
-        logging.INFO: "\033[32m",     # Green
+        logging.DEBUG: "\033[36m",  # Cyan
+        logging.INFO: "\033[32m",  # Green
         logging.WARNING: "\033[33m",  # Yellow
-        logging.ERROR: "\033[31m",    # Red
-        logging.CRITICAL: "\033[35m", # Magenta
+        logging.ERROR: "\033[31m",  # Red
+        logging.CRITICAL: "\033[35m",  # Magenta
     }
     RESET = "\033[0m"
 
     def format(self, record: logging.LogRecord) -> str:
         color = self.LEVEL_COLORS.get(record.levelno, self.RESET)
-        time_str = datetime.now(timezone.utc).strftime("%H:%M:%S")
+        time_str = datetime.now(UTC).strftime("%H:%M:%S")
         prefix = f"[{time_str}] {color}{record.levelname:<8}{self.RESET} [{record.name}]"
-        
+
         ctx = []
         req_id = get_request_id()
         if req_id:

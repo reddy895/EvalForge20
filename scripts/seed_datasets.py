@@ -1,7 +1,7 @@
 import asyncio
 import os
 import sys
-from typing import Any, Dict, List
+from typing import Any
 
 # Ensure repository root is on sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -10,7 +10,7 @@ from src.evalforge.schemas.dataset import DatasetCreate, TestCaseCreate
 from src.evalforge.services.dataset_service import DatasetService
 from src.evalforge.storage.database import close_db, get_session_factory, init_db
 
-SEED_DATASETS: List[Dict[str, Any]] = [
+SEED_DATASETS: list[dict[str, Any]] = [
     {
         "name": "Python Algorithmic Synthesis",
         "description": "Tests code synthesis for algorithmic functions: palindromes, two-sum, and recursion.",

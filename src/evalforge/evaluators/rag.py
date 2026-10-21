@@ -2,13 +2,13 @@
 
 import re
 import string
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from src.evalforge.evaluators.base import BaseEvaluator, MetricResult
 from src.evalforge.schemas.rag import RAGQueryCase, RAGScorecard
 
 
-def clean_tokens(text: str) -> Set[str]:
+def clean_tokens(text: str) -> set[str]:
     """Tokenize and remove punctuation and short stop words."""
     clean = text.lower()
     clean = "".join(ch for ch in clean if ch not in set(string.punctuation))
@@ -27,8 +27,8 @@ class ContextRelevanceEvaluator(BaseEvaluator):
     async def evaluate(
         self,
         prediction: str,  # Context string
-        reference: Optional[str] = None,  # Query string
-        context: Optional[str] = None,
+        reference: str | None = None,  # Query string
+        context: str | None = None,
         **kwargs: Any,
     ) -> MetricResult:
         query = reference or ""
@@ -48,7 +48,10 @@ class ContextRelevanceEvaluator(BaseEvaluator):
             score=score,
             passed=score >= 0.5,
             method="query_context_token_coverage",
-            details={"query_tokens_count": len(q_tokens), "matched_tokens": len(q_tokens & d_tokens)},
+            details={
+                "query_tokens_count": len(q_tokens),
+                "matched_tokens": len(q_tokens & d_tokens),
+            },
         )
 
 
@@ -62,8 +65,8 @@ class FaithfulnessEvaluator(BaseEvaluator):
     async def evaluate(
         self,
         prediction: str,  # Generated answer
-        reference: Optional[str] = None,
-        context: Optional[str] = None,  # Concatenated contexts
+        reference: str | None = None,
+        context: str | None = None,  # Concatenated contexts
         **kwargs: Any,
     ) -> MetricResult:
         answer = prediction
@@ -102,8 +105,8 @@ class AnswerRelevanceEvaluator(BaseEvaluator):
     async def evaluate(
         self,
         prediction: str,  # Answer
-        reference: Optional[str] = None,  # Query
-        context: Optional[str] = None,
+        reference: str | None = None,  # Query
+        context: str | None = None,
         **kwargs: Any,
     ) -> MetricResult:
         query = reference or ""
@@ -144,8 +147,8 @@ async def evaluate_rag_case(case: RAGQueryCase) -> RAGScorecard:
     ar_res = await ar_eval.evaluate(case.answer, reference=case.query)
 
     # 4. Citations if expected
-    cit_prec: Optional[float] = None
-    cit_rec: Optional[float] = None
+    cit_prec: float | None = None
+    cit_rec: float | None = None
     if case.expected_citations:
         found = []
         ans_tokens = clean_tokens(case.answer)

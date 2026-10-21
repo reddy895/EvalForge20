@@ -1,13 +1,21 @@
 """Model capability detection and metadata parser for Ollama."""
 
-from typing import Any, Dict
+from typing import Any
+
 from src.evalforge.providers.schemas import ModelInfo, ProviderCapabilities
 
 # Known families with robust native tool-calling template support in Ollama
-TOOL_CAPABLE_FAMILIES = {"llama3.1", "llama3.2", "qwen2.5", "mistral", "command-r", "deepseek-coder"}
+TOOL_CAPABLE_FAMILIES = {
+    "llama3.1",
+    "llama3.2",
+    "qwen2.5",
+    "mistral",
+    "command-r",
+    "deepseek-coder",
+}
 
 
-def parse_model_info(raw_tag: Dict[str, Any]) -> ModelInfo:
+def parse_model_info(raw_tag: dict[str, Any]) -> ModelInfo:
     """Extract standard ModelInfo schema from an Ollama /api/tags entry."""
     details = raw_tag.get("details", {})
     return ModelInfo(
@@ -22,7 +30,7 @@ def parse_model_info(raw_tag: Dict[str, Any]) -> ModelInfo:
     )
 
 
-def detect_capabilities(show_data: Dict[str, Any], model_name: str) -> ProviderCapabilities:
+def detect_capabilities(show_data: dict[str, Any], model_name: str) -> ProviderCapabilities:
     """Analyze Ollama /api/show response to accurately report supported features."""
     details = show_data.get("details", {})
     model_info = show_data.get("model_info", {})

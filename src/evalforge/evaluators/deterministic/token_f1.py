@@ -1,9 +1,9 @@
 """Token-level Precision, Recall, and F1 Score metric evaluator."""
 
-from collections import Counter
 import re
 import string
-from typing import Any, List, Optional
+from collections import Counter
+from typing import Any
 
 from src.evalforge.evaluators.base import BaseEvaluator, MetricResult
 
@@ -16,7 +16,7 @@ class TokenF1Evaluator(BaseEvaluator):
     is_deterministic = True
 
     @staticmethod
-    def tokenize(text: str) -> List[str]:
+    def tokenize(text: str) -> list[str]:
         """Normalize and tokenize text into token sequences."""
         clean = text.lower()
         clean = "".join(ch for ch in clean if ch not in set(string.punctuation))
@@ -26,8 +26,8 @@ class TokenF1Evaluator(BaseEvaluator):
     async def evaluate(
         self,
         prediction: str,
-        reference: Optional[str] = None,
-        context: Optional[str] = None,
+        reference: str | None = None,
+        context: str | None = None,
         threshold: float = 0.7,
         **kwargs: Any,
     ) -> MetricResult:

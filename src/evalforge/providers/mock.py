@@ -4,7 +4,7 @@ import asyncio
 import json
 import re
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from src.evalforge.core.errors import ModelNotFoundError, ProviderError
 from src.evalforge.providers.base import BaseProvider
@@ -54,23 +54,23 @@ class MockProvider(BaseProvider):
     def __init__(
         self,
         name: str = "mock",
-        config: Optional[Dict[str, Any]] = None,
+        config: dict[str, Any] | None = None,
         healthy: bool = True,
         latency_seconds: float = 0.005,
-        canned_responses: Optional[Dict[str, str]] = None,
-        raise_error: Optional[Exception] = None,
+        canned_responses: dict[str, str] | None = None,
+        raise_error: Exception | None = None,
     ):
         super().__init__(name=name, config=config)
         self.healthy = healthy
         self.latency_seconds = latency_seconds
         self.canned_responses = canned_responses or {}
         self.raise_error = raise_error
-        self.call_history: List[InferenceRequest] = []
+        self.call_history: list[InferenceRequest] = []
 
     async def health_check(self) -> bool:
         return self.healthy
 
-    async def list_models(self) -> List[ModelInfo]:
+    async def list_models(self) -> list[ModelInfo]:
         if not self.healthy:
             raise ProviderError("Mock provider is offline", provider=self.name)
         return list(self.DEFAULT_MODELS)
@@ -121,10 +121,12 @@ class MockProvider(BaseProvider):
                 break
 
         # Check tool execution requests
-        tool_calls: Optional[List[ToolCall]] = None
-        if request.tools and ("call tool" in prompt_text.lower() or "use tool" in prompt_text.lower()):
+        tool_calls: list[ToolCall] | None = None
+        if request.tools and (
+            "call tool" in prompt_text.lower() or "use tool" in prompt_text.lower()
+        ):
             first_tool = request.tools[0]
-            sample_args: Dict[str, Any] = {}
+            sample_args: dict[str, Any] = {}
             if "properties" in first_tool.parameters:
                 for prop_name in first_tool.parameters["properties"]:
                     sample_args[prop_name] = "test_value"
@@ -133,7 +135,7 @@ class MockProvider(BaseProvider):
 
         # Check structured json requests
         elif request.json_schema and not response_text:
-            dummy_json: Dict[str, Any] = {}
+            dummy_json: dict[str, Any] = {}
             if "properties" in request.json_schema:
                 for prop_name, prop_def in request.json_schema["properties"].items():
                     prop_type = prop_def.get("type", "string")

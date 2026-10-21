@@ -2,7 +2,7 @@
 
 import os
 import re
-from typing import Optional
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -19,7 +19,7 @@ def sanitize_filename(filename: str) -> str:
     return clean or "unnamed_file"
 
 
-def validate_path_safety(target_path: str, base_dir: Optional[str] = None) -> str:
+def validate_path_safety(target_path: str, base_dir: str | None = None) -> str:
     """Ensure target_path does not escape base directory via directory traversal."""
     if "\0" in target_path:
         raise SecurityViolationError("Path contains prohibited null byte character.")
@@ -35,7 +35,7 @@ def validate_path_safety(target_path: str, base_dir: Optional[str] = None) -> st
     return norm_path
 
 
-def enforce_content_length(content_length: Optional[int], max_allowed_bytes: int) -> None:
+def enforce_content_length(content_length: int | None, max_allowed_bytes: int) -> None:
     """Verify request content-length against configured maximum bytes limit."""
     if content_length and content_length > max_allowed_bytes:
         raise PayloadTooLargeError(

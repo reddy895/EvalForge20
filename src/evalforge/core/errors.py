@@ -1,6 +1,7 @@
 """Domain error hierarchy and centralized FastAPI exception handlers."""
 
-from typing import Any, Dict, Optional
+from typing import Any
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -14,8 +15,8 @@ logger = get_logger("evalforge.errors")
 class ErrorDetail(BaseModel):
     code: str
     message: str
-    details: Optional[Any] = None
-    request_id: Optional[str] = None
+    details: Any | None = None
+    request_id: str | None = None
 
 
 class ErrorResponse(BaseModel):
@@ -30,7 +31,7 @@ class EvalForgeError(Exception):
         message: str,
         code: str = "INTERNAL_ERROR",
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        details: Optional[Any] = None,
+        details: Any | None = None,
     ):
         super().__init__(message)
         self.message = message
@@ -50,7 +51,7 @@ class NotFoundError(EvalForgeError):
 
 
 class EntityConflictError(EvalForgeError):
-    def __init__(self, message: str, details: Optional[Any] = None):
+    def __init__(self, message: str, details: Any | None = None):
         super().__init__(
             message=message,
             code="CONFLICT",
@@ -60,7 +61,7 @@ class EntityConflictError(EvalForgeError):
 
 
 class DataValidationError(EvalForgeError):
-    def __init__(self, message: str, details: Optional[Any] = None):
+    def __init__(self, message: str, details: Any | None = None):
         super().__init__(
             message=message,
             code="VALIDATION_FAILED",
@@ -70,7 +71,7 @@ class DataValidationError(EvalForgeError):
 
 
 class ProviderError(EvalForgeError):
-    def __init__(self, message: str, provider: str, details: Optional[Any] = None):
+    def __init__(self, message: str, provider: str, details: Any | None = None):
         super().__init__(
             message=message,
             code="PROVIDER_ERROR",
@@ -118,7 +119,7 @@ class EvaluationCancelledError(EvalForgeError):
 
 
 class SecurityViolationError(EvalForgeError):
-    def __init__(self, message: str, details: Optional[Any] = None):
+    def __init__(self, message: str, details: Any | None = None):
         super().__init__(
             message=message,
             code="SECURITY_VIOLATION",

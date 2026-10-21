@@ -1,6 +1,7 @@
 """Pydantic schemas for inference requests, responses, models, and capabilities."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -12,33 +13,33 @@ class ChatMessage(BaseModel):
 class ToolDefinition(BaseModel):
     name: str
     description: str
-    parameters: Dict[str, Any] = Field(default_factory=dict)
+    parameters: dict[str, Any] = Field(default_factory=dict)
 
 
 class ToolCall(BaseModel):
     name: str
-    arguments: Dict[str, Any] = Field(default_factory=dict)
+    arguments: dict[str, Any] = Field(default_factory=dict)
 
 
 class InferenceRequest(BaseModel):
     model: str
-    prompt: Optional[str] = None
-    messages: Optional[List[ChatMessage]] = None
-    system_prompt: Optional[str] = None
+    prompt: str | None = None
+    messages: list[ChatMessage] | None = None
+    system_prompt: str | None = None
     temperature: float = 0.7
-    top_p: Optional[float] = None
-    seed: Optional[int] = None
-    context_length: Optional[int] = None
-    max_tokens: Optional[int] = None
-    json_schema: Optional[Dict[str, Any]] = None
-    tools: Optional[List[ToolDefinition]] = None
-    stop: Optional[List[str]] = None
+    top_p: float | None = None
+    seed: int | None = None
+    context_length: int | None = None
+    max_tokens: int | None = None
+    json_schema: dict[str, Any] | None = None
+    tools: list[ToolDefinition] | None = None
+    stop: list[str] | None = None
 
 
 class TokenUsage(BaseModel):
-    prompt_tokens: Optional[int] = None
-    completion_tokens: Optional[int] = None
-    total_tokens: Optional[int] = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
 
 
 class InferenceResponse(BaseModel):
@@ -46,20 +47,20 @@ class InferenceResponse(BaseModel):
     model: str
     provider: str
     latency_ms: float
-    usage: Optional[TokenUsage] = None
-    tool_calls: Optional[List[ToolCall]] = None
-    raw_metadata: Dict[str, Any] = Field(default_factory=dict)
+    usage: TokenUsage | None = None
+    tool_calls: list[ToolCall] | None = None
+    raw_metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ModelInfo(BaseModel):
     id: str
     name: str
     provider: str
-    size_bytes: Optional[int] = None
-    parameter_size: Optional[str] = None
-    quantization: Optional[str] = None
-    family: Optional[str] = None
-    modified_at: Optional[str] = None
+    size_bytes: int | None = None
+    parameter_size: str | None = None
+    quantization: str | None = None
+    family: str | None = None
+    modified_at: str | None = None
 
 
 class ProviderCapabilities(BaseModel):
@@ -69,4 +70,4 @@ class ProviderCapabilities(BaseModel):
     supports_tools: bool = False
     supports_structured_output: bool = False
     supports_system_prompt: bool = True
-    max_context_length: Optional[int] = 4096
+    max_context_length: int | None = 4096

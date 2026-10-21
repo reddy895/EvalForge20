@@ -1,7 +1,7 @@
 """Dataset exporter for streaming JSONL export."""
 
 import json
-from typing import Iterator
+from collections.abc import Iterator
 
 from src.evalforge.storage.models.dataset import Dataset
 

@@ -1,6 +1,5 @@
 """BenchmarkComparison repository for model comparisons and rankings."""
 
-from typing import List, Optional
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,9 +13,7 @@ class BenchmarkRepository(BaseRepository[BenchmarkComparison]):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, model_cls=BenchmarkComparison)
 
-    async def list_recent(
-        self, offset: int = 0, limit: int = 20
-    ) -> List[BenchmarkComparison]:
+    async def list_recent(self, offset: int = 0, limit: int = 20) -> list[BenchmarkComparison]:
         """List benchmark comparisons in descending chronological order."""
         stmt = (
             select(BenchmarkComparison)
@@ -27,7 +24,7 @@ class BenchmarkRepository(BaseRepository[BenchmarkComparison]):
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_by_dataset(self, dataset_id: str) -> List[BenchmarkComparison]:
+    async def get_by_dataset(self, dataset_id: str) -> list[BenchmarkComparison]:
         """Fetch comparisons executed against a given dataset."""
         stmt = (
             select(BenchmarkComparison)

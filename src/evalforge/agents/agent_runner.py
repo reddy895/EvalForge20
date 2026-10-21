@@ -3,7 +3,6 @@
 import asyncio
 import json
 import time
-from typing import Any, Dict, List, Optional, Set, Tuple
 
 from src.evalforge.agents.tool_harness import SafeToolHarness
 from src.evalforge.core.logging import get_logger
@@ -21,7 +20,7 @@ logger = get_logger("evalforge.agents.runner")
 class AgentExecutionRunner:
     """Orchestrates an agent loop: prompt -> model -> tool call -> tool result -> final outcome."""
 
-    def __init__(self, provider: BaseProvider, harness: Optional[SafeToolHarness] = None):
+    def __init__(self, provider: BaseProvider, harness: SafeToolHarness | None = None):
         self.provider = provider
         self.harness = harness or SafeToolHarness()
 
@@ -29,13 +28,11 @@ class AgentExecutionRunner:
         self,
         model_id: str,
         task: str,
-        tool_specs: List[AgentToolSpec],
+        tool_specs: list[AgentToolSpec],
         max_steps: int = 8,
         timeout_seconds: float = 30.0,
-    ) -> Tuple[List[AgentStepTrace], Optional[str], bool, int]:
+    ) -> tuple[list[AgentStepTrace], str | None, bool, int]:
         """Execute the multi-turn agent interaction loop with step limits and timeout enforcement."""
-        start_time = time.perf_counter()
-
         # Convert tool specs to provider definitions
         provider_tools = [
             ToolDefinition(
@@ -45,18 +42,18 @@ class AgentExecutionRunner:
             )
             for t in tool_specs
         ]
-        allowed_tool_names: Set[str] = {t.name.lower() for t in tool_specs}
+        allowed_tool_names: set[str] = {t.name.lower() for t in tool_specs}
 
-        messages: List[ChatMessage] = [ChatMessage(role="user", content=task)]
-        traces: List[AgentStepTrace] = []
-        final_output: Optional[str] = None
+        messages: list[ChatMessage] = [ChatMessage(role="user", content=task)]
+        traces: list[AgentStepTrace] = []
+        final_output: str | None = None
         task_completed = False
         policy_violations_count = 0
 
         async def _run_loop() -> None:
             nonlocal final_output, task_completed, policy_violations_count
 
-            for step in range(1, max_steps + 1):
+            for _step in range(1, max_steps + 1):
                 step_start = time.perf_counter()
 
                 # Inference request
@@ -86,7 +83,9 @@ class AgentExecutionRunner:
                             step_number=len(traces) + 1,
                             tool_name=tc.name,
                             tool_args=tc.arguments,
-                            tool_result=exec_res.output if exec_res.success else {"error": exec_res.error},
+                            tool_result=exec_res.output
+                            if exec_res.success
+                            else {"error": exec_res.error},
                             thought=resp.text or None,
                             duration_ms=round(step_duration + exec_res.duration_ms, 2),
                             is_valid_call=exec_res.success,
@@ -103,7 +102,11 @@ class AgentExecutionRunner:
                         messages.append(
                             ChatMessage(
                                 role="tool",
-                                content=json.dumps(exec_res.output if exec_res.success else {"error": exec_res.error}),
+                                content=json.dumps(
+                                    exec_res.output
+                                    if exec_res.success
+                                    else {"error": exec_res.error}
+                                ),
                             )
                         )
                 else:
@@ -124,7 +127,7 @@ class AgentExecutionRunner:
 
         try:
             await asyncio.wait_for(_run_loop(), timeout=timeout_seconds)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("Agent execution exceeded timeout of %s seconds", timeout_seconds)
             final_output = f"Execution timed out after {timeout_seconds}s"
             task_completed = False

@@ -1,7 +1,7 @@
 """EvaluationRun and CaseResult specialized repository."""
 
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+
 from sqlalchemy import desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -16,7 +16,7 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, model_cls=EvaluationRun)
 
-    async def get_with_results(self, evaluation_id: str) -> Optional[EvaluationRun]:
+    async def get_with_results(self, evaluation_id: str) -> EvaluationRun | None:
         """Fetch evaluation run eager-loading all case-level results."""
         stmt = (
             select(EvaluationRun)
@@ -28,12 +28,12 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
 
     async def list_by_filter(
         self,
-        status: Optional[str] = None,
-        model_id: Optional[str] = None,
-        dataset_id: Optional[str] = None,
+        status: str | None = None,
+        model_id: str | None = None,
+        dataset_id: str | None = None,
         offset: int = 0,
         limit: int = 50,
-    ) -> List[EvaluationRun]:
+    ) -> list[EvaluationRun]:
         """Filter evaluations with pagination and descending timestamp order."""
         stmt = select(EvaluationRun)
         if status:
@@ -51,26 +51,22 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
         self,
         evaluation_id: str,
         status: str,
-        error_message: Optional[str] = None,
+        error_message: str | None = None,
     ) -> None:
         """Atomic status update for evaluation lifecycle progression."""
         values = {"status": status}
         if error_message is not None:
             values["error_message"] = error_message
         if status in ("completed", "failed", "cancelled"):
-            values["completed_at"] = datetime.now(timezone.utc)
+            values["completed_at"] = datetime.now(UTC)
 
-        stmt = (
-            update(EvaluationRun)
-            .where(EvaluationRun.id == evaluation_id)
-            .values(**values)
-        )
+        stmt = update(EvaluationRun).where(EvaluationRun.id == evaluation_id).values(**values)
         await self.session.execute(stmt)
         await self.session.flush()
 
     async def add_case_results(
-        self, evaluation_id: str, results: List[CaseResult]
-    ) -> List[CaseResult]:
+        self, evaluation_id: str, results: list[CaseResult]
+    ) -> list[CaseResult]:
         """Batch save case evaluation outcomes."""
         for res in results:
             res.evaluation_id = evaluation_id
@@ -80,7 +76,7 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
 
     async def get_case_results(
         self, evaluation_id: str, offset: int = 0, limit: int = 100
-    ) -> List[CaseResult]:
+    ) -> list[CaseResult]:
         """Fetch paginated case-level results for a specific evaluation."""
         stmt = (
             select(CaseResult)

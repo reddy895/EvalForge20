@@ -1,13 +1,12 @@
 """Evaluation application service orchestrating runs, execution, and cancellation."""
 
 import asyncio
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.evalforge.core.errors import (
     DataValidationError,
-    EvaluationCancelledError,
     NotFoundError,
 )
 from src.evalforge.core.logging import get_logger
@@ -36,9 +35,7 @@ class EvaluationService:
         self.registry = get_provider_registry()
         self.coordinator = get_lifecycle_coordinator()
 
-    async def create_and_start_run(
-        self, request: EvaluationCreateRequest
-    ) -> EvaluationRun:
+    async def create_and_start_run(self, request: EvaluationCreateRequest) -> EvaluationRun:
         """Create a persistent evaluation run and launch execution in the background."""
         # Validate dataset
         dataset = await self.dataset_repo.get_with_cases(request.dataset_id)
@@ -49,7 +46,7 @@ class EvaluationService:
             raise DataValidationError(f"Dataset '{dataset.name}' has no test cases to evaluate.")
 
         # Validate provider
-        provider = self.registry.get(request.provider)
+        self.registry.get(request.provider)
         config = request.config or EvaluationConfig()
 
         run_name = request.name or f"{dataset.name} — {request.model_id}"
@@ -72,7 +69,9 @@ class EvaluationService:
 
         # Launch execution as background task
         asyncio.create_task(
-            self._execute_evaluation_task(run.id, snapshot, request.model_id, request.provider, config)
+            self._execute_evaluation_task(
+                run.id, snapshot, request.model_id, request.provider, config
+            )
         )
 
         return run
@@ -101,7 +100,7 @@ class EvaluationService:
 
         try:
             # Execute cases with bounded concurrency
-            case_results: List[CaseResult] = await pool.map(
+            case_results: list[CaseResult] = await pool.map(
                 lambda case: runner.execute_case(case, evaluation_id),
                 snapshot.cases,
                 cancellation_event=cancel_event,
@@ -130,12 +129,14 @@ class EvaluationService:
                 run.pass_rate = scorecard.pass_rate
                 run.avg_latency_ms = scorecard.avg_latency_ms
                 run.summary_metrics = scorecard.model_dump()
-                run.completed_at = datetime.now(timezone.utc)
+                run.completed_at = datetime.now(UTC)
 
                 await repo.add_case_results(evaluation_id, case_results)
                 await session.commit()
 
-            logger.info("Evaluation '%s' finished with pass rate %.2f", evaluation_id, scorecard.pass_rate)
+            logger.info(
+                "Evaluation '%s' finished with pass rate %.2f", evaluation_id, scorecard.pass_rate
+            )
 
         except Exception as exc:
             logger.exception("Evaluation '%s' execution failed: %s", evaluation_id, exc)
@@ -160,12 +161,12 @@ class EvaluationService:
 
     async def list_evaluations(
         self,
-        status: Optional[str] = None,
-        model_id: Optional[str] = None,
-        dataset_id: Optional[str] = None,
+        status: str | None = None,
+        model_id: str | None = None,
+        dataset_id: str | None = None,
         offset: int = 0,
         limit: int = 50,
-    ) -> List[EvaluationRun]:
+    ) -> list[EvaluationRun]:
         """List evaluations filtered by status, model, or dataset."""
         return await self.eval_repo.list_by_filter(
             status=status,

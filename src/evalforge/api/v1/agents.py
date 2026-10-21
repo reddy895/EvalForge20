@@ -1,13 +1,10 @@
 """API endpoints for Agent evaluation and tool execution trace retrieval."""
 
-import json
-from typing import List
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.evalforge.schemas.agent import (
     AgentEvaluationCreateRequest,
-    AgentEvaluationDetailResponse,
     AgentEvaluationResponse,
     AgentStepTrace,
 )
@@ -71,13 +68,13 @@ async def get_agent_evaluation(
 
 @agents_router.get(
     "/{evaluation_id}/traces",
-    response_model=List[AgentStepTrace],
+    response_model=list[AgentStepTrace],
     summary="Get ordered execution traces for an agent evaluation",
 )
 async def get_agent_traces(
     evaluation_id: str,
     db: AsyncSession = Depends(get_db),
-) -> List[AgentStepTrace]:
+) -> list[AgentStepTrace]:
     """Retrieve chronologically ordered tool calls, arguments, outputs, and reasoning steps."""
     service = AgentService(db)
     traces = await service.get_traces(evaluation_id)

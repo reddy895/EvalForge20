@@ -1,7 +1,7 @@
 """Unit and integration test suite for multi-model benchmark comparisons."""
 
 import uuid
-import pytest
+
 from starlette.testclient import TestClient
 
 from src.evalforge.benchmarks.statistics import compute_model_metrics

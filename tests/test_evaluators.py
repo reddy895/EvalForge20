@@ -159,16 +159,13 @@ async def test_latency_sla_evaluator() -> None:
     assert res_good.passed is True
     assert res_good.details["throughput_tokens_per_sec"] is not None
 
-    res_slow = await evaluator.evaluate(
-        "Output", latency_ms=1500.0, max_latency_ms=1000.0
-    )
+    res_slow = await evaluator.evaluate("Output", latency_ms=1500.0, max_latency_ms=1000.0)
     assert res_slow.score < 1.0
     assert res_slow.passed is False
 
 
 @pytest.mark.asyncio
 async def test_llm_judge_evaluator_with_mock() -> None:
-    canned = {'{"score": 5, "reasoning": "Excellent mathematical deduction"}': '{"score": 5, "reasoning": "Excellent mathematical deduction"}'}
     mock = MockProvider(
         canned_responses={".*": '{"score": 5, "reasoning": "Excellent mathematical deduction"}'}
     )

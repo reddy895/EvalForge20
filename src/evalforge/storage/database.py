@@ -1,6 +1,7 @@
 """Database engine configuration and async session management."""
 
 from collections.abc import AsyncGenerator
+
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+
 from src.evalforge.core.config import get_settings
 from src.evalforge.core.logging import get_logger
 
@@ -35,6 +37,7 @@ def get_engine() -> AsyncEngine:
 
         # Enforce foreign key constraints in SQLite
         if "sqlite" in settings.DATABASE_URL:
+
             @event.listens_for(_engine.sync_engine, "connect")
             def set_sqlite_pragma(dbapi_connection: object, _: object) -> None:
                 cursor = dbapi_connection.cursor()  # type: ignore[attr-defined]
@@ -72,9 +75,9 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def init_db() -> None:
     """Initialize database tables for development/testing if migrations have not run."""
-    from src.evalforge.storage.base import Base
     # Import all models so metadata knows all tables
     import src.evalforge.storage.models  # noqa: F401
+    from src.evalforge.storage.base import Base
 
     engine = get_engine()
     async with engine.begin() as conn:

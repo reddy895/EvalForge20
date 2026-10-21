@@ -1,6 +1,7 @@
 """Health check and system diagnostics endpoints."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -27,6 +28,6 @@ async def check_health() -> HealthResponse:
         app=settings.APP_NAME,
         version=settings.APP_VERSION,
         environment=settings.ENVIRONMENT,
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
         ollama_base_url=settings.OLLAMA_BASE_URL,
     )

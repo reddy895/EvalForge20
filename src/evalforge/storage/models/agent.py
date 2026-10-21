@@ -1,8 +1,9 @@
 """AgentEvaluation and AgentTrace SQLAlchemy ORM models."""
 
 import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
+
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,13 +21,13 @@ class AgentEvaluation(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     total_steps: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     max_steps: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
     task_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    tool_accuracy: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    schema_validity: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    tool_accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
+    schema_validity: Mapped[float | None] = mapped_column(Float, nullable=True)
     policy_violations: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    final_output: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    final_output: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    traces: Mapped[List["AgentTrace"]] = relationship(
+    traces: Mapped[list["AgentTrace"]] = relationship(
         "AgentTrace",
         back_populates="agent_evaluation",
         cascade="all, delete-orphan",
@@ -44,15 +45,15 @@ class AgentTrace(Base, UUIDPrimaryKeyMixin):
         nullable=False,
     )
     step_number: Mapped[int] = mapped_column(Integer, nullable=False)
-    tool_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    tool_args_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    tool_result_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    thought: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    tool_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    tool_args_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tool_result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    thought: Mapped[str | None] = mapped_column(Text, nullable=True)
     duration_ms: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     is_valid_call: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         server_default=func.now(),
         nullable=False,
     )
@@ -62,7 +63,7 @@ class AgentTrace(Base, UUIDPrimaryKeyMixin):
     )
 
     @property
-    def tool_args(self) -> Dict[str, Any]:
+    def tool_args(self) -> dict[str, Any]:
         if not self.tool_args_json:
             return {}
         try:
@@ -71,7 +72,7 @@ class AgentTrace(Base, UUIDPrimaryKeyMixin):
             return {}
 
     @tool_args.setter
-    def tool_args(self, value: Dict[str, Any]) -> None:
+    def tool_args(self, value: dict[str, Any]) -> None:
         self.tool_args_json = json.dumps(value)
 
     @property

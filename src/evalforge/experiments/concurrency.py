@@ -1,7 +1,8 @@
 """Bounded concurrency worker pool with cancellation awareness."""
 
 import asyncio
-from typing import Any, Awaitable, Callable, List, Optional, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import TypeVar
 
 from src.evalforge.core.logging import get_logger
 
@@ -21,11 +22,11 @@ class BoundedConcurrencyPool:
     async def map(
         self,
         worker_fn: Callable[[T], Awaitable[R]],
-        items: List[T],
-        cancellation_event: Optional[asyncio.Event] = None,
-    ) -> List[R]:
+        items: list[T],
+        cancellation_event: asyncio.Event | None = None,
+    ) -> list[R]:
         """Execute worker_fn on each item concurrently up to the semaphore limit."""
-        results: List[Optional[R]] = [None] * len(items)
+        results: list[R | None] = [None] * len(items)
 
         async def _run_one(index: int, item: T) -> None:
             if cancellation_event and cancellation_event.is_set():

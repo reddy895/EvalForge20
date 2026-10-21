@@ -1,7 +1,7 @@
 """Benchmark comparison service coordinating multi-model benchmark runs."""
 
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.evalforge.benchmarks.comparator import MultiModelComparator
@@ -37,9 +37,7 @@ class BenchmarkService:
         self.eval_repo = EvaluationRepository(session)
         self.registry = get_provider_registry()
 
-    async def compare_models(
-        self, request: BenchmarkCompareRequest
-    ) -> BenchmarkComparisonResponse:
+    async def compare_models(self, request: BenchmarkCompareRequest) -> BenchmarkComparisonResponse:
         """Run multiple models sequentially or concurrently against an immutable dataset snapshot."""
         dataset = await self.dataset_repo.get_with_cases(request.dataset_id)
         if not dataset:
@@ -53,10 +51,12 @@ class BenchmarkService:
 
         comparator = MultiModelComparator(provider=provider, config=config)
 
-        matrix_items: List[ModelComparisonMetrics] = []
-        evaluation_ids: List[str] = []
+        matrix_items: list[ModelComparisonMetrics] = []
+        evaluation_ids: list[str] = []
 
-        comparison_name = request.name or f"Comparison on {dataset.name} ({len(request.models)} models)"
+        comparison_name = (
+            request.name or f"Comparison on {dataset.name} ({len(request.models)} models)"
+        )
 
         # Run benchmark for each model against identical snapshot
         for model_id in request.models:
@@ -96,7 +96,7 @@ class BenchmarkService:
             run.failed_cases = metrics.failed_cases
             run.pass_rate = metrics.pass_rate
             run.avg_latency_ms = metrics.avg_latency_ms
-            run.completed_at = datetime.now(timezone.utc)
+            run.completed_at = datetime.now(UTC)
 
             await self.eval_repo.add_case_results(run.id, case_results)
             await self.session.flush()
@@ -118,7 +118,7 @@ class BenchmarkService:
             metrics_evaluated=config.metrics,
             temperature=config.temperature,
             concurrency=config.concurrency,
-            executed_at=datetime.now(timezone.utc).isoformat(),
+            executed_at=datetime.now(UTC).isoformat(),
         )
         comparison.reproducibility = repro.model_dump()
         await self.benchmark_repo.add(comparison)

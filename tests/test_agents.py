@@ -1,6 +1,7 @@
 """Unit and integration test suite for Agent tool harness, safety, and trace auditing."""
 
 import uuid
+
 import pytest
 from starlette.testclient import TestClient
 
@@ -16,10 +17,10 @@ def test_safe_math_ast_evaluator() -> None:
     assert safe_eval_math("2 ** 3") == 8.0
 
     # Prevent unsafe python code injection
-    with pytest.raises(Exception):
+    with pytest.raises((ValueError, SyntaxError, TypeError)):
         safe_eval_math("__import__('os').system('ls')")
 
-    with pytest.raises(Exception):
+    with pytest.raises((ValueError, SyntaxError, TypeError)):
         safe_eval_math("open('/etc/passwd').read()")
 
 

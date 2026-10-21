@@ -1,8 +1,8 @@
 """Dataset snapshot builder for freeze-state reproducibility."""
 
 import hashlib
-import json
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from src.evalforge.storage.models.dataset import Dataset
@@ -12,11 +12,11 @@ class FrozenTestCase(BaseModel):
     __test__ = False
     id: str
     prompt: str
-    expected_output: Optional[str] = None
-    context: Optional[str] = None
-    tags: List[str] = Field(default_factory=list)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    evaluator_config: Dict[str, Any] = Field(default_factory=dict)
+    expected_output: str | None = None
+    context: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    evaluator_config: dict[str, Any] = Field(default_factory=dict)
 
 
 class DatasetSnapshot(BaseModel):
@@ -25,16 +25,16 @@ class DatasetSnapshot(BaseModel):
     version: int
     snapshot_hash: str
     total_cases: int
-    cases: List[FrozenTestCase]
+    cases: list[FrozenTestCase]
 
 
 def create_dataset_snapshot(dataset: Dataset) -> DatasetSnapshot:
     """Create an immutable, serializable snapshot of test cases with a cryptographic digest."""
-    frozen_cases: List[FrozenTestCase] = []
+    frozen_cases: list[FrozenTestCase] = []
 
     ds_id = str(dataset.id or "transient")
     hasher = hashlib.sha256()
-    hasher.update(f"{ds_id}:{dataset.name}:{dataset.version}".encode("utf-8"))
+    hasher.update(f"{ds_id}:{dataset.name}:{dataset.version}".encode())
 
     for case in dataset.test_cases:
         frozen = FrozenTestCase(

@@ -1,6 +1,7 @@
 """Comprehensive unit tests for provider abstraction, Ollama client, and mock provider."""
 
 import json
+
 import httpx
 import pytest
 from httpx import Response
@@ -11,10 +12,8 @@ from src.evalforge.main import app
 from src.evalforge.providers.mock import MockProvider
 from src.evalforge.providers.ollama.capabilities import detect_capabilities, parse_model_info
 from src.evalforge.providers.ollama.client import OllamaClient
-from src.evalforge.providers.ollama.provider import OllamaProvider
-from src.evalforge.providers.registry import ProviderRegistry, get_provider_registry
+from src.evalforge.providers.registry import ProviderRegistry
 from src.evalforge.providers.schemas import (
-    ChatMessage,
     InferenceRequest,
     ToolDefinition,
 )
@@ -113,7 +112,9 @@ async def test_ollama_client_mock_transport_tags() -> None:
         return Response(404)
 
     client = OllamaClient(base_url="http://mock-ollama:11434")
-    client._http_client = httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://mock-ollama:11434")
+    client._http_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(handler), base_url="http://mock-ollama:11434"
+    )
 
     tags = await client.list_tags()
     assert len(tags["models"]) == 1

@@ -1,9 +1,8 @@
 """API endpoints for inference providers and local Ollama management."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 
 from src.evalforge.core.config import Settings, get_settings
-from src.evalforge.core.errors import ProviderConnectionError
 from src.evalforge.providers.ollama.client import get_ollama_client
 from src.evalforge.providers.registry import get_provider_registry
 from src.evalforge.providers.schemas import InferenceRequest
@@ -12,8 +11,8 @@ from src.evalforge.schemas.providers import (
     OllamaModelsListResponse,
     OllamaTestInferenceRequest,
     OllamaTestInferenceResponse,
-    ProviderStatusItem,
     ProvidersListResponse,
+    ProviderStatusItem,
 )
 
 providers_router = APIRouter(prefix="/providers", tags=["Providers"])

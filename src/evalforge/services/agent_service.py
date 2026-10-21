@@ -1,6 +1,5 @@
 """Agent evaluation application service managing agent runs and step auditing."""
 
-from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.evalforge.agents.agent_metrics import compute_agent_metrics
@@ -23,9 +22,7 @@ class AgentService:
         self.repo = AgentRepository(session)
         self.registry = get_provider_registry()
 
-    async def run_evaluation(
-        self, request: AgentEvaluationCreateRequest
-    ) -> AgentEvaluation:
+    async def run_evaluation(self, request: AgentEvaluationCreateRequest) -> AgentEvaluation:
         """Execute a controlled agent test case with strict allowlist and full step auditing."""
         provider = self.registry.get(request.provider)
 
@@ -109,6 +106,6 @@ class AgentService:
             raise NotFoundError("AgentEvaluation", evaluation_id)
         return entity
 
-    async def get_traces(self, evaluation_id: str) -> List[AgentTrace]:
+    async def get_traces(self, evaluation_id: str) -> list[AgentTrace]:
         """Fetch ordered step traces for an agent evaluation."""
         return await self.repo.list_traces(evaluation_id)

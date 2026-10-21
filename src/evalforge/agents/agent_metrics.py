@@ -1,6 +1,5 @@
 """Agent evaluation metrics for tool selection, schema validity, and safety adherence."""
 
-from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 
 from src.evalforge.schemas.agent import AgentStepTrace
@@ -16,10 +15,10 @@ class AgentEvaluationScorecard(BaseModel):
 
 
 def compute_agent_metrics(
-    traces: List[AgentStepTrace],
-    expected_tools: Optional[List[str]] = None,
-    expected_outcome: Optional[str] = None,
-    final_output: Optional[str] = None,
+    traces: list[AgentStepTrace],
+    expected_tools: list[str] | None = None,
+    expected_outcome: str | None = None,
+    final_output: str | None = None,
     policy_violations: int = 0,
     raw_task_completed: bool = False,
 ) -> AgentEvaluationScorecard:
@@ -32,7 +31,9 @@ def compute_agent_metrics(
         tool_accuracy = 1.0 if total_tool_calls > 0 else 0.5
     else:
         expected_set = {t.lower() for t in expected_tools}
-        correct_calls = sum(1 for t in tool_traces if t.tool_name and t.tool_name.lower() in expected_set)
+        correct_calls = sum(
+            1 for t in tool_traces if t.tool_name and t.tool_name.lower() in expected_set
+        )
         tool_accuracy = round(correct_calls / total_tool_calls, 4) if total_tool_calls > 0 else 0.0
 
     # 2. Argument Schema Validity

@@ -1,6 +1,7 @@
 """API schemas for provider discovery, health checks, and test executions."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from src.evalforge.providers.schemas import ModelInfo, TokenUsage
@@ -13,27 +14,31 @@ class ProviderStatusItem(BaseModel):
 
 
 class ProvidersListResponse(BaseModel):
-    providers: List[ProviderStatusItem]
+    providers: list[ProviderStatusItem]
 
 
 class OllamaHealthCheckResponse(BaseModel):
     status: str
     base_url: str
     reachable: bool
-    version: Optional[str] = None
-    suggestion: Optional[str] = None
+    version: str | None = None
+    suggestion: str | None = None
 
 
 class OllamaModelsListResponse(BaseModel):
     total: int
-    models: List[ModelInfo]
+    models: list[ModelInfo]
 
 
 class OllamaTestInferenceRequest(BaseModel):
-    model: str = Field(..., description="Name of the locally installed Ollama model (e.g. 'llama3.2')")
-    prompt: str = Field(default="Say hello and confirm you are operational.", description="Test prompt to execute")
+    model: str = Field(
+        ..., description="Name of the locally installed Ollama model (e.g. 'llama3.2')"
+    )
+    prompt: str = Field(
+        default="Say hello and confirm you are operational.", description="Test prompt to execute"
+    )
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
-    system_prompt: Optional[str] = None
+    system_prompt: str | None = None
 
 
 class OllamaTestInferenceResponse(BaseModel):
@@ -41,5 +46,5 @@ class OllamaTestInferenceResponse(BaseModel):
     model: str
     text: str
     latency_ms: float
-    usage: Optional[TokenUsage] = None
-    raw_metadata: Dict[str, Any] = Field(default_factory=dict)
+    usage: TokenUsage | None = None
+    raw_metadata: dict[str, Any] = Field(default_factory=dict)

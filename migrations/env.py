@@ -1,12 +1,14 @@
 import asyncio
 from logging.config import fileConfig
+
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-from alembic import context
 
 from src.evalforge.core.config import get_settings
 from src.evalforge.storage.base import Base
+
 # Ensure all models are registered in Base.metadata
 try:
     import src.evalforge.storage.models  # noqa: F401

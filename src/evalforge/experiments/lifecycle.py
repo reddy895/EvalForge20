@@ -1,7 +1,6 @@
 """Lifecycle coordinator managing run cancellation signals and state."""
 
 import asyncio
-from typing import Dict, Optional
 
 from src.evalforge.core.logging import get_logger
 
@@ -12,7 +11,7 @@ class LifecycleCoordinator:
     """Coordinates cancellation events and tracking for active running evaluations."""
 
     def __init__(self) -> None:
-        self._cancellation_events: Dict[str, asyncio.Event] = {}
+        self._cancellation_events: dict[str, asyncio.Event] = {}
 
     def register_run(self, evaluation_id: str) -> asyncio.Event:
         """Register a new run and return its cancellation event."""
@@ -38,7 +37,7 @@ class LifecycleCoordinator:
         self._cancellation_events.pop(evaluation_id, None)
 
 
-_lifecycle_coordinator: Optional[LifecycleCoordinator] = None
+_lifecycle_coordinator: LifecycleCoordinator | None = None
 
 
 def get_lifecycle_coordinator() -> LifecycleCoordinator:

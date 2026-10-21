@@ -3,8 +3,10 @@
 import ast
 import operator as op
 import time
-from typing import Any, Callable, Dict, List, Optional, Set
-from pydantic import BaseModel, Field
+from collections.abc import Callable
+from typing import Any
+
+from pydantic import BaseModel
 
 from src.evalforge.core.logging import get_logger
 
@@ -25,6 +27,7 @@ SAFE_OPERATORS = {
 
 def safe_eval_math(expr: str) -> float:
     """Safely evaluate simple arithmetic expressions without arbitrary code execution."""
+
     def _eval(node: ast.AST) -> float:
         if isinstance(node, ast.Expression):
             return _eval(node.body)
@@ -45,8 +48,8 @@ def safe_eval_math(expr: str) -> float:
 
 class ToolExecutionResult(BaseModel):
     success: bool
-    output: Optional[Any] = None
-    error: Optional[str] = None
+    output: Any | None = None
+    error: str | None = None
     duration_ms: float = 0.0
     policy_violation: bool = False
 
@@ -55,22 +58,22 @@ class SafeToolHarness:
     """Safe, sandboxed execution environment strictly forbidding dangerous OS operations."""
 
     def __init__(self) -> None:
-        self._handlers: Dict[str, Callable[[Dict[str, Any]], Any]] = {}
+        self._handlers: dict[str, Callable[[dict[str, Any]], Any]] = {}
         self._register_default_tools()
 
     def _register_default_tools(self) -> None:
         # 1. Calculator
-        def _calc(args: Dict[str, Any]) -> Any:
+        def _calc(args: dict[str, Any]) -> Any:
             expression = args.get("expression") or args.get("query") or ""
             return {"result": safe_eval_math(str(expression))}
 
         # 2. String Reverser
-        def _reverse(args: Dict[str, Any]) -> Any:
+        def _reverse(args: dict[str, Any]) -> Any:
             text = str(args.get("text", ""))
             return {"reversed": text[::-1]}
 
         # 3. Weather Lookup (Deterministic Mock)
-        def _weather(args: Dict[str, Any]) -> Any:
+        def _weather(args: dict[str, Any]) -> Any:
             city = str(args.get("city", "Paris")).strip().title()
             mock_data = {
                 "Paris": {"temperature_c": 19, "condition": "Partly Cloudy"},
@@ -81,7 +84,7 @@ class SafeToolHarness:
             return mock_data.get(city, {"temperature_c": 20, "condition": "Clear"})
 
         # 4. Dictionary Lookup
-        def _dict(args: Dict[str, Any]) -> Any:
+        def _dict(args: dict[str, Any]) -> Any:
             word = str(args.get("word", "")).lower()
             definitions = {
                 "algorithm": "A step-by-step procedure for solving a problem or accomplishing a task.",
@@ -95,15 +98,15 @@ class SafeToolHarness:
         self.register_tool("weather_lookup", _weather)
         self.register_tool("dictionary_lookup", _dict)
 
-    def register_tool(self, name: str, handler: Callable[[Dict[str, Any]], Any]) -> None:
+    def register_tool(self, name: str, handler: Callable[[dict[str, Any]], Any]) -> None:
         """Register a safe tool handler."""
         self._handlers[name.lower()] = handler
 
     def execute(
         self,
         tool_name: str,
-        args: Dict[str, Any],
-        allowed_tools: Optional[Set[str]] = None,
+        args: dict[str, Any],
+        allowed_tools: set[str] | None = None,
     ) -> ToolExecutionResult:
         """Execute a tool while enforcing explicit allowlists and catching exceptions."""
         start_time = time.perf_counter()
@@ -114,7 +117,7 @@ class SafeToolHarness:
             duration = (time.perf_counter() - start_time) * 1000
             return ToolExecutionResult(
                 success=False,
-                error=f"Policy violation: tool '{tool_name}' is not in the permitted allowlist {sorted(list(allowed_tools))}",
+                error=f"Policy violation: tool '{tool_name}' is not in the permitted allowlist {sorted(allowed_tools)}",
                 duration_ms=round(duration, 2),
                 policy_violation=True,
             )

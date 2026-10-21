@@ -1,18 +1,20 @@
 """Initial schema for datasets, test cases, evaluations, benchmarks, and agent traces
 
 Revision ID: 001_initial_schema
-Revises: 
+Revises:
 Create Date: 2026-10-21 12:00:00.000000
 
 """
-from typing import Sequence, Union
-from alembic import op
+
+from collections.abc import Sequence
+
 import sqlalchemy as sa
+from alembic import op
 
 revision: str = "001_initial_schema"
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -23,23 +25,36 @@ def upgrade() -> None:
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("version", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("tags_json", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
     )
     op.create_index("ix_datasets_name", "datasets", ["name"])
 
     op.create_table(
         "test_cases",
         sa.Column("id", sa.String(length=36), primary_key=True, nullable=False),
-        sa.Column("dataset_id", sa.String(length=36), sa.ForeignKey("datasets.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "dataset_id",
+            sa.String(length=36),
+            sa.ForeignKey("datasets.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("prompt", sa.Text(), nullable=False),
         sa.Column("expected_output", sa.Text(), nullable=True),
         sa.Column("context", sa.Text(), nullable=True),
         sa.Column("tags_json", sa.Text(), nullable=True),
         sa.Column("metadata_json", sa.Text(), nullable=True),
         sa.Column("evaluator_config_json", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
     )
     op.create_index("ix_test_cases_dataset_id", "test_cases", ["dataset_id"])
 
@@ -49,7 +64,12 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("model_id", sa.String(length=255), nullable=False),
         sa.Column("provider", sa.String(length=64), nullable=False, server_default="ollama"),
-        sa.Column("dataset_id", sa.String(length=36), sa.ForeignKey("datasets.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "dataset_id",
+            sa.String(length=36),
+            sa.ForeignKey("datasets.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("dataset_name", sa.String(length=255), nullable=True),
         sa.Column("status", sa.String(length=32), nullable=False, server_default="queued"),
         sa.Column("config_json", sa.Text(), nullable=True),
@@ -61,8 +81,12 @@ def upgrade() -> None:
         sa.Column("avg_latency_ms", sa.Float(), nullable=True),
         sa.Column("summary_metrics_json", sa.Text(), nullable=True),
         sa.Column("error_message", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
     )
     op.create_index("ix_evaluation_runs_status", "evaluation_runs", ["status"])
@@ -71,7 +95,12 @@ def upgrade() -> None:
     op.create_table(
         "case_results",
         sa.Column("id", sa.String(length=36), primary_key=True, nullable=False),
-        sa.Column("evaluation_id", sa.String(length=36), sa.ForeignKey("evaluation_runs.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "evaluation_id",
+            sa.String(length=36),
+            sa.ForeignKey("evaluation_runs.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("case_id", sa.String(length=36), nullable=False),
         sa.Column("prompt", sa.Text(), nullable=False),
         sa.Column("expected_output", sa.Text(), nullable=True),
@@ -81,7 +110,9 @@ def upgrade() -> None:
         sa.Column("token_usage_json", sa.Text(), nullable=True),
         sa.Column("metrics_json", sa.Text(), nullable=True),
         sa.Column("error_message", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
     )
     op.create_index("ix_case_results_evaluation_id", "case_results", ["evaluation_id"])
 
@@ -95,8 +126,12 @@ def upgrade() -> None:
         sa.Column("evaluation_ids_json", sa.Text(), nullable=False),
         sa.Column("summary_matrix_json", sa.Text(), nullable=True),
         sa.Column("reproducibility_json", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
     )
 
     op.create_table(
@@ -115,14 +150,23 @@ def upgrade() -> None:
         sa.Column("policy_violations", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("final_output", sa.Text(), nullable=True),
         sa.Column("error_message", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
     )
 
     op.create_table(
         "agent_traces",
         sa.Column("id", sa.String(length=36), primary_key=True, nullable=False),
-        sa.Column("evaluation_id", sa.String(length=36), sa.ForeignKey("agent_evaluations.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "evaluation_id",
+            sa.String(length=36),
+            sa.ForeignKey("agent_evaluations.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("step_number", sa.Integer(), nullable=False),
         sa.Column("tool_name", sa.String(length=128), nullable=True),
         sa.Column("tool_args_json", sa.Text(), nullable=True),
@@ -130,7 +174,9 @@ def upgrade() -> None:
         sa.Column("thought", sa.Text(), nullable=True),
         sa.Column("duration_ms", sa.Float(), nullable=False, server_default="0.0"),
         sa.Column("is_valid_call", sa.Boolean(), nullable=False, server_default=sa.true()),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
     )
     op.create_index("ix_agent_traces_eval_step", "agent_traces", ["evaluation_id", "step_number"])
 

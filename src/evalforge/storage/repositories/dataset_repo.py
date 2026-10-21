@@ -1,6 +1,5 @@
 """Dataset and TestCase specialized repository."""
 
-from typing import List, Optional, Tuple
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -15,7 +14,7 @@ class DatasetRepository(BaseRepository[Dataset]):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, model_cls=Dataset)
 
-    async def get_with_cases(self, dataset_id: str) -> Optional[Dataset]:
+    async def get_with_cases(self, dataset_id: str) -> Dataset | None:
         """Fetch a dataset eager-loading all its test cases."""
         stmt = (
             select(Dataset)
@@ -25,15 +24,13 @@ class DatasetRepository(BaseRepository[Dataset]):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_by_name(self, name: str) -> Optional[Dataset]:
+    async def get_by_name(self, name: str) -> Dataset | None:
         """Fetch dataset by exact name."""
         stmt = select(Dataset).where(Dataset.name == name)
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def list_with_counts(
-        self, offset: int = 0, limit: int = 50
-    ) -> List[Tuple[Dataset, int]]:
+    async def list_with_counts(self, offset: int = 0, limit: int = 50) -> list[tuple[Dataset, int]]:
         """List datasets paired with their computed test case count."""
         stmt = (
             select(Dataset, func.count(TestCase.id).label("case_count"))
@@ -46,11 +43,11 @@ class DatasetRepository(BaseRepository[Dataset]):
         result = await self.session.execute(stmt)
         return [(row[0], row[1]) for row in result.all()]
 
-    async def get_case(self, case_id: str) -> Optional[TestCase]:
+    async def get_case(self, case_id: str) -> TestCase | None:
         """Retrieve individual test case."""
         return await self.session.get(TestCase, case_id)
 
-    async def add_cases(self, dataset_id: str, cases: List[TestCase]) -> List[TestCase]:
+    async def add_cases(self, dataset_id: str, cases: list[TestCase]) -> list[TestCase]:
         """Batch insert test cases into a dataset."""
         for case in cases:
             case.dataset_id = dataset_id

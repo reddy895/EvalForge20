@@ -2,15 +2,14 @@
 
 import csv
 import io
-from typing import List, Tuple
 
 from src.evalforge.schemas.dataset import RowImportError, TestCaseCreate
 
 
-def parse_csv_content(content: str) -> Tuple[List[TestCaseCreate], List[RowImportError]]:
+def parse_csv_content(content: str) -> tuple[list[TestCaseCreate], list[RowImportError]]:
     """Parse CSV or TSV content into validated TestCaseCreate models."""
-    valid_cases: List[TestCaseCreate] = []
-    errors: List[RowImportError] = []
+    valid_cases: list[TestCaseCreate] = []
+    errors: list[RowImportError] = []
 
     if not content.strip():
         return valid_cases, errors
@@ -83,10 +82,12 @@ def parse_csv_content(content: str) -> Tuple[List[TestCaseCreate], List[RowImpor
                 )
                 continue
 
-            expected = row.get(expected_col).strip() if expected_col and row.get(expected_col) else None
+            expected = (
+                row.get(expected_col).strip() if expected_col and row.get(expected_col) else None
+            )
             context = row.get(context_col).strip() if context_col and row.get(context_col) else None
 
-            tags: List[str] = []
+            tags: list[str] = []
             if tags_col and row.get(tags_col):
                 tags = [t.strip() for t in row[tags_col].split(",") if t.strip()]
 

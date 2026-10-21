@@ -1,7 +1,7 @@
 """Composite metric aggregator and statistical scorecard calculator."""
 
 import math
-from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 from src.evalforge.storage.models.evaluation import CaseResult
@@ -19,13 +19,13 @@ class EvaluationScorecard(BaseModel):
     p50_latency_ms: float
     p95_latency_ms: float
     p99_latency_ms: float
-    total_prompt_tokens: Optional[int] = None
-    total_completion_tokens: Optional[int] = None
-    avg_throughput_tok_s: Optional[float] = None
-    metric_averages: Dict[str, float] = Field(default_factory=dict)
+    total_prompt_tokens: int | None = None
+    total_completion_tokens: int | None = None
+    avg_throughput_tok_s: float | None = None
+    metric_averages: dict[str, float] = Field(default_factory=dict)
 
 
-def compute_percentile(values: List[float], percentile: float) -> float:
+def compute_percentile(values: list[float], percentile: float) -> float:
     """Calculate percentile from a sorted list of float values."""
     if not values:
         return 0.0
@@ -40,7 +40,7 @@ def compute_percentile(values: List[float], percentile: float) -> float:
     return round(d0 + d1, 2)
 
 
-def aggregate_scorecard(results: List[CaseResult]) -> EvaluationScorecard:
+def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
     """Compute aggregate pass rates, latency distributions, and metric averages."""
     total = len(results)
     if total == 0:
@@ -67,8 +67,8 @@ def aggregate_scorecard(results: List[CaseResult]) -> EvaluationScorecard:
     p99 = compute_percentile(latencies, 99.0)
 
     # Token aggregation
-    prompt_tokens_list: List[int] = []
-    comp_tokens_list: List[int] = []
+    prompt_tokens_list: list[int] = []
+    comp_tokens_list: list[int] = []
     for r in results:
         usage = r.token_usage
         if usage:
@@ -81,13 +81,13 @@ def aggregate_scorecard(results: List[CaseResult]) -> EvaluationScorecard:
     tot_comp = sum(comp_tokens_list) if comp_tokens_list else None
 
     # Calculate average throughput
-    avg_throughput: Optional[float] = None
+    avg_throughput: float | None = None
     if tot_comp and sum(latencies) > 0:
         avg_throughput = round(tot_comp / (sum(latencies) / 1000.0), 2)
 
     # Per-metric averages
-    metric_sums: Dict[str, float] = {}
-    metric_counts: Dict[str, int] = {}
+    metric_sums: dict[str, float] = {}
+    metric_counts: dict[str, int] = {}
     for r in results:
         metrics = r.metrics
         for m_name, m_data in metrics.items():
@@ -101,9 +101,7 @@ def aggregate_scorecard(results: List[CaseResult]) -> EvaluationScorecard:
                 metric_sums[m_name] = metric_sums.get(m_name, 0.0) + score
                 metric_counts[m_name] = metric_counts.get(m_name, 0) + 1
 
-    metric_averages = {
-        m: round(metric_sums[m] / metric_counts[m], 4) for m in metric_sums
-    }
+    metric_averages = {m: round(metric_sums[m] / metric_counts[m], 4) for m in metric_sums}
 
     return EvaluationScorecard(
         total_cases=total,

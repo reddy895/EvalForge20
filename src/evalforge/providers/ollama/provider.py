@@ -2,13 +2,12 @@
 
 import json
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.evalforge.providers.base import BaseProvider
 from src.evalforge.providers.ollama.capabilities import detect_capabilities, parse_model_info
 from src.evalforge.providers.ollama.client import OllamaClient, get_ollama_client
 from src.evalforge.providers.schemas import (
-    ChatMessage,
     InferenceRequest,
     InferenceResponse,
     ModelInfo,
@@ -24,8 +23,8 @@ class OllamaProvider(BaseProvider):
     def __init__(
         self,
         name: str = "ollama",
-        config: Optional[Dict[str, Any]] = None,
-        client: Optional[OllamaClient] = None,
+        config: dict[str, Any] | None = None,
+        client: OllamaClient | None = None,
     ):
         super().__init__(name=name, config=config)
         self.client = client or get_ollama_client(base_url=self.config.get("base_url"))
@@ -33,7 +32,7 @@ class OllamaProvider(BaseProvider):
     async def health_check(self) -> bool:
         return await self.client.check_health()
 
-    async def list_models(self) -> List[ModelInfo]:
+    async def list_models(self) -> list[ModelInfo]:
         raw_data = await self.client.list_tags()
         models_raw = raw_data.get("models", [])
         return [parse_model_info(item) for item in models_raw]
@@ -45,7 +44,7 @@ class OllamaProvider(BaseProvider):
     async def generate(self, request: InferenceRequest) -> InferenceResponse:
         start_time = time.perf_counter()
 
-        options: Dict[str, Any] = {
+        options: dict[str, Any] = {
             "temperature": request.temperature,
         }
         if request.top_p is not None:
@@ -60,7 +59,7 @@ class OllamaProvider(BaseProvider):
             options["stop"] = request.stop
 
         # Build payload
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "model": request.model,
             "options": options,
         }
@@ -72,12 +71,12 @@ class OllamaProvider(BaseProvider):
         # Execute either Chat or Generation endpoint
         use_chat = bool(request.messages or request.tools or request.system_prompt)
 
-        raw_response: Dict[str, Any]
-        tool_calls: Optional[List[ToolCall]] = None
+        raw_response: dict[str, Any]
+        tool_calls: list[ToolCall] | None = None
         response_text = ""
 
         if use_chat:
-            messages: List[Dict[str, Any]] = []
+            messages: list[dict[str, Any]] = []
             if request.system_prompt:
                 messages.append({"role": "system", "content": request.system_prompt})
             if request.messages:
@@ -116,9 +115,7 @@ class OllamaProvider(BaseProvider):
                             args = json.loads(args)
                         except Exception:
                             args = {"raw": args}
-                    tool_calls.append(
-                        ToolCall(name=func.get("name", "unknown"), arguments=args)
-                    )
+                    tool_calls.append(ToolCall(name=func.get("name", "unknown"), arguments=args))
         else:
             payload["prompt"] = request.prompt or ""
             raw_response = await self.client.generate(payload)

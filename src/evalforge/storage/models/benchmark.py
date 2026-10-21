@@ -1,7 +1,8 @@
 """BenchmarkComparison SQLAlchemy ORM model for multi-model comparisons."""
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -13,14 +14,14 @@ class BenchmarkComparison(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     dataset_id: Mapped[str] = mapped_column(String(36), nullable=False)
-    dataset_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    dataset_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     model_ids_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
     evaluation_ids_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
-    summary_matrix_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    reproducibility_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    summary_matrix_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reproducibility_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     @property
-    def model_ids(self) -> List[str]:
+    def model_ids(self) -> list[str]:
         if not self.model_ids_json:
             return []
         try:
@@ -29,11 +30,11 @@ class BenchmarkComparison(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             return []
 
     @model_ids.setter
-    def model_ids(self, value: List[str]) -> None:
+    def model_ids(self, value: list[str]) -> None:
         self.model_ids_json = json.dumps(value)
 
     @property
-    def evaluation_ids(self) -> List[str]:
+    def evaluation_ids(self) -> list[str]:
         if not self.evaluation_ids_json:
             return []
         try:
@@ -42,11 +43,11 @@ class BenchmarkComparison(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             return []
 
     @evaluation_ids.setter
-    def evaluation_ids(self, value: List[str]) -> None:
+    def evaluation_ids(self, value: list[str]) -> None:
         self.evaluation_ids_json = json.dumps(value)
 
     @property
-    def summary_matrix(self) -> Dict[str, Any]:
+    def summary_matrix(self) -> dict[str, Any]:
         if not self.summary_matrix_json:
             return {}
         try:
@@ -55,11 +56,11 @@ class BenchmarkComparison(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             return {}
 
     @summary_matrix.setter
-    def summary_matrix(self, value: Dict[str, Any]) -> None:
+    def summary_matrix(self, value: dict[str, Any]) -> None:
         self.summary_matrix_json = json.dumps(value)
 
     @property
-    def reproducibility(self) -> Dict[str, Any]:
+    def reproducibility(self) -> dict[str, Any]:
         if not self.reproducibility_json:
             return {}
         try:
@@ -68,5 +69,5 @@ class BenchmarkComparison(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             return {}
 
     @reproducibility.setter
-    def reproducibility(self, value: Dict[str, Any]) -> None:
+    def reproducibility(self, value: dict[str, Any]) -> None:
         self.reproducibility_json = json.dumps(value)

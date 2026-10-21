@@ -4,6 +4,7 @@ import time
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -44,6 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Cleanly close database connection pools and client sessions
     try:
         from src.evalforge.providers.ollama.client import close_ollama_client
+
         await close_ollama_client()
     except Exception as exc:
         logger.warning("Error closing provider clients: %s", exc)

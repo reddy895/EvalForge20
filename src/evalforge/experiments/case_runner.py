@@ -1,6 +1,6 @@
 """Isolated test-case executor with metric scoring and error capture."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.evalforge.core.logging import get_logger
 from src.evalforge.evaluators.base import BaseEvaluator
@@ -31,10 +31,10 @@ class CaseRunner:
         self.provider = provider
         self.model_id = model_id
         self.config = config
-        self.evaluators: Dict[str, BaseEvaluator] = self._build_evaluators()
+        self.evaluators: dict[str, BaseEvaluator] = self._build_evaluators()
 
-    def _build_evaluators(self) -> Dict[str, BaseEvaluator]:
-        evals: Dict[str, BaseEvaluator] = {
+    def _build_evaluators(self) -> dict[str, BaseEvaluator]:
+        evals: dict[str, BaseEvaluator] = {
             "exact_match": ExactMatchEvaluator(),
             "token_f1": TokenF1Evaluator(),
             "keyword_match": KeywordEvaluator(),
@@ -83,7 +83,7 @@ class CaseRunner:
             error_msg = str(exc)
 
         # Compute metrics
-        metrics_dict: Dict[str, Any] = {}
+        metrics_dict: dict[str, Any] = {}
         all_passed = error_msg is None
 
         for metric_name in self.config.metrics:

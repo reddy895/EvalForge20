@@ -1,6 +1,7 @@
 """Latency, throughput, and performance efficiency evaluators."""
 
-from typing import Any, Dict, Optional
+from typing import Any
+
 from pydantic import BaseModel
 
 from src.evalforge.evaluators.base import BaseEvaluator, MetricResult
@@ -8,10 +9,10 @@ from src.evalforge.evaluators.base import BaseEvaluator, MetricResult
 
 class PerformanceMetrics(BaseModel):
     latency_ms: float
-    throughput_tok_s: Optional[float] = None
-    prompt_tokens: Optional[int] = None
-    completion_tokens: Optional[int] = None
-    total_tokens: Optional[int] = None
+    throughput_tok_s: float | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
     meets_sla: bool = True
 
 
@@ -25,18 +26,22 @@ class LatencySlaEvaluator(BaseEvaluator):
     async def evaluate(
         self,
         prediction: str,
-        reference: Optional[str] = None,
-        context: Optional[str] = None,
+        reference: str | None = None,
+        context: str | None = None,
         latency_ms: float = 0.0,
         max_latency_ms: float = 2000.0,
-        completion_tokens: Optional[int] = None,
-        prompt_tokens: Optional[int] = None,
+        completion_tokens: int | None = None,
+        prompt_tokens: int | None = None,
         **kwargs: Any,
     ) -> MetricResult:
         passed = latency_ms <= max_latency_ms
-        score = 1.0 if passed else max(0.0, round(1.0 - ((latency_ms - max_latency_ms) / max_latency_ms), 2))
+        score = (
+            1.0
+            if passed
+            else max(0.0, round(1.0 - ((latency_ms - max_latency_ms) / max_latency_ms), 2))
+        )
 
-        throughput_tok_s: Optional[float] = None
+        throughput_tok_s: float | None = None
         if completion_tokens is not None and latency_ms > 0:
             throughput_tok_s = round(completion_tokens / (latency_ms / 1000.0), 2)
 

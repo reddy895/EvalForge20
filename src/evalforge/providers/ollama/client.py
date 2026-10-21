@@ -1,6 +1,7 @@
 """Asynchronous HTTP client for Ollama local REST API."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
+
 import httpx
 
 from src.evalforge.core.config import get_settings
@@ -19,11 +20,11 @@ _ollama_client_instance: Optional["OllamaClient"] = None
 class OllamaClient:
     """Async HTTP client managing connections to the local Ollama daemon."""
 
-    def __init__(self, base_url: Optional[str] = None, timeout_seconds: Optional[float] = None):
+    def __init__(self, base_url: str | None = None, timeout_seconds: float | None = None):
         settings = get_settings()
         self.base_url = (base_url or settings.OLLAMA_BASE_URL).rstrip("/")
         self.timeout = timeout_seconds or settings.OLLAMA_TIMEOUT_SECONDS
-        self._http_client: Optional[httpx.AsyncClient] = None
+        self._http_client: httpx.AsyncClient | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._http_client is None or self._http_client.is_closed:
@@ -63,7 +64,7 @@ class OllamaClient:
         except Exception as exc:
             raise ProviderError(f"Failed to get Ollama version: {exc}", provider="ollama")
 
-    async def list_tags(self) -> Dict[str, Any]:
+    async def list_tags(self) -> dict[str, Any]:
         """Fetch list of locally installed models."""
         client = self._get_client()
         try:
@@ -84,7 +85,7 @@ class OllamaClient:
         except Exception as exc:
             raise ProviderError(f"Failed to query Ollama models: {exc}", provider="ollama")
 
-    async def show_model(self, model_name: str) -> Dict[str, Any]:
+    async def show_model(self, model_name: str) -> dict[str, Any]:
         """Fetch detailed parameters, license, and template for a specific model."""
         client = self._get_client()
         try:
@@ -107,7 +108,7 @@ class OllamaClient:
                 provider="ollama",
             )
 
-    async def generate(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Execute a text completion generation request."""
         client = self._get_client()
         # Force stream=False for non-streaming batch evaluations
@@ -134,7 +135,7 @@ class OllamaClient:
         except Exception as exc:
             raise ProviderError(f"Ollama generation failed: {exc}", provider="ollama")
 
-    async def chat(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def chat(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Execute a multi-turn chat request with optional tool calling."""
         client = self._get_client()
         payload["stream"] = False
@@ -167,7 +168,7 @@ class OllamaClient:
             self._http_client = None
 
 
-def get_ollama_client(base_url: Optional[str] = None) -> OllamaClient:
+def get_ollama_client(base_url: str | None = None) -> OllamaClient:
     """Return shared or customized OllamaClient instance."""
     global _ollama_client_instance
     if _ollama_client_instance is None or base_url is not None:

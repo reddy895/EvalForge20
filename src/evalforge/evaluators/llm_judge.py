@@ -2,7 +2,7 @@
 
 import json
 import re
-from typing import Any, Optional
+from typing import Any
 
 from src.evalforge.evaluators.base import BaseEvaluator, MetricResult
 from src.evalforge.providers.base import BaseProvider
@@ -45,7 +45,7 @@ You MUST respond strictly in the following JSON format:
         self,
         provider: BaseProvider,
         judge_model: str = "mock-llama-3.1-8b",
-        rubric: Optional[str] = None,
+        rubric: str | None = None,
     ):
         self.provider = provider
         self.judge_model = judge_model
@@ -54,9 +54,9 @@ You MUST respond strictly in the following JSON format:
     async def evaluate(
         self,
         prediction: str,
-        reference: Optional[str] = None,
-        context: Optional[str] = None,
-        rubric_override: Optional[str] = None,
+        reference: str | None = None,
+        context: str | None = None,
+        rubric_override: str | None = None,
         threshold: float = 0.6,  # 3/5 or higher
         **kwargs: Any,
     ) -> MetricResult:
@@ -66,10 +66,10 @@ You MUST respond strictly in the following JSON format:
 {active_rubric}
 
 [INPUT CONTEXT]
-{context or 'N/A'}
+{context or "N/A"}
 
 [REFERENCE TARGET ANSWER]
-{reference or 'N/A'}
+{reference or "N/A"}
 
 [CANDIDATE OUTPUT UNDER EVALUATION]
 {prediction}

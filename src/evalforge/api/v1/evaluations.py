@@ -1,6 +1,5 @@
 """API endpoints for Evaluation execution, progress monitoring, and results inspection."""
 
-from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -62,9 +61,9 @@ async def create_evaluation(
     summary="List evaluation runs",
 )
 async def list_evaluations(
-    status_filter: Optional[str] = Query(None, alias="status"),
-    model_id: Optional[str] = Query(None),
-    dataset_id: Optional[str] = Query(None),
+    status_filter: str | None = Query(None, alias="status"),
+    model_id: str | None = Query(None),
+    dataset_id: str | None = Query(None),
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),

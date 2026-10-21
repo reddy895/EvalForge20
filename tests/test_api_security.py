@@ -4,7 +4,11 @@ import pytest
 from starlette.testclient import TestClient
 
 from src.evalforge.core.errors import PayloadTooLargeError, SecurityViolationError
-from src.evalforge.core.security import enforce_content_length, sanitize_filename, validate_path_safety
+from src.evalforge.core.security import (
+    enforce_content_length,
+    sanitize_filename,
+    validate_path_safety,
+)
 from src.evalforge.main import app
 
 

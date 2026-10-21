@@ -2,7 +2,7 @@
 
 import io
 import json
-import pytest
+
 from starlette.testclient import TestClient
 
 from src.evalforge.datasets.exporter import export_dataset_to_jsonl
@@ -79,6 +79,7 @@ def test_export_dataset_to_jsonl() -> None:
 
 def test_dataset_api_lifecycle() -> None:
     import uuid
+
     suite_name = f"Integration Suite {uuid.uuid4().hex[:8]}"
     import_name = f"Bulk Imported Suite {uuid.uuid4().hex[:8]}"
 
@@ -139,7 +140,9 @@ def test_dataset_api_lifecycle() -> None:
         assert len(export_lines) == 2
 
         # 6. Test multipart import
-        file_bytes = b'{"prompt": "Imported Q1", "target": "A1"}\n{"prompt": "Imported Q2", "target": "A2"}'
+        file_bytes = (
+            b'{"prompt": "Imported Q1", "target": "A1"}\n{"prompt": "Imported Q2", "target": "A2"}'
+        )
         import_res = client.post(
             "/api/v1/datasets/import",
             data={"name": import_name, "format": "jsonl"},

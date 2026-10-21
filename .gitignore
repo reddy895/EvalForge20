@@ -6,11 +6,50 @@ build/
 *.log
 *.tsbuildinfo
 
+# Python & Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing & Linting
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Databases & Runtime State
+*.db
+*.sqlite
+*.sqlite3
+evalforge.db
+data/*.db
+
 # Environment variables
 .env
 .env.local
 .env.*.local
-.env.example
+!.env.example
 
 # IDE & Editor
 .vscode/

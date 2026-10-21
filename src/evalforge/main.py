@@ -16,6 +16,7 @@ from src.evalforge.core.logging import (
     set_request_id,
     setup_logging,
 )
+from src.evalforge.core.security import SecurityHeadersMiddleware
 from src.evalforge.storage.database import close_db, init_db
 
 logger = get_logger("evalforge.app")
@@ -73,6 +74,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Security defense headers middleware
+    application.add_middleware(SecurityHeadersMiddleware)
 
     # Request ID and latency tracking middleware
     @application.middleware("http")

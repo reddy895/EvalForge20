@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class TestCaseCreate(BaseModel):
+    __test__ = False
     model_config = ConfigDict(from_attributes=True)
 
     prompt: str = Field(..., min_length=1, description="Input prompt or conversation to evaluate")
@@ -16,6 +17,7 @@ class TestCaseCreate(BaseModel):
 
 
 class TestCaseUpdate(BaseModel):
+    __test__ = False
     model_config = ConfigDict(from_attributes=True)
 
     prompt: Optional[str] = None
@@ -27,6 +29,7 @@ class TestCaseUpdate(BaseModel):
 
 
 class TestCaseResponse(BaseModel):
+    __test__ = False
     model_config = ConfigDict(from_attributes=True)
 
     id: str

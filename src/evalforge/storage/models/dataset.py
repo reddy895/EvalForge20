@@ -40,6 +40,7 @@ class Dataset(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
 class TestCase(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "test_cases"
+    __test__ = False
 
     dataset_id: Mapped[str] = mapped_column(
         String(36),

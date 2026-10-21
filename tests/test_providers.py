@@ -155,29 +155,28 @@ async def test_provider_registry() -> None:
 
 
 def test_api_health_endpoint() -> None:
-    client = TestClient(app)
-    response = client.get("/health")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "healthy"
-    assert data["app"] == "EvalForge20"
-    assert "ollama_base_url" in data
+    with TestClient(app) as client:
+        response = client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert data["app"] == "EvalForge20"
+        assert "ollama_base_url" in data
 
 
 def test_api_providers_endpoints() -> None:
-    client = TestClient(app)
+    with TestClient(app) as client:
+        # List providers
+        res = client.get("/api/v1/providers")
+        assert res.status_code == 200
+        data = res.json()
+        names = [p["name"] for p in data["providers"]]
+        assert "ollama" in names
+        assert "mock" in names
 
-    # List providers
-    res = client.get("/api/v1/providers")
-    assert res.status_code == 200
-    data = res.json()
-    names = [p["name"] for p in data["providers"]]
-    assert "ollama" in names
-    assert "mock" in names
-
-    # Ollama health
-    res = client.get("/api/v1/providers/ollama/health")
-    assert res.status_code == 200
-    health_data = res.json()
-    assert "base_url" in health_data
-    assert "reachable" in health_data
+        # Ollama health
+        res = client.get("/api/v1/providers/ollama/health")
+        assert res.status_code == 200
+        health_data = res.json()
+        assert "base_url" in health_data
+        assert "reachable" in health_data

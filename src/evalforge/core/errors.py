@@ -129,10 +129,11 @@ class SecurityViolationError(EvalForgeError):
 
 class PayloadTooLargeError(EvalForgeError):
     def __init__(self, message: str, max_bytes: int):
+        status_code = getattr(status, "HTTP_413_CONTENT_TOO_LARGE", 413)
         super().__init__(
             message=message,
             code="PAYLOAD_TOO_LARGE",
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status_code,
             details={"max_allowed_bytes": max_bytes},
         )
 

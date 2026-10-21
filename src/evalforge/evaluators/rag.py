@@ -147,7 +147,14 @@ async def evaluate_rag_case(case: RAGQueryCase) -> RAGScorecard:
     cit_prec: Optional[float] = None
     cit_rec: Optional[float] = None
     if case.expected_citations:
-        found = [c for c in case.expected_citations if c.lower() in case.answer.lower()]
+        found = []
+        ans_tokens = clean_tokens(case.answer)
+        for cit in case.expected_citations:
+            cit_tokens = clean_tokens(cit)
+            if cit.lower() in case.answer.lower():
+                found.append(cit)
+            elif cit_tokens and len(cit_tokens & ans_tokens) / len(cit_tokens) >= 0.4:
+                found.append(cit)
         cit_rec = round(len(found) / len(case.expected_citations), 2)
         cit_prec = 1.0 if found else 0.0
 

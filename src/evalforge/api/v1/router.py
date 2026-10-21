@@ -2,8 +2,10 @@
 
 from fastapi import APIRouter
 from src.evalforge.api.v1.datasets import datasets_router
+from src.evalforge.api.v1.evaluations import evaluations_router
 from src.evalforge.api.v1.providers import providers_router
 
 api_v1_router = APIRouter()
 api_v1_router.include_router(providers_router)
 api_v1_router.include_router(datasets_router)
+api_v1_router.include_router(evaluations_router)

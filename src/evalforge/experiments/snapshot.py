@@ -32,8 +32,9 @@ def create_dataset_snapshot(dataset: Dataset) -> DatasetSnapshot:
     """Create an immutable, serializable snapshot of test cases with a cryptographic digest."""
     frozen_cases: List[FrozenTestCase] = []
 
+    ds_id = str(dataset.id or "transient")
     hasher = hashlib.sha256()
-    hasher.update(f"{dataset.id}:{dataset.name}:{dataset.version}".encode("utf-8"))
+    hasher.update(f"{ds_id}:{dataset.name}:{dataset.version}".encode("utf-8"))
 
     for case in dataset.test_cases:
         frozen = FrozenTestCase(
@@ -56,7 +57,7 @@ def create_dataset_snapshot(dataset: Dataset) -> DatasetSnapshot:
     snapshot_hash = hasher.hexdigest()
 
     return DatasetSnapshot(
-        dataset_id=dataset.id,
+        dataset_id=ds_id,
         dataset_name=dataset.name,
         version=dataset.version,
         snapshot_hash=snapshot_hash,

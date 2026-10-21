@@ -1,12 +1,15 @@
 """API endpoints for Dataset and TestCase management."""
 
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile, status
+from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.evalforge.datasets.exporter import export_dataset_to_jsonl
 from src.evalforge.schemas.dataset import (
     DatasetCreate,
     DatasetDetailResponse,
+    DatasetImportResponse,
     DatasetListResponse,
     DatasetResponse,
     DatasetUpdate,
@@ -89,6 +92,54 @@ async def list_datasets(
             )
             for d, count in items
         ],
+    )
+
+
+@datasets_router.post(
+    "/import",
+    response_model=DatasetImportResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Import dataset from JSONL or CSV file",
+)
+async def import_dataset(
+    name: str = Form(..., description="Dataset name to create"),
+    format: str = Form("jsonl", description="Format: 'jsonl' or 'csv'"),
+    description: Optional[str] = Form(None, description="Optional description"),
+    file: UploadFile = File(..., description="Uploaded dataset file"),
+    db: AsyncSession = Depends(get_db),
+) -> DatasetImportResponse:
+    """Import test cases from an uploaded JSONL or CSV file with validation."""
+    content_bytes = await file.read()
+    content_str = content_bytes.decode("utf-8", errors="replace")
+
+    service = DatasetService(db)
+    return await service.import_content(
+        name=name,
+        content=content_str,
+        format_type=format,
+        description=description,
+    )
+
+
+@datasets_router.get(
+    "/{dataset_id}/export",
+    summary="Export dataset to JSONL",
+    response_class=PlainTextResponse,
+)
+async def export_dataset(
+    dataset_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Export all test cases in the dataset as a downloadable JSONL file."""
+    service = DatasetService(db)
+    dataset = await service.get_dataset_with_cases(dataset_id)
+    jsonl_text = export_dataset_to_jsonl(dataset)
+
+    filename = f"{dataset.name.lower().replace(' ', '_')}_export.jsonl"
+    return Response(
+        content=jsonl_text,
+        media_type="application/x-ndjson",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

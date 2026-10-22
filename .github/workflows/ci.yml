@@ -1,0 +1,38 @@
+name: EvalForge20 CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Run Ruff Linter
+        run: ruff check src backend/src tests backend/tests
+      - name: Run Pytest Suite
+        run: pytest -v
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: cd frontend && npm ci
+      - name: Run Vitest Suite
+        run: cd frontend && npm test -- --run
+      - name: Build production bundle
+        run: cd frontend && npm run build

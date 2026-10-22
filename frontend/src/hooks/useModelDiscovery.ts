@@ -11,7 +11,7 @@ export function useModelDiscovery() {
     setLoading(true);
     try {
       const data = await api.getModels();
-      setModels(data);
+      setModels(data.models);
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to load models');

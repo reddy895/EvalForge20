@@ -7,3 +7,5 @@ export * from './HistoricalTrendsChart';
 export * from './LeaderboardTable';
 export * from './NormalizedRadarChart';
 export * from './CommitActivityHeatmap';
+export * from './EvaluationResultCharts';
+

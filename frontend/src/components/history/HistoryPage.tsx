@@ -4,6 +4,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Modal } from '../ui/Modal';
 import { useToast } from '../ui/Toast';
+import { EvaluationResultCharts } from '../../charts';
 import {
   History,
   Download,
@@ -296,7 +297,11 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
               </div>
             </div>
 
+            {/* Graphical Performance & Accuracy Telemetry */}
+            <EvaluationResultCharts run={inspectRun} />
+
             <div className="flex flex-col gap-3">
+
               {inspectRun.case_results.map((c, i) => (
                 <div
                   key={c.case_id}

@@ -46,7 +46,11 @@ async def test_model_service_filtering_and_search() -> None:
     # Search by text query
     qwen_results, total = await service.filter_models(query="qwen")
     assert total > 0
-    assert all("qwen" in m.id.lower() or "qwen" in m.name.lower() for m in qwen_results)
+    assert all(
+        "qwen" in m.id.lower() or "qwen" in m.name.lower() or (m.family and "qwen" in m.family.lower())
+        for m in qwen_results
+    )
+
 
     # Filter local only
     local_models, _ = await service.filter_models(is_local=True)

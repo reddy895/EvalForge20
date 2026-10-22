@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SAMPLE_MODELS } from '../../data/models';
 import { SAMPLE_TEST_CASES, simulateEvaluationRun } from '../../data/benchmarks';
-import { EvaluationRun, NavRoute } from '../../types';
+import { EvaluationRun, ModelProfile, NavRoute } from '../../types';
 import { api } from '../../services/api';
+import { EvaluationResultCharts } from '../../charts';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { useToast } from '../ui/Toast';
@@ -18,6 +19,7 @@ import {
   RotateCcw,
   Sparkles,
 } from 'lucide-react';
+
 
 interface EvaluatePageProps {
   initialModelId?: string;
@@ -38,12 +40,22 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
   const [selectedBenchmarkId, setSelectedBenchmarkId] = useState<string>('coding_basics');
   const [sampleLimit, setSampleLimit] = useState<number>(3);
 
+  const [availableModels, setAvailableModels] = useState<ModelProfile[]>(SAMPLE_MODELS);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [currentProgress, setCurrentProgress] = useState<number>(0);
   const [activeRunResult, setActiveRunResult] = useState<EvaluationRun | null>(null);
 
+  useEffect(() => {
+    api.getModels({ limit: 50 }).then((res) => {
+      if (res?.models && res.models.length > 0) {
+        setAvailableModels(res.models);
+      }
+    }).catch(() => {});
+  }, []);
+
   const selectedModel =
-    SAMPLE_MODELS.find((m) => m.id === selectedModelId) || SAMPLE_MODELS[0];
+    availableModels.find((m) => m.id === selectedModelId) || availableModels[0] || SAMPLE_MODELS[0];
+
 
   const benchmarksList = [
     {
@@ -234,12 +246,13 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
               onChange={(e) => setSelectedModelId(e.target.value)}
               className="h-11 px-4 rounded-xl bg-[#191A18] border border-[#41413B] text-[#F5F0E7] text-sm outline-none focus:border-[#D9823B] cursor-pointer"
             >
-              {SAMPLE_MODELS.map((m) => (
+              {availableModels.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name} ({m.provider}) {m.is_local ? '• Ollama' : '• Cloud'}
                 </option>
               ))}
             </select>
+
             <div className="flex items-center gap-2 text-xs font-mono text-[#A6A49D]">
               <span>Architecture: {selectedModel.family}</span>
               <span>•</span>
@@ -392,8 +405,14 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
             </div>
           </div>
 
+          {/* Graphical Representation of Performance, Accuracy & Capability Radar */}
+          <div className="p-6 border-b border-[#41413B] bg-[#191A18]/40">
+            <EvaluationResultCharts run={activeRunResult} />
+          </div>
+
           {/* Test Case Inspection List */}
           <div className="p-6 flex flex-col gap-4">
+
             <span className="text-xs font-mono uppercase tracking-wider text-[#A6A49D]">
               Individual Case Breakdown ({activeRunResult.case_results.length})
             </span>

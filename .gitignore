@@ -40,10 +40,13 @@ htmlcov/
 
 # Databases & Runtime State
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 evalforge.db
 data/*.db
+
 
 # Environment variables
 .env

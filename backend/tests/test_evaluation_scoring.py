@@ -1,9 +1,10 @@
 """Unit tests for deterministic evaluation metrics: Token F1, JSON schema validity, and SLA."""
 
-from src.evalforge.evaluation.metrics_token import compute_token_f1
 from src.evalforge.evaluation.metrics_json import validate_json_validity
 from src.evalforge.evaluation.metrics_sla import evaluate_sla_latency
+from src.evalforge.evaluation.metrics_token import compute_token_f1
 from src.evalforge.evaluation.scoring import EvaluationScorer
+
 
 def test_token_f1_exact() -> None:
     res = compute_token_f1("The quick brown fox", "the quick brown fox")

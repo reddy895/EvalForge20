@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
+
 @dataclass
 class ValidationReport:
     is_valid: bool

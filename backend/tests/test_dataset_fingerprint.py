@@ -3,6 +3,7 @@
 from src.evalforge.datasets.fingerprint import compute_dataset_fingerprint
 from src.evalforge.datasets.validator import validate_dataset_records
 
+
 def test_fingerprint_deterministic() -> None:
     data_a = [{"id": "1", "prompt": "Hi", "expected_output": "Hello"}]
     data_b = [{"id": "1", "prompt": "Hi", "expected_output": "Hello"}]

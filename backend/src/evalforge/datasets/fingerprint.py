@@ -2,7 +2,9 @@
 
 import hashlib
 import json
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
+
 
 def compute_dataset_fingerprint(cases: Sequence[dict[str, Any]]) -> str:
     """Compute deterministic SHA-256 hash over canonical test case representation."""

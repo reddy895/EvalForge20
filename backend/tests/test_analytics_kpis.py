@@ -2,6 +2,7 @@
 
 from src.evalforge.analytics.kpis import calculate_platform_kpis
 
+
 def test_calculate_platform_kpis_empty() -> None:
     kpi = calculate_platform_kpis(0, 0, 0, [])
     assert kpi.total_runs == 0

@@ -1,8 +1,10 @@
 """Unit tests for Ollama pull monitor and offline diagnostics."""
 
 import pytest
-from src.evalforge.providers.ollama.pull_monitor import parse_pull_event
+
 from src.evalforge.providers.ollama.diagnostics import run_ollama_diagnostics
+from src.evalforge.providers.ollama.pull_monitor import parse_pull_event
+
 
 def test_parse_pull_event() -> None:
     event = parse_pull_event({"status": "downloading", "digest": "sha256:123", "total": 1000, "completed": 500})

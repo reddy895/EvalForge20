@@ -1,6 +1,7 @@
 """Modular API route for multi-provider registry and health details."""
 
 from fastapi import APIRouter
+
 from src.evalforge.providers.registry import get_provider_registry
 
 router = APIRouter(prefix="/providers", tags=["providers"])

@@ -2,6 +2,7 @@
 
 from src.evalforge.core.hardware import HardwareConstraintAnalyzer
 
+
 def test_hardware_estimate_7b_q4() -> None:
     est = HardwareConstraintAnalyzer.estimate_ram(7.0, "Q4_K_M", 8192)
     assert est.weights_ram_gb > 3.0 and est.weights_ram_gb < 5.0

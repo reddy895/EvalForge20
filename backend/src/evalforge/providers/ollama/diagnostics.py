@@ -1,7 +1,9 @@
 """Ollama connectivity probe and setup advisor."""
 
-import httpx
 from dataclasses import dataclass
+
+import httpx
+
 
 @dataclass
 class OllamaDiagnosticReport:

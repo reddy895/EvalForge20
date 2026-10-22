@@ -1,7 +1,9 @@
 """Unit tests for EvaluationRunner."""
 
 import pytest
+
 from src.evalforge.evaluation.runner import EvaluationRunner
+
 
 @pytest.mark.asyncio
 async def test_evaluation_runner_batch() -> None:

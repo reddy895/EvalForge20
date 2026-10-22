@@ -1,7 +1,8 @@
 """Platform overview KPI aggregation logic."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
+
 
 @dataclass
 class PlatformKPIs:

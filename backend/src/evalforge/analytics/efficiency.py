@@ -1,8 +1,9 @@
 """Latency percentile and token throughput analytics."""
 
 import statistics
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
+
 
 @dataclass
 class EfficiencyMetrics:

@@ -1,7 +1,9 @@
 """Database connectivity and schema validation probe."""
 
 from sqlalchemy import text
+
 from src.evalforge.storage.database import get_engine
+
 
 async def check_database_health() -> dict[str, str | bool | int]:
     """Execute low-overhead probe against configured database engine."""

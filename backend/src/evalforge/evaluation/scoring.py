@@ -2,6 +2,7 @@
 
 from typing import Any
 
+
 class EvaluationScorer:
     """Coordinates deterministic metric evaluations on actual vs expected model outputs."""
 

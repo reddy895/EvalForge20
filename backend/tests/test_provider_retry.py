@@ -1,7 +1,9 @@
 """Unit tests for provider retry handler."""
 
 import pytest
+
 from src.evalforge.providers.retry import execute_with_retry
+
 
 @pytest.mark.asyncio
 async def test_execute_with_retry_success() -> None:

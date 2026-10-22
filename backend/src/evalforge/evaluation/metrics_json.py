@@ -3,6 +3,7 @@
 import json
 from typing import Any
 
+
 def validate_json_validity(text: str) -> tuple[bool, Any | None, str | None]:
     """Check if model output contains syntactically valid JSON."""
     cleaned = text.strip()

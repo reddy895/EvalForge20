@@ -2,6 +2,7 @@
 
 from src.evalforge.analytics.efficiency import calculate_efficiency_metrics
 
+
 def test_efficiency_empty() -> None:
     eff = calculate_efficiency_metrics([])
     assert eff.sample_count == 0

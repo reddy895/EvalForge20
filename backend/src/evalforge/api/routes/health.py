@@ -1,6 +1,7 @@
 """Modular API route for health and readiness probes."""
 
 from fastapi import APIRouter
+
 from src.evalforge.core.config import get_settings
 from src.evalforge.database.health import check_database_health
 

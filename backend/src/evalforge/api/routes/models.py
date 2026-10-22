@@ -1,6 +1,7 @@
 """Modular API route for model dynamic discovery and technical catalog."""
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter
+
 from src.evalforge.services.model_service import get_model_service
 
 router = APIRouter(prefix="/models", tags=["models"])

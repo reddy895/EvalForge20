@@ -1,9 +1,9 @@
 """Modular API route for analytics overview and verified Git commit telemetry."""
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter
+
 from src.evalforge.database.session import get_db_context
-from src.evalforge.services.analytics_service import AnalyticsService, get_analytics_service
+from src.evalforge.services.analytics_service import get_analytics_service
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 

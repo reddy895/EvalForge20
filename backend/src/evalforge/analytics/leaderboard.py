@@ -1,7 +1,8 @@
 """Benchmark leaderboard matrix and ranking generator."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
+
 
 @dataclass
 class LeaderboardEntry:

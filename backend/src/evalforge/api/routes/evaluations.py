@@ -2,10 +2,9 @@
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.evalforge.storage.database import get_db
-from src.evalforge.services.evaluation_service import EvaluationService
 from src.evalforge.storage.repositories.evaluation_repo import EvaluationRepository
-from src.evalforge.storage.repositories.dataset_repo import DatasetRepository
 
 router = APIRouter(prefix="/evaluations", tags=["evaluations"])
 

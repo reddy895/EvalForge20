@@ -2,6 +2,7 @@
 
 from src.evalforge.analytics.leaderboard import generate_leaderboard
 
+
 def test_generate_leaderboard_ranking() -> None:
     runs = [
         {"model_id": "model_b", "quality_score": 85.0, "median_latency_ms": 150.0},

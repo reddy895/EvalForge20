@@ -4,6 +4,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 
+
 @dataclass
 class TokenScoreResult:
     precision: float

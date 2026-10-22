@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "evalforge20"
-version = "2.0.0"
+version = "2.1.0"
 description = "EvalForge20 — Production-Minded, Local-First LLM and AI Agent Evaluation Platform"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -58,10 +58,15 @@ ignore = ["B008", "B904", "E501"]
 [tool.pytest.ini_options]
 minversion = "8.0"
 addopts = "-ra -q --strict-markers"
-testpaths = ["tests"]
+testpaths = ["tests", "backend/tests"]
+pythonpath = ["backend"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = [
     "integration: integration tests requiring external services (e.g. real Ollama)",
     "security: security and boundary validation tests",
 ]
+
+[tool.setuptools.packages.find]
+where = ["backend"]
+

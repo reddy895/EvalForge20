@@ -113,7 +113,7 @@ export interface EvaluationRun {
   created_at: string;
 }
 
-export type NavRoute = 'landing' | 'models' | 'model-detail' | 'compare' | 'evaluate' | 'history';
+export type NavRoute = 'landing' | 'models' | 'model-detail' | 'compare' | 'evaluate' | 'history' | 'analytics';
 
 export type LandingSectionId =
   | 'hero'
@@ -131,4 +131,93 @@ export interface FilterOptions {
   task: string;
   onlyInstalled: boolean;
   sortBy: 'recommended' | 'benchmark' | 'context' | 'ram';
+}
+
+export interface ProviderDetail {
+  name: string;
+  display_name: string;
+  provider_type: 'local' | 'cloud';
+  implementation_status: 'implemented_and_tested' | 'configurable_cloud' | 'planned';
+  healthy: boolean;
+  is_configured: boolean;
+  default: boolean;
+  base_url?: string | null;
+  setup_instructions?: string | null;
+  supported_models_count: number;
+}
+
+export interface CommitItem {
+  hash: string;
+  date: string;
+  author: string;
+  message: string;
+}
+
+export interface DailyCommitActivity {
+  date: string;
+  count: number;
+  level: number;
+  sample_commits: CommitItem[];
+}
+
+export interface CommitAnalytics {
+  target_commits: number;
+  total_verified_commits: number;
+  target_achieved: boolean;
+  target_progress_percent: number;
+  status_label: string;
+  source: string;
+  time_range_start: string;
+  time_range_end: string;
+  author_distribution: Record<string, number>;
+  daily_activity: DailyCommitActivity[];
+  last_updated: string;
+}
+
+export interface AnalyticsOverview {
+  total_providers: number;
+  healthy_providers: number;
+  total_models: number;
+  local_models_count: number;
+  cloud_models_count: number;
+  total_evaluation_runs: number;
+  completed_runs: number;
+  failed_runs: number;
+  running_runs: number;
+  cancelled_runs: number;
+  overall_pass_rate_percent: number;
+  overall_reliability_percent: number;
+  average_latency_ms: number;
+  total_test_cases_evaluated: number;
+  total_benchmark_comparisons: number;
+  total_agent_evaluations: number;
+  recent_runs: Array<{
+    id: string;
+    name: string;
+    model_id: string;
+    provider: string;
+    dataset_name?: string;
+    status: string;
+    pass_rate?: number;
+    avg_latency_ms?: number;
+    total_cases?: number;
+    passed_cases?: number;
+    created_at: string;
+  }>;
+  model_scorecards: Array<{
+    model_id: string;
+    total_runs: number;
+    avg_pass_rate: number;
+    avg_latency_ms: number;
+  }>;
+  timestamp: string;
+}
+
+export interface DatasetItem {
+  id: string;
+  name: string;
+  description?: string;
+  version: number;
+  case_count?: number;
+  created_at?: string;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { SAMPLE_MODELS } from '../../data/models';
 import { ModelProfile, NavRoute } from '../../types';
 import { Card, CardHeader, CardTitle, CardBody } from '../ui/Card';
@@ -6,6 +6,8 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { SearchInput, Select } from '../ui/Input';
 import { ModelProfileModal } from '../profile/ModelProfileModal';
+import { api } from '../../services/api';
+import { useToast } from '../ui/Toast';
 import {
   LayoutGrid,
   List,
@@ -17,6 +19,7 @@ import {
   GitCompare,
   Play,
   RotateCcw,
+  RefreshCw,
 } from 'lucide-react';
 
 interface ModelsPageProps {
@@ -32,6 +35,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
   compareModelIds,
   onToggleCompare,
 }) => {
+  const { info, success, error } = useToast();
+  const [models, setModels] = useState<ModelProfile[]>(SAMPLE_MODELS);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<string>('all');
@@ -42,13 +48,45 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
   const [activeProfileModel, setActiveProfileModel] = useState<ModelProfile | null>(null);
 
-  const providers = useMemo(() => {
-    const set = new Set(SAMPLE_MODELS.map((m) => m.provider));
-    return ['all', ...Array.from(set)];
+  useEffect(() => {
+    let mounted = true;
+    api
+      .getModels()
+      .then((res) => {
+        if (mounted && res.models && res.models.length > 0) {
+          setModels(res.models);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
   }, []);
 
+  const handleSyncDiscovery = async () => {
+    setIsRefreshing(true);
+    info('Discovering Models', 'Scanning local Ollama daemon and inference registry...');
+    try {
+      await api.refreshModels();
+      const res = await api.getModels();
+      if (res.models && res.models.length > 0) {
+        setModels(res.models);
+        success('Catalog Synchronized', `Discovered ${res.total} models across local and cloud providers.`);
+      }
+    } catch (err: any) {
+      error('Sync Failed', err?.message || 'Could not reach inference endpoints');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const providers = useMemo(() => {
+    const set = new Set(models.map((m) => m.provider));
+    return ['all', ...Array.from(set)];
+  }, [models]);
+
   const filteredModels = useMemo(() => {
-    let result = SAMPLE_MODELS.filter((model) => {
+    let result = models.filter((model) => {
       const matchesSearch =
         searchQuery === '' ||
         model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -88,7 +126,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
     });
 
     return result;
-  }, [searchQuery, selectedProvider, selectedTask, selectedLicense, localOnly, sortBy]);
+  }, [models, searchQuery, selectedProvider, selectedTask, selectedLicense, localOnly, sortBy]);
 
   const handleResetFilters = () => {
     setSearchQuery('');
@@ -113,12 +151,21 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
           </h1>
           <p className="text-sm text-[#A6A49D] max-w-xl">
             Explore verified specifications, hardware memory requirements, and empirical benchmark
-            evaluations across {SAMPLE_MODELS.length} curated open-source and commercial models.
+            evaluations across {models.length} curated open-source, local Ollama, and cloud models.
           </p>
         </div>
 
         {/* View Switcher & Action */}
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSyncDiscovery}
+            iconLeft={<RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />}
+          >
+            Sync Ollama & APIs
+          </Button>
+
           <div className="flex items-center rounded-full bg-[#191A18] p-1 border border-[#41413B]">
             <button
               onClick={() => setViewMode('grid')}

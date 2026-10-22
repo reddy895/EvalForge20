@@ -7,6 +7,7 @@ import { ModelsPage } from '../catalog/ModelsPage';
 import { ComparePage } from '../comparison/ComparePage';
 import { EvaluatePage } from '../evaluations/EvaluatePage';
 import { HistoryPage } from '../history/HistoryPage';
+import { AnalyticsPage } from '../analytics/AnalyticsPage';
 import { ModelProfileModal } from '../profile/ModelProfileModal';
 import { simulateEvaluationRun } from '../../data/benchmarks';
 
@@ -109,6 +110,10 @@ export const AppShell: React.FC = () => {
             onClearHistory={handleClearHistory}
             onRouteChange={handleRouteChange}
           />
+        )}
+
+        {currentRoute === 'analytics' && (
+          <AnalyticsPage onRouteChange={handleRouteChange} />
         )}
       </main>
 

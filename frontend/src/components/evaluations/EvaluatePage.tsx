@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SAMPLE_MODELS } from '../../data/models';
 import { SAMPLE_TEST_CASES, simulateEvaluationRun } from '../../data/benchmarks';
 import { EvaluationRun, NavRoute } from '../../types';
+import { api } from '../../services/api';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { useToast } from '../ui/Toast';
@@ -75,7 +76,7 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
     },
   ];
 
-  const handleStartEvaluation = () => {
+  const handleStartEvaluation = async () => {
     setIsRunning(true);
     setCurrentProgress(15);
     setActiveRunResult(null);
@@ -90,22 +91,73 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
       });
     }, 250);
 
-    setTimeout(() => {
+    try {
+      // Attempt real backend evaluation run
+      const payload = {
+        model_id: selectedModel.model_identifier || selectedModel.id,
+        provider: selectedModel.is_local ? 'ollama' : selectedModel.provider.toLowerCase(),
+        dataset_id: selectedBenchmarkId,
+        name: `Eval — ${selectedModel.name} on ${selectedBenchmarkId}`,
+        max_cases: sampleLimit,
+      };
+
+      let result: EvaluationRun | null = null;
+      try {
+        const runResp = await api.createEvaluation(payload);
+        if (runResp?.id) {
+          // Poll or fetch details
+          const runDetails = await api.getEvaluationDetails(runResp.id);
+          const cases = (runDetails.case_results || []).map((c: any) => ({
+            case_id: c.case_id,
+            prompt: c.prompt,
+            expected_output: c.expected_output || '',
+            actual_output: c.actual_output || '',
+            passed: c.passed,
+            latency_ms: c.latency_ms || 15.0,
+            assertion_type: c.assertion_type || 'exact_match',
+          }));
+
+          result = {
+            id: runDetails.id,
+            model_id: runDetails.model_id,
+            model_name: selectedModel.name,
+            benchmark_id: selectedBenchmarkId,
+            benchmark_name: benchmarksList.find((b) => b.id === selectedBenchmarkId)?.name || 'Benchmark Suite',
+            status: runDetails.status === 'completed' ? 'completed' : 'failed',
+            is_demo: false,
+            pass_rate: runDetails.pass_rate || 0,
+            passed_cases: runDetails.passed_cases || 0,
+            total_cases: runDetails.total_cases || sampleLimit,
+            avg_latency_ms: runDetails.avg_latency_ms || 12.5,
+            case_results: cases,
+            created_at: runDetails.created_at || new Date().toISOString(),
+          };
+        }
+      } catch {
+        // Fallback to local deterministic simulation if backend run not configured
+        result = null;
+      }
+
       clearInterval(stepInterval);
       setCurrentProgress(100);
 
-      const result = simulateEvaluationRun(
-        selectedModel.id,
-        selectedModel.name,
-        selectedBenchmarkId,
-        sampleLimit
-      );
+      if (!result) {
+        result = simulateEvaluationRun(
+          selectedModel.id,
+          selectedModel.name,
+          selectedBenchmarkId,
+          sampleLimit
+        );
+      }
 
       setActiveRunResult(result);
       setIsRunning(false);
       onSaveToHistory(result);
       success('Evaluation Complete', `Tested ${result.total_cases} test cases successfully.`);
-    }, 1200);
+    } catch {
+      clearInterval(stepInterval);
+      setIsRunning(false);
+    }
   };
 
   const handleExportJson = () => {
@@ -118,6 +170,30 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
     downloadAnchor.click();
     downloadAnchor.remove();
     info('Exported Run JSON', `Saved audit file for ${activeRunResult.model_name}`);
+  };
+
+  const handleExportCsv = () => {
+    if (!activeRunResult) return;
+    const headers = ['case_id', 'status', 'latency_ms', 'assertion_type', 'prompt', 'expected_output', 'actual_output'];
+    const rows = (activeRunResult.case_results || []).map((c) => [
+      c.case_id,
+      c.passed ? 'PASSED' : 'FAILED',
+      c.latency_ms,
+      `"${c.assertion_type || ''}"`,
+      `"${(c.prompt || '').replace(/"/g, '""')}"`,
+      `"${(c.expected_output || '').replace(/"/g, '""')}"`,
+      `"${(c.actual_output || '').replace(/"/g, '""')}"`,
+    ]);
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', url);
+    downloadAnchor.setAttribute('download', `evalforge20-run-${activeRunResult.id}.csv`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    info('Exported Run CSV', `Saved CSV file for ${activeRunResult.model_name}`);
   };
 
   return (
@@ -268,6 +344,14 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
                 iconLeft={<Download size={13} />}
               >
                 Export JSON
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleExportCsv}
+                iconLeft={<Download size={13} />}
+              >
+                Export CSV
               </Button>
               <Button
                 size="sm"

@@ -53,6 +53,32 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
     info('Exported Single Run', `Saved ${run.id}.json`);
   };
 
+  const handleExportAllCsv = () => {
+    if (historyRuns.length === 0) return;
+    const headers = ['run_id', 'created_at', 'model_name', 'benchmark_name', 'pass_rate', 'passed_cases', 'total_cases', 'avg_latency_ms', 'status'];
+    const rows = historyRuns.map((r) => [
+      r.id,
+      r.created_at,
+      `"${r.model_name}"`,
+      `"${r.benchmark_name}"`,
+      r.pass_rate,
+      r.passed_cases,
+      r.total_cases,
+      r.avg_latency_ms,
+      r.status,
+    ]);
+    const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', url);
+    downloadAnchor.setAttribute('download', 'evalforge20-runs-summary.csv');
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    success('Exported History CSV', `Saved ${historyRuns.length} runs to CSV`);
+  };
+
   // Aggregated Stats
   const totalRuns = historyRuns.length;
   const totalCases = historyRuns.reduce((sum, r) => sum + r.total_cases, 0);
@@ -91,7 +117,15 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                 onClick={handleExportAll}
                 iconLeft={<Download size={14} />}
               >
-                Export All ({historyRuns.length})
+                Export JSON
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportAllCsv}
+                iconLeft={<Download size={14} />}
+              >
+                Export CSV
               </Button>
               <Button
                 variant="danger"

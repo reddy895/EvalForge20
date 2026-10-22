@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: evalforge20-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/evalforge.db
+      - LOG_LEVEL=INFO
+    volumes:
+      - evalforge_data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  evalforge_data:

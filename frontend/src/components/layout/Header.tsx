@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavRoute } from '../../types';
 import { Button } from '../ui/Button';
-import { Menu, X, Cpu, GitCompare, Play, History, Grid, Flame } from 'lucide-react';
+import { Menu, X, Cpu, GitCompare, Play, History, Grid, Flame, BarChart3 } from 'lucide-react';
 
 interface HeaderProps {
   currentRoute: NavRoute;
@@ -17,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onRouteChange }) =
     { label: 'Catalog', route: 'models', icon: <Grid size={15} /> },
     { label: 'Compare', route: 'compare', icon: <GitCompare size={15} /> },
     { label: 'Evaluate', route: 'evaluate', icon: <Play size={15} /> },
+    { label: 'Analytics', route: 'analytics', icon: <BarChart3 size={15} /> },
     { label: 'History', route: 'history', icon: <History size={15} /> },
   ];
 

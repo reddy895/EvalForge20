@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EvaluationRun, TestCaseResult } from '../types';
+import { api } from '../services/api';
 import {
   Activity,
   BarChart2,
@@ -22,6 +23,17 @@ interface EvaluationResultChartsProps {
 export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ run, className = '' }) => {
   const [activeTab, setActiveTab] = useState<'performance' | 'accuracy' | 'radar' | 'benchmark'>('performance');
   const [hoveredCaseId, setHoveredCaseId] = useState<string | null>(null);
+  const [leaderboardPeers, setLeaderboardPeers] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.getLeaderboard()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setLeaderboardPeers(data);
+        }
+      })
+      .catch(() => {});
+  }, [run.id]);
 
   const cases: TestCaseResult[] = run.case_results || [];
   const totalCases = run.total_cases || cases.length || 1;
@@ -105,15 +117,26 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
   const gaugeCircumference = 2 * Math.PI * gaugeRadius;
   const gaugeOffset = gaugeCircumference - (passRatePercent / 100) * gaugeCircumference;
 
-  // Benchmark comparison peer data
-  const comparisonPeers = [
-    { name: run.model_name, isCurrent: true, passRate: passRatePercent, latency: Number(meanLatency.toFixed(1)) },
-    { name: 'Qwen 2.5 7B Instruct', isCurrent: false, passRate: 88.5, latency: 24.2 },
-    { name: 'Llama 3.2 3B Instruct', isCurrent: false, passRate: 81.2, latency: 16.8 },
-    { name: 'Mistral 7B Instruct v0.3', isCurrent: false, passRate: 83.0, latency: 26.5 },
-    { name: 'Phi-3.5 Mini Instruct', isCurrent: false, passRate: 78.4, latency: 14.1 },
-    { name: 'DeepSeek-R1 Distill 8B', isCurrent: false, passRate: 89.1, latency: 29.4 },
-  ].sort((a, b) => b.passRate - a.passRate);
+  // Real benchmark comparison peer list
+  const currentPeer = {
+    name: run.model_name,
+    isCurrent: true,
+    passRate: passRatePercent,
+    latency: Number(meanLatency.toFixed(1)),
+    throughput: run.tokens_per_second ? Number(run.tokens_per_second.toFixed(1)) : null,
+  };
+
+  const otherPeers = leaderboardPeers
+    .filter((p) => p.model_name !== run.model_name && p.model_id !== run.model_id)
+    .map((p) => ({
+      name: p.model_name || p.model_id,
+      isCurrent: false,
+      passRate: Math.round((p.pass_rate || 0) * 100),
+      latency: Number((p.avg_latency_ms || 0).toFixed(1)),
+      throughput: p.tokens_per_second ? Number(p.tokens_per_second.toFixed(1)) : null,
+    }));
+
+  const comparisonPeers = [currentPeer, ...otherPeers].sort((a, b) => b.passRate - a.passRate);
 
   return (
     <div className={`p-6 rounded-3xl bg-[#1F201D] border border-[#41413B] shadow-lg flex flex-col gap-6 ${className}`}>
@@ -200,32 +223,41 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
 
             <div className="p-4 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col gap-1">
               <span className="text-[11px] font-mono text-[#A6A49D] flex items-center gap-1">
-                <Zap size={12} className="text-[#68B587]" /> Fastest Response
+                <Zap size={12} className="text-[#68B587]" /> {run.load_duration_ms ? 'Model Load' : 'Fastest Response'}
               </span>
               <span className="text-xl font-mono font-bold text-[#68B587]">
-                {minLatency.toFixed(1)} <span className="text-xs font-normal text-[#A6A49D]">ms</span>
+                {run.load_duration_ms ? run.load_duration_ms.toFixed(1) : minLatency.toFixed(1)}{' '}
+                <span className="text-xs font-normal text-[#A6A49D]">ms</span>
               </span>
-              <span className="text-[10px] text-[#A6A49D] font-mono">Peak inference speed</span>
+              <span className="text-[10px] text-[#A6A49D] font-mono">
+                {run.load_duration_ms ? 'Ollama memory load time' : 'Peak inference latency'}
+              </span>
             </div>
 
             <div className="p-4 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col gap-1">
               <span className="text-[11px] font-mono text-[#A6A49D] flex items-center gap-1">
-                <TrendingUp size={12} className="text-[#E06C75]" /> P95 / Max Latency
+                <TrendingUp size={12} className="text-[#E06C75]" /> P95 Latency
               </span>
               <span className="text-xl font-mono font-bold text-[#E06C75]">
-                {maxLatency.toFixed(1)} <span className="text-xs font-normal text-[#A6A49D]">ms</span>
+                {(run.p95_latency_ms !== undefined ? run.p95_latency_ms : maxLatency).toFixed(1)}{' '}
+                <span className="text-xs font-normal text-[#A6A49D]">ms</span>
               </span>
-              <span className="text-[10px] text-[#A6A49D] font-mono">Worst-case edge latency</span>
+              <span className="text-[10px] text-[#A6A49D] font-mono">95th percentile response</span>
             </div>
 
             <div className="p-4 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col gap-1">
               <span className="text-[11px] font-mono text-[#A6A49D] flex items-center gap-1">
-                <Sparkles size={12} className="text-[#61AFEF]" /> Est. Throughput
+                <Sparkles size={12} className="text-[#61AFEF]" /> Generation Speed
               </span>
               <span className="text-xl font-mono font-bold text-[#61AFEF]">
-                {Math.round(1000 / (meanLatency || 20))} <span className="text-xs font-normal text-[#A6A49D]">tok/s</span>
+                {run.tokens_per_second !== undefined
+                  ? run.tokens_per_second.toFixed(1)
+                  : Math.round(1000 / (meanLatency || 20))}{' '}
+                <span className="text-xs font-normal text-[#A6A49D]">tok/s</span>
               </span>
-              <span className="text-[10px] text-[#A6A49D] font-mono">Local prompt generation</span>
+              <span className="text-[10px] text-[#A6A49D] font-mono">
+                {run.tokens_per_second !== undefined ? 'Ollama measured throughput' : 'Estimated local throughput'}
+              </span>
             </div>
           </div>
 

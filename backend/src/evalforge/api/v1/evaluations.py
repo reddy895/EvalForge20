@@ -112,22 +112,31 @@ async def get_evaluation_results(
     run = await service.get_evaluation_with_results(evaluation_id)
     base_resp = _map_run_response(run)
 
-    case_items = [
-        CaseResultResponse(
-            id=c.id,
-            case_id=c.case_id,
-            prompt=c.prompt,
-            expected_output=c.expected_output,
-            actual_output=c.actual_output,
-            passed=c.passed,
-            latency_ms=c.latency_ms,
-            metrics=c.metrics,
-            token_usage=c.token_usage,
-            error_message=c.error_message,
-            created_at=c.created_at.isoformat(),
+    case_items = []
+    for c in run.results:
+        m_dict = c.metrics or {}
+        u_dict = c.token_usage or {}
+        ass_type = m_dict.get("_assertion_type") or u_dict.get("assertion_type") or "exact_match"
+        tps = u_dict.get("tokens_per_second") or m_dict.get("_tokens_per_second")
+        load_ms = u_dict.get("load_duration_ms") or m_dict.get("_load_duration_ms")
+        case_items.append(
+            CaseResultResponse(
+                id=c.id,
+                case_id=c.case_id,
+                prompt=c.prompt,
+                expected_output=c.expected_output,
+                actual_output=c.actual_output,
+                passed=c.passed,
+                latency_ms=c.latency_ms,
+                assertion_type=ass_type,
+                tokens_per_second=tps,
+                load_duration_ms=load_ms,
+                metrics=m_dict,
+                token_usage=u_dict,
+                error_message=c.error_message,
+                created_at=c.created_at.isoformat(),
+            )
         )
-        for c in run.results
-    ]
 
     return EvaluationDetailResponse(
         **base_resp.model_dump(),

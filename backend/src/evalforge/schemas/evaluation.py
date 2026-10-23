@@ -33,7 +33,8 @@ class EvaluationCreateRequest(BaseModel):
     provider: str = Field(
         default="ollama", description="Inference provider name ('ollama' or 'mock')"
     )
-    dataset_id: str = Field(..., description="ID of the dataset to evaluate")
+    dataset_id: str = Field(..., description="ID or slug of the dataset to evaluate")
+    max_cases: int | None = Field(None, description="Optional cap on test cases to evaluate")
     config: EvaluationConfig | None = Field(default_factory=EvaluationConfig)
 
 
@@ -47,6 +48,9 @@ class CaseResultResponse(BaseModel):
     actual_output: str | None = None
     passed: bool
     latency_ms: float
+    assertion_type: str | None = None
+    tokens_per_second: float | None = None
+    load_duration_ms: float | None = None
     metrics: dict[str, Any] = Field(default_factory=dict)
     token_usage: dict[str, Any] | None = None
     error_message: str | None = None

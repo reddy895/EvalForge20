@@ -16,12 +16,15 @@ class EvaluationScorecard(BaseModel):
     failed_cases: int
     pass_rate: float
     avg_latency_ms: float
+    median_latency_ms: float = 0.0
     p50_latency_ms: float
     p95_latency_ms: float
     p99_latency_ms: float
     total_prompt_tokens: int | None = None
     total_completion_tokens: int | None = None
     avg_throughput_tok_s: float | None = None
+    avg_tokens_per_second: float | None = None
+    avg_load_duration_ms: float | None = None
     metric_averages: dict[str, float] = Field(default_factory=dict)
 
 
@@ -85,12 +88,29 @@ def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
     if tot_comp and sum(latencies) > 0:
         avg_throughput = round(tot_comp / (sum(latencies) / 1000.0), 2)
 
+    # Calculate accurate tokens-per-second and load durations when reported
+    tps_list = [
+        float(r.token_usage["tokens_per_second"])
+        for r in results
+        if r.token_usage and r.token_usage.get("tokens_per_second") is not None
+    ]
+    avg_tps = round(sum(tps_list) / len(tps_list), 2) if tps_list else avg_throughput
+
+    load_list = [
+        float(r.token_usage["load_duration_ms"])
+        for r in results
+        if r.token_usage and r.token_usage.get("load_duration_ms") is not None
+    ]
+    avg_load = round(sum(load_list) / len(load_list), 2) if load_list else None
+
     # Per-metric averages
     metric_sums: dict[str, float] = {}
     metric_counts: dict[str, int] = {}
     for r in results:
         metrics = r.metrics
         for m_name, m_data in metrics.items():
+            if m_name.startswith("_"):
+                continue
             score = None
             if isinstance(m_data, dict) and "score" in m_data:
                 score = m_data["score"]
@@ -110,11 +130,14 @@ def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
         failed_cases=failed_count,
         pass_rate=pass_rate,
         avg_latency_ms=avg_latency,
+        median_latency_ms=p50,
         p50_latency_ms=p50,
         p95_latency_ms=p95,
         p99_latency_ms=p99,
         total_prompt_tokens=tot_prompt,
         total_completion_tokens=tot_comp,
         avg_throughput_tok_s=avg_throughput,
+        avg_tokens_per_second=avg_tps,
+        avg_load_duration_ms=avg_load,
         metric_averages=metric_averages,
     )

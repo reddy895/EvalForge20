@@ -109,8 +109,15 @@ export interface EvaluationRun {
   passed_cases: number;
   total_cases: number;
   avg_latency_ms: number;
+  median_latency_ms?: number;
+  p95_latency_ms?: number;
+  tokens_per_second?: number;
+  load_duration_ms?: number;
+  eval_duration_ms?: number;
+  total_tokens?: number;
   case_results: TestCaseResult[];
   created_at: string;
+  error_message?: string;
 }
 
 export type NavRoute = 'landing' | 'models' | 'model-detail' | 'compare' | 'evaluate' | 'history' | 'analytics';

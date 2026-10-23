@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { SAMPLE_MODELS } from '../../data/models';
-import { SAMPLE_TEST_CASES, simulateEvaluationRun } from '../../data/benchmarks';
 import { EvaluationRun, ModelProfile, NavRoute } from '../../types';
 import { api } from '../../services/api';
+import { useOllamaStatus } from '../../hooks/useOllamaStatus';
 import { EvaluationResultCharts } from '../../charts';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -10,6 +10,8 @@ import { useToast } from '../ui/Toast';
 import {
   Play,
   CheckCircle2,
+  XCircle,
+  AlertTriangle,
   Download,
   Terminal,
   Zap,
@@ -32,10 +34,11 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
   onSaveToHistory,
   onRouteChange,
 }) => {
-  const { success, info } = useToast();
+  const { success, info, error: showError } = useToast();
+  const ollamaStatus = useOllamaStatus();
 
   const [selectedModelId, setSelectedModelId] = useState<string>(
-    initialModelId || 'qwen-2.5-7b-instruct'
+    initialModelId || 'qwen-2.5-1.5b-instruct'
   );
   const [selectedBenchmarkId, setSelectedBenchmarkId] = useState<string>('coding_basics');
   const [sampleLimit, setSampleLimit] = useState<number>(3);
@@ -43,15 +46,22 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
   const [availableModels, setAvailableModels] = useState<ModelProfile[]>(SAMPLE_MODELS);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [currentProgress, setCurrentProgress] = useState<number>(0);
+  const [progressStatus, setProgressStatus] = useState<string>('');
   const [activeRunResult, setActiveRunResult] = useState<EvaluationRun | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
 
   useEffect(() => {
     api.getModels({ limit: 50 }).then((res) => {
       if (res?.models && res.models.length > 0) {
         setAvailableModels(res.models);
+        // Default to first installed model if available
+        const installed = res.models.find((m: ModelProfile) => m.is_installed || m.is_local);
+        if (installed && !initialModelId) {
+          setSelectedModelId(installed.id);
+        }
       }
     }).catch(() => {});
-  }, []);
+  }, [initialModelId]);
 
   const selectedModel =
     availableModels.find((m) => m.id === selectedModelId) || availableModels[0] || SAMPLE_MODELS[0];
@@ -63,112 +73,107 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
       name: 'Python Algorithmic Synthesis',
       description: 'Tests function generation, string reversal, palindromes, and recursion.',
       icon: <Code size={16} />,
-      cases: SAMPLE_TEST_CASES.coding_basics?.length || 3,
+      cases: 3,
     },
     {
       id: 'structured_json',
       name: 'Constrained JSON Schema Extraction',
       description: 'Verifies entity extraction adhering to strict typed schemas without hallucination.',
       icon: <FileCode size={16} />,
-      cases: SAMPLE_TEST_CASES.structured_json?.length || 3,
+      cases: 3,
     },
     {
       id: 'reasoning_math',
       name: 'Mathematical Word Logic',
       description: 'Multi-step algebraic word problems requiring verified arithmetic deduction.',
       icon: <Zap size={16} />,
-      cases: SAMPLE_TEST_CASES.reasoning_math?.length || 3,
+      cases: 3,
     },
     {
       id: 'rag_retrieval',
       name: 'Needle-in-a-Haystack Fact Recall',
       description: 'Evaluates precision factual retrieval inside dense contextual documents.',
       icon: <HardDrive size={16} />,
-      cases: SAMPLE_TEST_CASES.rag_retrieval?.length || 2,
+      cases: 2,
     },
   ];
 
   const handleStartEvaluation = async () => {
     setIsRunning(true);
-    setCurrentProgress(15);
+    setCurrentProgress(10);
+    setProgressStatus('Submitting evaluation run to backend...');
     setActiveRunResult(null);
-
-    const stepInterval = setInterval(() => {
-      setCurrentProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(stepInterval);
-          return 95;
-        }
-        return prev + 25;
-      });
-    }, 250);
+    setRunError(null);
 
     try {
-      // Attempt real backend evaluation run
       const payload = {
         model_id: selectedModel.model_identifier || selectedModel.id,
-        provider: selectedModel.is_local ? 'ollama' : selectedModel.provider.toLowerCase(),
+        provider: selectedModel.is_local ? 'ollama' : (selectedModel.provider ? selectedModel.provider.toLowerCase() : 'ollama'),
         dataset_id: selectedBenchmarkId,
         name: `Eval — ${selectedModel.name} on ${selectedBenchmarkId}`,
         max_cases: sampleLimit,
       };
 
-      let result: EvaluationRun | null = null;
-      try {
-        const runResp = await api.createEvaluation(payload);
-        if (runResp?.id) {
-          // Poll or fetch details
-          const runDetails = await api.getEvaluationDetails(runResp.id);
-          const cases = (runDetails.case_results || []).map((c: any) => ({
-            case_id: c.case_id,
-            prompt: c.prompt,
-            expected_output: c.expected_output || '',
-            actual_output: c.actual_output || '',
-            passed: c.passed,
-            latency_ms: c.latency_ms || 15.0,
-            assertion_type: c.assertion_type || 'exact_match',
-          }));
+      setCurrentProgress(20);
+      setProgressStatus(`Starting local Ollama inference on ${payload.model_id}...`);
 
-          result = {
-            id: runDetails.id,
-            model_id: runDetails.model_id,
-            model_name: selectedModel.name,
-            benchmark_id: selectedBenchmarkId,
-            benchmark_name: benchmarksList.find((b) => b.id === selectedBenchmarkId)?.name || 'Benchmark Suite',
-            status: runDetails.status === 'completed' ? 'completed' : 'failed',
-            is_demo: false,
-            pass_rate: runDetails.pass_rate || 0,
-            passed_cases: runDetails.passed_cases || 0,
-            total_cases: runDetails.total_cases || sampleLimit,
-            avg_latency_ms: runDetails.avg_latency_ms || 12.5,
-            case_results: cases,
-            created_at: runDetails.created_at || new Date().toISOString(),
-          };
-        }
-      } catch {
-        // Fallback to local deterministic simulation if backend run not configured
-        result = null;
+      const runResp = await api.createEvaluation(payload);
+      if (!runResp?.id) {
+        throw new Error('Backend failed to create evaluation run.');
       }
 
-      clearInterval(stepInterval);
+      // Poll until completed with live progress updates
+      const runDetails = await api.pollEvaluation(runResp.id, (pct) => {
+        setCurrentProgress(pct);
+        setProgressStatus(`Executing test cases (${pct}% complete)...`);
+      });
+
+      const cases = (runDetails.case_results || []).map((c: any) => ({
+        case_id: c.case_id,
+        prompt: c.prompt,
+        expected_output: c.expected_output || '',
+        actual_output: c.actual_output || '',
+        passed: Boolean(c.passed),
+        latency_ms: Number((c.latency_ms || 0).toFixed(1)),
+        assertion_type: c.assertion_type || 'exact_match',
+      }));
+
+      const result: EvaluationRun = {
+        id: runDetails.id,
+        model_id: runDetails.model_id,
+        model_name: selectedModel.name,
+        benchmark_id: selectedBenchmarkId,
+        benchmark_name: benchmarksList.find((b) => b.id === selectedBenchmarkId)?.name || 'Benchmark Suite',
+        status: runDetails.status === 'completed' ? 'completed' : 'failed',
+        is_demo: false,
+        pass_rate: Number((runDetails.pass_rate || 0).toFixed(2)),
+        passed_cases: runDetails.passed_cases || 0,
+        total_cases: runDetails.total_cases || sampleLimit,
+        avg_latency_ms: Number((runDetails.avg_latency_ms || 0).toFixed(1)),
+        median_latency_ms: runDetails.median_latency_ms ? Number(runDetails.median_latency_ms.toFixed(1)) : undefined,
+        p95_latency_ms: runDetails.p95_latency_ms ? Number(runDetails.p95_latency_ms.toFixed(1)) : undefined,
+        tokens_per_second: runDetails.tokens_per_second ? Number(runDetails.tokens_per_second.toFixed(1)) : undefined,
+        load_duration_ms: runDetails.load_duration_ms ? Number(runDetails.load_duration_ms.toFixed(1)) : undefined,
+        case_results: cases,
+        created_at: runDetails.created_at || new Date().toISOString(),
+      };
+
       setCurrentProgress(100);
-
-      if (!result) {
-        result = simulateEvaluationRun(
-          selectedModel.id,
-          selectedModel.name,
-          selectedBenchmarkId,
-          sampleLimit
-        );
-      }
-
+      setProgressStatus('Evaluation completed.');
       setActiveRunResult(result);
       setIsRunning(false);
       onSaveToHistory(result);
-      success('Evaluation Complete', `Tested ${result.total_cases} test cases successfully.`);
-    } catch {
-      clearInterval(stepInterval);
+
+      if (result.status === 'completed') {
+        success('Evaluation Complete', `Tested ${result.total_cases} cases: ${result.passed_cases} passed (${(result.pass_rate * 100).toFixed(0)}%).`);
+      } else {
+        showError('Evaluation Incomplete', 'Some test cases failed or encountered model timeout.');
+      }
+    } catch (err: any) {
       setIsRunning(false);
+      const errMsg = err.message || 'Execution failed during model inference.';
+      setRunError(errMsg);
+      showError('Evaluation Failed', errMsg);
     }
   };
 
@@ -226,10 +231,33 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
           </p>
         </div>
 
-        <Badge variant="demo" size="md">
-          Demo Mode Enabled
-        </Badge>
+        <div className="flex items-center gap-3">
+          {ollamaStatus.reachable ? (
+            <Badge variant="installed" size="md">
+              Ollama Connected ({ollamaStatus.version || 'Local'}) • {ollamaStatus.installedModels} Models
+            </Badge>
+          ) : (
+            <Badge variant="warning" size="md">
+              Ollama Offline • Local Inference Disabled
+            </Badge>
+          )}
+        </div>
       </div>
+
+      {runError && (
+        <div className="p-4 rounded-2xl bg-[#E26D5C]/10 border border-[#E26D5C]/40 text-[#E26D5C] text-xs flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={16} />
+            <span><strong>Execution Error:</strong> {runError}</span>
+          </div>
+          <button
+            onClick={() => setRunError(null)}
+            className="text-xs underline hover:no-underline cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Studio Configuration Card */}
       <div className="p-6 rounded-3xl bg-[#242522] border border-[#41413B] shadow-md flex flex-col gap-6">
@@ -323,8 +351,8 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
           <h3 className="text-base font-semibold text-[#F5F0E7]">
             Executing Test Suite against {selectedModel.name}...
           </h3>
-          <p className="text-xs font-mono text-[#A6A49D]">
-            Evaluating assertion types: JSON schema, exact regex match, execution validation
+          <p className="text-xs font-mono text-[#D9823B]">
+            {progressStatus || 'Running inference and computing metric assertions...'}
           </p>
           <div className="w-full max-w-md h-2 rounded-full bg-[#191A18] overflow-hidden mt-2">
             <div
@@ -378,7 +406,7 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
           </div>
 
           {/* Metric Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 border-b border-[#41413B] bg-[#191A18]/30 font-mono text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 p-6 border-b border-[#41413B] bg-[#191A18]/30 font-mono text-xs">
             <div>
               <span className="text-[#A6A49D] block text-[11px] mb-1">Pass Rate</span>
               <span className="text-[#68B587] font-bold text-base">
@@ -398,9 +426,27 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
               </span>
             </div>
             <div>
+              <span className="text-[#A6A49D] block text-[11px] mb-1">P95 Latency</span>
+              <span className="text-[#F5F0E7] font-bold text-base">
+                {activeRunResult.p95_latency_ms !== undefined ? `${activeRunResult.p95_latency_ms} ms` : '—'}
+              </span>
+            </div>
+            <div>
+              <span className="text-[#A6A49D] block text-[11px] mb-1">Generation Speed</span>
+              <span className="text-[#D9823B] font-bold text-base">
+                {activeRunResult.tokens_per_second !== undefined ? `${activeRunResult.tokens_per_second} tok/s` : '—'}
+              </span>
+            </div>
+            <div>
               <span className="text-[#A6A49D] block text-[11px] mb-1">Status</span>
-              <span className="text-[#68B587] font-semibold uppercase flex items-center gap-1">
-                <CheckCircle2 size={14} /> Completed
+              <span className={`font-semibold uppercase flex items-center gap-1 ${
+                activeRunResult.status === 'completed' ? 'text-[#68B587]' : 'text-[#E26D5C]'
+              }`}>
+                {activeRunResult.status === 'completed' ? (
+                  <><CheckCircle2 size={14} /> Completed</>
+                ) : (
+                  <><XCircle size={14} /> Failed</>
+                )}
               </span>
             </div>
           </div>
@@ -436,8 +482,8 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
 
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-[#A6A49D]">{c.latency_ms} ms</span>
-                      <Badge variant="installed" size="sm">
-                        PASSED
+                      <Badge variant={c.passed ? "installed" : "error"} size="sm">
+                        {c.passed ? 'PASSED' : 'FAILED'}
                       </Badge>
                     </div>
                   </div>

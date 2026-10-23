@@ -56,8 +56,13 @@ async def list_models(
 async def get_model(model_id: str) -> ModelInfo:
     """Retrieve full technical specifications, hardware requirements, pricing, and benchmarks for a model."""
     all_models = await ModelService.get_all_models()
+    cleaned_id = model_id.removeprefix("ollama:")
     for m in all_models:
-        if m.id == model_id or m.model_identifier == model_id:
+        if (
+            m.id in (model_id, cleaned_id)
+            or (m.model_identifier and m.model_identifier in (model_id, cleaned_id))
+            or (m.id and m.id.endswith(cleaned_id))
+        ):
             return m
     raise ModelNotFoundError(model_id, "catalog")
 

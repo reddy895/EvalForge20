@@ -4,7 +4,10 @@ from typing import Any
 
 from src.evalforge.core.logging import get_logger
 from src.evalforge.evaluators.base import BaseEvaluator
-from src.evalforge.evaluators.deterministic.exact_match import ExactMatchEvaluator
+from src.evalforge.evaluators.deterministic.exact_match import (
+    ExactMatchEvaluator,
+    NormalizedExactMatchEvaluator,
+)
 from src.evalforge.evaluators.deterministic.json_schema import JsonSchemaEvaluator
 from src.evalforge.evaluators.deterministic.keywords import KeywordEvaluator
 from src.evalforge.evaluators.deterministic.token_f1 import TokenF1Evaluator
@@ -36,6 +39,7 @@ class CaseRunner:
     def _build_evaluators(self) -> dict[str, BaseEvaluator]:
         evals: dict[str, BaseEvaluator] = {
             "exact_match": ExactMatchEvaluator(),
+            "normalized_exact_match": NormalizedExactMatchEvaluator(),
             "token_f1": TokenF1Evaluator(),
             "keyword_match": KeywordEvaluator(),
             "json_schema": JsonSchemaEvaluator(),
@@ -66,14 +70,24 @@ class CaseRunner:
 
         # Attach json schema if specified in case evaluator config
         case_cfg = case.evaluator_config or {}
-        if "json_schema" in case_cfg:
-            inference_req.json_schema = case_cfg["json_schema"]
+        assertion_type = (
+            case_cfg.get("assertion_type")
+            or case.metadata.get("assertion_type")
+            or "exact_match"
+        )
+        if "json_schema" in case_cfg or assertion_type == "json_schema":
+            inference_req.json_schema = case_cfg.get("json_schema") or {"type": "object"}
 
+        resp = None
         try:
             resp = await self.provider.generate(inference_req)
             pred_text = resp.text
             latency_ms = resp.latency_ms
-            usage_dict = resp.usage.model_dump() if resp.usage else None
+            usage_dict = resp.usage.model_dump() if resp.usage else {}
+            if resp.raw_metadata:
+                for k, v in resp.raw_metadata.items():
+                    if v is not None:
+                        usage_dict[k] = v
             error_msg = None
         except Exception as exc:
             logger.warning("Inference failed for case '%s': %s", case.id, exc)
@@ -83,10 +97,22 @@ class CaseRunner:
             error_msg = str(exc)
 
         # Compute metrics
-        metrics_dict: dict[str, Any] = {}
+        metrics_dict: dict[str, Any] = {
+            "_assertion_type": assertion_type,
+            "_latency_ms": latency_ms,
+        }
+        if resp and resp.raw_metadata:
+            metrics_dict["_tokens_per_second"] = resp.raw_metadata.get("tokens_per_second")
+            metrics_dict["_load_duration_ms"] = resp.raw_metadata.get("load_duration_ms")
+
+        # Dynamically determine metrics to evaluate
+        metrics_to_run = list(self.config.metrics)
+        if assertion_type == "json_schema" and "json_schema" not in metrics_to_run:
+            metrics_to_run.append("json_schema")
+
         all_passed = error_msg is None
 
-        for metric_name in self.config.metrics:
+        for metric_name in metrics_to_run:
             evaluator = self.evaluators.get(metric_name)
             if evaluator and error_msg is None:
                 try:

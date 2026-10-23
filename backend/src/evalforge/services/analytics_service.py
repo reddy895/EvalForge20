@@ -315,6 +315,119 @@ class AnalyticsService:
             timestamp=datetime.now(UTC).isoformat(),
         )
 
+    @classmethod
+    async def get_leaderboard(cls, db: AsyncSession) -> list[dict[str, Any]]:
+        """Compute live empirical leaderboard from completed evaluation runs."""
+        from src.evalforge.analytics.leaderboard import generate_leaderboard
+
+        q = await db.execute(
+            select(EvaluationRun)
+            .where(EvaluationRun.status == "completed")
+            .order_by(EvaluationRun.created_at.desc())
+        )
+        runs = q.scalars().all()
+        if not runs:
+            return []
+
+        all_models = await ModelService.get_all_models()
+        model_names = {m.id: m.name for m in all_models}
+        for m in all_models:
+            if m.model_identifier:
+                model_names[m.model_identifier] = m.name
+
+        runs_data = []
+        for r in runs:
+            summary = r.summary_metrics or {}
+            runs_data.append({
+                "model_id": r.model_id,
+                "model_name": model_names.get(r.model_id, r.name or r.model_id),
+                "benchmark_name": r.dataset_name or "Standard Benchmark",
+                "quality_score": round((r.pass_rate or 0.0) * 100.0, 1),
+                "pass_rate": round((r.pass_rate or 0.0) * 100.0, 1),
+                "median_latency_ms": summary.get("p50_latency_ms") or summary.get("median_latency_ms") or r.avg_latency_ms or 0.0,
+                "avg_latency_ms": r.avg_latency_ms or 0.0,
+                "tokens_per_second": summary.get("avg_tokens_per_second") or summary.get("avg_throughput_tok_s"),
+                "total_cases": r.total_cases,
+                "is_local": r.provider == "ollama" or "mock" in r.model_id or "qwen" in r.model_id or "llama" in r.model_id,
+            })
+
+        entries = generate_leaderboard(runs_data)
+        return [
+            {
+                "rank": e.rank,
+                "model_id": e.model_id,
+                "model_name": e.model_name,
+                "benchmark_name": e.benchmark_name,
+                "quality_score": e.quality_score,
+                "median_latency_ms": e.median_latency_ms,
+                "tokens_per_second": e.tokens_per_second,
+                "pass_rate_percent": e.pass_rate_percent,
+                "sample_count": e.sample_count,
+            }
+            for e in entries
+        ]
+
+    @classmethod
+    async def get_efficiency(cls, db: AsyncSession) -> list[dict[str, Any]]:
+        """Compute latency distribution and throughput efficiency per model."""
+        q = await db.execute(
+            select(EvaluationRun)
+            .where(EvaluationRun.status == "completed")
+            .order_by(EvaluationRun.created_at.desc())
+        )
+        runs = q.scalars().all()
+        by_model: dict[str, list[EvaluationRun]] = {}
+        for r in runs:
+            by_model.setdefault(r.model_id, []).append(r)
+
+        all_models = await ModelService.get_all_models()
+        name_map = {m.id: m.name for m in all_models}
+        for m in all_models:
+            if m.model_identifier:
+                name_map[m.model_identifier] = m.name
+
+        rows = []
+        for m_id, m_runs in by_model.items():
+            tps_values = [
+                (r.summary_metrics or {}).get("avg_tokens_per_second")
+                for r in m_runs
+                if (r.summary_metrics or {}).get("avg_tokens_per_second")
+            ]
+            latencies = [r.avg_latency_ms for r in m_runs if r.avg_latency_ms]
+            avg_tps = round(sum(tps_values) / len(tps_values), 1) if tps_values else None
+            avg_dur = round(sum(latencies) / len(latencies) / 1000.0, 2) if latencies else 0.0
+            rows.append({
+                "model_id": m_id,
+                "model_name": name_map.get(m_id, m_id),
+                "tokens_per_second": avg_tps,
+                "avg_duration_sec": avg_dur,
+                "sample_count": sum(r.total_cases for r in m_runs),
+            })
+        return rows
+
+    @classmethod
+    async def get_historical_trends(cls, db: AsyncSession) -> list[dict[str, Any]]:
+        """Return chronological evaluation points from persisted database runs."""
+        q = await db.execute(
+            select(EvaluationRun)
+            .where(EvaluationRun.status == "completed")
+            .order_by(EvaluationRun.created_at.asc())
+            .limit(50)
+        )
+        runs = q.scalars().all()
+        return [
+            {
+                "run_id": r.id,
+                "date": r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else "Unknown",
+                "model_id": r.model_id,
+                "model_name": r.name,
+                "pass_rate": round((r.pass_rate or 0.0) * 100.0, 1),
+                "latency_ms": round(r.avg_latency_ms or 0.0, 1),
+                "total_cases": r.total_cases,
+            }
+            for r in runs
+        ]
+
 
 _analytics_service: AnalyticsService | None = None
 

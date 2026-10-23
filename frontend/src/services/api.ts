@@ -204,23 +204,28 @@ class ApiService {
   }
 
   // Evaluation Runs
-  async getEvaluations(): Promise<EvaluationRun[]> {
+  async getEvaluations(params?: { limit?: number; offset?: number }): Promise<EvaluationRun[]> {
     try {
-      const data = await this.request<{ items: any[] }>('/evaluations');
+      const q = params ? `?limit=${params.limit ?? 50}&offset=${params.offset ?? 0}` : '';
+      const data = await this.request<{ items: any[] }>(`/evaluations${q}`);
       return (data.items || []).map((r) => ({
         id: r.id,
         model_id: r.model_id,
         model_name: r.name || r.model_id,
         benchmark_id: r.dataset_id || 'default',
-        benchmark_name: r.dataset_name || 'Standard Benchmark Suite',
+        benchmark_name: r.dataset_name || (r.dataset_id ? r.dataset_id.replace(/_/g, ' ') : 'Standard Benchmark Suite'),
         status: r.status === 'completed' ? 'completed' : r.status === 'failed' ? 'failed' : 'running',
         is_demo: false,
         pass_rate: r.pass_rate || 0,
         passed_cases: r.passed_cases || 0,
         total_cases: r.total_cases || 0,
-        avg_latency_ms: r.avg_latency_ms || 0,
+        avg_latency_ms: Number((r.avg_latency_ms || 0).toFixed(1)),
+        median_latency_ms: r.median_latency_ms ? Number(r.median_latency_ms.toFixed(1)) : undefined,
+        p95_latency_ms: r.p95_latency_ms ? Number(r.p95_latency_ms.toFixed(1)) : undefined,
+        tokens_per_second: r.tokens_per_second ? Number(r.tokens_per_second.toFixed(1)) : undefined,
+        load_duration_ms: r.load_duration_ms ? Number(r.load_duration_ms.toFixed(1)) : undefined,
         case_results: [],
-        created_at: r.created_at,
+        created_at: r.created_at || new Date().toISOString(),
       }));
     } catch {
       return [];

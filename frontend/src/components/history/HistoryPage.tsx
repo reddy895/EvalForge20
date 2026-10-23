@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { EvaluationRun, NavRoute } from '../../types';
+import { api } from '../../services/api';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Modal } from '../ui/Modal';
@@ -27,6 +28,43 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
 }) => {
   const { info, success } = useToast();
   const [inspectRun, setInspectRun] = useState<EvaluationRun | null>(null);
+  const [inspectLoading, setInspectLoading] = useState<boolean>(false);
+
+  const handleInspect = async (run: EvaluationRun) => {
+    if (run.case_results && run.case_results.length > 0) {
+      setInspectRun(run);
+      return;
+    }
+    setInspectLoading(true);
+    try {
+      const details = await api.getEvaluationDetails(run.id);
+      const fullRun: EvaluationRun = {
+        ...run,
+        pass_rate: details.pass_rate !== undefined ? details.pass_rate : run.pass_rate,
+        passed_cases: details.passed_cases || run.passed_cases,
+        total_cases: details.total_cases || run.total_cases,
+        avg_latency_ms: details.avg_latency_ms || run.avg_latency_ms,
+        median_latency_ms: details.median_latency_ms,
+        p95_latency_ms: details.p95_latency_ms,
+        tokens_per_second: details.tokens_per_second,
+        load_duration_ms: details.load_duration_ms,
+        case_results: (details.case_results || []).map((c: any) => ({
+          case_id: c.case_id,
+          prompt: c.prompt,
+          expected_output: c.expected_output || '',
+          actual_output: c.actual_output || '',
+          passed: Boolean(c.passed),
+          latency_ms: Number((c.latency_ms || 0).toFixed(1)),
+          assertion_type: c.assertion_type || 'exact_match',
+        })),
+      };
+      setInspectRun(fullRun);
+    } catch {
+      setInspectRun(run);
+    } finally {
+      setInspectLoading(false);
+    }
+  };
 
   const handleExportAll = () => {
     if (historyRuns.length === 0) return;
@@ -235,8 +273,8 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                     </td>
                     <td className="p-4 text-[#F5F0E7]">{run.avg_latency_ms} ms</td>
                     <td className="p-4">
-                      <Badge variant="demo" size="sm">
-                        Demo
+                      <Badge variant={run.is_demo ? "demo" : "installed"} size="sm">
+                        {run.is_demo ? "Demo" : "Ollama"}
                       </Badge>
                     </td>
                     <td className="p-4 text-right">
@@ -244,7 +282,8 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                         <Button
                           size="sm"
                           variant="secondary"
-                          onClick={() => setInspectRun(run)}
+                          onClick={() => handleInspect(run)}
+                          loading={inspectLoading}
                           iconLeft={<Eye size={12} />}
                         >
                           Inspect
@@ -311,7 +350,9 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                     <span className="text-[#D9823B] font-semibold">
                       #{i + 1} {c.case_id} ({c.assertion_type})
                     </span>
-                    <span className="text-[#68B587] font-bold">PASSED ({c.latency_ms} ms)</span>
+                    <span className={c.passed ? "text-[#68B587] font-bold" : "text-[#E06C75] font-bold"}>
+                      {c.passed ? "PASSED" : "FAILED"} ({c.latency_ms} ms)
+                    </span>
                   </div>
                   <div className="text-[#A6A49D]">
                     <span className="text-[#78766F] block text-[10px]">PROMPT:</span>

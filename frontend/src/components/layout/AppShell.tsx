@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavRoute, ModelProfile, EvaluationRun } from '../../types';
 import { Header } from './Header';
 import { Footer } from './Footer';
@@ -9,22 +9,28 @@ import { EvaluatePage } from '../evaluations/EvaluatePage';
 import { HistoryPage } from '../history/HistoryPage';
 import { AnalyticsPage } from '../analytics/AnalyticsPage';
 import { ModelProfileModal } from '../profile/ModelProfileModal';
-import { simulateEvaluationRun } from '../../data/benchmarks';
+import { api } from '../../services/api';
 
 export const AppShell: React.FC = () => {
   const [currentRoute, setCurrentRoute] = useState<NavRoute>('landing');
   const [compareModelIds, setCompareModelIds] = useState<string[]>([
-    'qwen-2.5-7b-instruct',
-    'llama-3.1-8b-instruct',
+    'qwen-2.5-1.5b-instruct',
+    'qwen-2.5-3b-instruct',
   ]);
-  const [selectedModelForEval, setSelectedModelForEval] = useState<string>('qwen-2.5-7b-instruct');
+  const [selectedModelForEval, setSelectedModelForEval] = useState<string>('qwen-2.5-1.5b-instruct');
   const [selectedProfileModel, setSelectedProfileModel] = useState<ModelProfile | null>(null);
+  const [historyRuns, setHistoryRuns] = useState<EvaluationRun[]>([]);
 
-  // Initialize with initial sample runs so History is immediately meaningful and informative
-  const [historyRuns, setHistoryRuns] = useState<EvaluationRun[]>(() => [
-    simulateEvaluationRun('qwen-2.5-7b-instruct', 'Qwen 2.5 7B Instruct', 'coding_basics', 3),
-    simulateEvaluationRun('llama-3.1-8b-instruct', 'Llama 3.1 8B Instruct', 'structured_json', 3),
-  ]);
+  useEffect(() => {
+    // Fetch persisted evaluations from backend database
+    api.getEvaluations({ limit: 50 })
+      .then((runs) => {
+        if (Array.isArray(runs) && runs.length > 0) {
+          setHistoryRuns(runs);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleRouteChange = (route: NavRoute) => {
     setCurrentRoute(route);

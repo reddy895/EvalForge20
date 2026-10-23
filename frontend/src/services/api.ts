@@ -46,9 +46,31 @@ class ApiService {
     }
   }
 
-  // Health
-  async getHealth(): Promise<{ status: string; app: string; version: string; ollama_base_url: string }> {
+  // Health & Ollama Diagnostics
+  async getHealth(): Promise<{
+    status: string;
+    app: string;
+    version: string;
+    ollama_base_url: string;
+    ollama_reachable?: boolean;
+    ollama_version?: string | null;
+    ollama_installed_models?: number;
+  }> {
     return this.request('/health');
+  }
+
+  async getOllamaHealth(): Promise<{
+    status: string;
+    base_url: string;
+    reachable: boolean;
+    version: string | null;
+    suggestion: string | null;
+  }> {
+    return this.request('/providers/ollama/health');
+  }
+
+  async getOllamaModels(): Promise<{ total: number; models: any[] }> {
+    return this.request('/providers/ollama/models');
   }
 
   // Providers
@@ -143,11 +165,34 @@ class ApiService {
     return this.request<CommitAnalytics>('/analytics/commits');
   }
 
+  // Live empirical Leaderboard
+  async getLeaderboard(): Promise<any[]> {
+    return this.request<any[]>('/analytics/leaderboard');
+  }
+
+  // Token Efficiency and Throughput Metrics
+  async getEfficiencyMetrics(): Promise<any[]> {
+    return this.request<any[]>('/analytics/efficiency');
+  }
+
+  // Chronological Historical Trends
+  async getHistoricalTrends(): Promise<any[]> {
+    return this.request<any[]>('/analytics/trends');
+  }
+
   // Datasets
   async getDatasets(): Promise<DatasetItem[]> {
     try {
       const data = await this.request<{ items: DatasetItem[] }>('/datasets');
-      return data.items || [];
+      if (data.items && data.items.length > 0) {
+        return data.items;
+      }
+      return [
+        { id: 'coding_basics', name: 'Python Algorithmic Synthesis', description: 'Tests function generation, string reversal, and recursion.', version: 1, case_count: 3 },
+        { id: 'structured_json', name: 'Constrained JSON Schema Extraction', description: 'Verifies typed schema extraction.', version: 1, case_count: 3 },
+        { id: 'reasoning_math', name: 'Mathematical Word Logic', description: 'Multi-step algebraic word problems.', version: 1, case_count: 3 },
+        { id: 'rag_retrieval', name: 'Needle-in-a-Haystack Fact Recall', description: 'Evaluates precision factual retrieval inside dense documents.', version: 1, case_count: 2 },
+      ];
     } catch {
       return [
         { id: 'coding_basics', name: 'Python Algorithmic Synthesis', description: 'Tests function generation, string reversal, and recursion.', version: 1, case_count: 3 },
@@ -197,7 +242,35 @@ class ApiService {
   }
 
   async getEvaluationDetails(id: string): Promise<any> {
-    return this.request(`/evaluations/${id}`);
+    // Call /results to retrieve case-level results and detailed metrics
+    return this.request(`/evaluations/${id}/results`);
+  }
+
+  async pollEvaluation(
+    id: string,
+    onProgress?: (progressPercent: number) => void,
+    maxWaitSec: number = 60
+  ): Promise<any> {
+    const startTime = Date.now();
+    const intervalMs = 600;
+
+    while ((Date.now() - startTime) < maxWaitSec * 1000) {
+      try {
+        const details = await this.getEvaluationDetails(id);
+        if (details.status === 'completed' || details.status === 'failed' || details.status === 'cancelled') {
+          if (onProgress) onProgress(100);
+          return details;
+        }
+        if (details.total_cases > 0 && details.completed_cases !== undefined) {
+          const pct = Math.min(95, Math.max(15, Math.round((details.completed_cases / details.total_cases) * 100)));
+          if (onProgress) onProgress(pct);
+        }
+      } catch {
+        // Retry
+      }
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    }
+    throw new Error(`Evaluation run timed out after ${maxWaitSec}s waiting for completion.`);
   }
 }
 

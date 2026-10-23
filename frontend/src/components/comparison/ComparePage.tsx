@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SAMPLE_MODELS } from '../../data/models';
-import { NavRoute } from '../../types';
+import { NavRoute, ModelProfile } from '../../types';
+import { api } from '../../services/api';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import {
@@ -33,16 +34,27 @@ export const ComparePage: React.FC<ComparePageProps> = ({
   onSelectModelForEvaluation,
 }) => {
   const [selectedDropdownModelId, setSelectedDropdownModelId] = useState<string>('');
+  const [availableModels, setAvailableModels] = useState<ModelProfile[]>(SAMPLE_MODELS);
 
-  // Default to 2 top models if none selected
+  useEffect(() => {
+    api.getModels({ limit: 100 })
+      .then((res) => {
+        if (res?.models && res.models.length > 0) {
+          setAvailableModels(res.models);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Default to 2 top installed models if none selected
   const activeIds =
     compareModelIds.length > 0
       ? compareModelIds
-      : ['qwen-2.5-7b-instruct', 'llama-3.1-8b-instruct'];
+      : ['qwen-2.5-1.5b-instruct', 'qwen-2.5-3b-instruct'];
 
-  const modelsToCompare = SAMPLE_MODELS.filter((m) => activeIds.includes(m.id));
+  const modelsToCompare = availableModels.filter((m) => activeIds.includes(m.id));
 
-  const availableToAdd = SAMPLE_MODELS.filter((m) => !activeIds.includes(m.id));
+  const availableToAdd = availableModels.filter((m) => !activeIds.includes(m.id));
 
   const handleAddSelected = () => {
     if (selectedDropdownModelId) {

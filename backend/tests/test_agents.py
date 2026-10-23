@@ -3,7 +3,7 @@
 import uuid
 
 import pytest
-from starlette.testclient import TestClient
+from fastapi.testclient import TestClient
 
 from src.evalforge.agents.agent_metrics import compute_agent_metrics
 from src.evalforge.agents.tool_harness import SafeToolHarness, safe_eval_math

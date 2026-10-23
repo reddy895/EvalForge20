@@ -51,6 +51,20 @@ class OllamaProvider(BaseProvider):
     async def generate(self, request: InferenceRequest) -> InferenceResponse:
         start_time = time.perf_counter()
 
+        # Normalize model identifier (strip ollama: prefix and resolve catalog models)
+        model_to_use = request.model
+        if model_to_use.startswith("ollama:"):
+            model_to_use = model_to_use[7:]
+        else:
+            try:
+                from src.evalforge.services.model_service import VERIFIED_CATALOG_MODELS
+                for cm in VERIFIED_CATALOG_MODELS:
+                    if cm.id == model_to_use and cm.model_identifier:
+                        model_to_use = cm.model_identifier
+                        break
+            except Exception:
+                pass
+
         options: dict[str, Any] = {
             "temperature": request.temperature,
         }
@@ -67,7 +81,7 @@ class OllamaProvider(BaseProvider):
 
         # Build payload
         payload: dict[str, Any] = {
-            "model": request.model,
+            "model": model_to_use,
             "options": options,
         }
 
@@ -128,7 +142,7 @@ class OllamaProvider(BaseProvider):
             raw_response = await self.client.generate(payload)
             response_text = raw_response.get("response", "")
 
-        duration_ms = (time.perf_counter() - start_time) * 1000
+        wall_duration_ms = (time.perf_counter() - start_time) * 1000
 
         # Extract token usage if provided by Ollama
         prompt_tokens = raw_response.get("prompt_eval_count")
@@ -143,18 +157,50 @@ class OllamaProvider(BaseProvider):
                 total_tokens=p_tok + c_tok,
             )
 
+        # Precise Ollama nanosecond durations
+        total_dur_ns = raw_response.get("total_duration")
+        load_dur_ns = raw_response.get("load_duration")
+        prompt_eval_dur_ns = raw_response.get("prompt_eval_duration")
+        eval_dur_ns = raw_response.get("eval_duration")
+
+        # Calculate genuine tokens per second: completion_tokens / (eval_duration_sec)
+        tps: float | None = None
+        if completion_tokens and eval_dur_ns and eval_dur_ns > 0:
+            tps = round(completion_tokens / (eval_dur_ns / 1e9), 2)
+        elif completion_tokens and wall_duration_ms > 0:
+            tps = round(completion_tokens / (wall_duration_ms / 1000.0), 2)
+
+        prompt_tps: float | None = None
+        if prompt_tokens and prompt_eval_dur_ns and prompt_eval_dur_ns > 0:
+            prompt_tps = round(prompt_tokens / (prompt_eval_dur_ns / 1e9), 2)
+
+        # Compute millisecond equivalents
+        total_dur_ms = round(total_dur_ns / 1e6, 2) if total_dur_ns is not None else round(wall_duration_ms, 2)
+        load_dur_ms = round(load_dur_ns / 1e6, 2) if load_dur_ns is not None else None
+        eval_dur_ms = round(eval_dur_ns / 1e6, 2) if eval_dur_ns is not None else None
+        prompt_eval_dur_ms = round(prompt_eval_dur_ns / 1e6, 2) if prompt_eval_dur_ns is not None else None
+
         return InferenceResponse(
             text=response_text,
             model=request.model,
             provider=self.name,
-            latency_ms=round(duration_ms, 2),
+            latency_ms=total_dur_ms,
             usage=token_usage,
             tool_calls=tool_calls,
             raw_metadata={
-                "total_duration_ns": raw_response.get("total_duration"),
-                "load_duration_ns": raw_response.get("load_duration"),
-                "prompt_eval_duration_ns": raw_response.get("prompt_eval_duration"),
-                "eval_duration_ns": raw_response.get("eval_duration"),
+                "total_duration_ns": total_dur_ns,
+                "load_duration_ns": load_dur_ns,
+                "prompt_eval_duration_ns": prompt_eval_dur_ns,
+                "eval_duration_ns": eval_dur_ns,
+                "total_duration_ms": total_dur_ms,
+                "load_duration_ms": load_dur_ms,
+                "eval_duration_ms": eval_dur_ms,
+                "prompt_eval_dur_ms": prompt_eval_dur_ms,
+                "tokens_per_second": tps,
+                "prompt_tokens_per_second": prompt_tps,
+                "wall_latency_ms": round(wall_duration_ms, 2),
+                "eval_count": completion_tokens,
+                "prompt_eval_count": prompt_tokens,
             },
         )
 

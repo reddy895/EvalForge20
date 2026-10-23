@@ -2,12 +2,13 @@
 
 from typing import Any
 
-from src.evalforge.providers.schemas import ModelInfo, ProviderCapabilities
+from src.evalforge.providers.schemas import HardwareRequirements, ModelInfo, ProviderCapabilities
 
 # Known families with robust native tool-calling template support in Ollama
 TOOL_CAPABLE_FAMILIES = {
     "llama3.1",
     "llama3.2",
+    "qwen2",
     "qwen2.5",
     "mistral",
     "command-r",
@@ -18,14 +19,56 @@ TOOL_CAPABLE_FAMILIES = {
 def parse_model_info(raw_tag: dict[str, Any]) -> ModelInfo:
     """Extract standard ModelInfo schema from an Ollama /api/tags entry."""
     details = raw_tag.get("details", {})
+    name = raw_tag.get("name", "unknown")
+    caps = raw_tag.get("capabilities", [])
+    is_remote = bool(raw_tag.get("remote_model") or raw_tag.get("remote_host") or ":cloud" in name)
+    
+    size_bytes = raw_tag.get("size")
+    param_size = details.get("parameter_size") or ""
+    quant = details.get("quantization_level") or ("Cloud" if is_remote else "Unknown")
+    family = details.get("family") or ""
+    ctx_len = details.get("context_length") or 4096
+    disk_gb = round(size_bytes / 1e9, 2) if size_bytes else 4.0
+
+    supports_tools = "tools" in caps or family in TOOL_CAPABLE_FAMILIES or "qwen" in family or "llama" in family
+
+    # Compute sensible RAM requirements based on parameter count
+    min_ram = 4.0
+    rec_ram = 8.0
+    if "7b" in param_size.lower() or "8b" in param_size.lower():
+        min_ram = 8.0
+        rec_ram = 16.0
+    elif "14b" in param_size.lower():
+        min_ram = 16.0
+        rec_ram = 32.0
+    elif "70b" in param_size.lower():
+        min_ram = 48.0
+        rec_ram = 64.0
+
     return ModelInfo(
-        id=raw_tag.get("name", "unknown"),
-        name=raw_tag.get("name", "unknown"),
+        id=name,
+        name=name,
         provider="ollama",
-        size_bytes=raw_tag.get("size"),
-        parameter_size=details.get("parameter_size"),
-        quantization=details.get("quantization_level"),
-        family=details.get("family"),
+        model_identifier=name,
+        size_bytes=size_bytes,
+        parameter_size=param_size,
+        parameter_count=param_size,
+        quantization=quant,
+        family=family,
+        context_window=ctx_len,
+        supports_tools=supports_tools,
+        supports_structured_output=True,
+        is_local=not is_remote,
+        is_installed=not is_remote,
+        is_remote=is_remote,
+        description=f"Local Ollama model {name} ({param_size}, {quant}).",
+        hardware=HardwareRequirements(
+            min_ram_gb=min_ram,
+            recommended_ram_gb=rec_ram,
+            quantization=quant,
+            context_length=ctx_len,
+            disk_space_gb=disk_gb,
+        ),
         modified_at=raw_tag.get("modified_at"),
     )
 

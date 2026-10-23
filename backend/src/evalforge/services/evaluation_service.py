@@ -46,31 +46,41 @@ class EvaluationService:
             raise DataValidationError(f"Dataset '{dataset.name}' has no test cases to evaluate.")
 
         # Validate provider
-        self.registry.get(request.provider)
+        provider_name = request.provider or "ollama"
+        if request.model_id.startswith("mock-"):
+            provider_name = "mock"
+        self.registry.get(provider_name)
+
         config = request.config or EvaluationConfig()
+        # For local Ollama inference, constrain concurrency to prevent resource thrashing
+        if provider_name == "ollama" and config.concurrency > 2:
+            config.concurrency = 1
 
         run_name = request.name or f"{dataset.name} — {request.model_id}"
+
+        # Freeze dataset snapshot for immutable evaluation
+        snapshot = create_dataset_snapshot(dataset)
+        if request.max_cases and request.max_cases > 0 and request.max_cases < len(snapshot.cases):
+            snapshot.cases = snapshot.cases[:request.max_cases]
+            snapshot.total_cases = len(snapshot.cases)
 
         # Create evaluation record
         run = EvaluationRun(
             name=run_name,
             model_id=request.model_id,
-            provider=request.provider,
+            provider=provider_name,
             dataset_id=dataset.id,
             dataset_name=dataset.name,
             status="queued",
-            total_cases=len(dataset.test_cases),
+            total_cases=len(snapshot.cases),
         )
         run.config = config.model_dump()
         await self.eval_repo.add(run)
 
-        # Freeze dataset snapshot for immutable evaluation
-        snapshot = create_dataset_snapshot(dataset)
-
         # Launch execution as background task
         asyncio.create_task(
             self._execute_evaluation_task(
-                run.id, snapshot, request.model_id, request.provider, config
+                run.id, snapshot, request.model_id, provider_name, config
             )
         )
 

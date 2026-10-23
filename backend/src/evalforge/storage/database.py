@@ -135,8 +135,12 @@ async def init_db() -> None:
                     )
                 await session.commit()
                 logger.info("Seeded initial providers and catalog models into database.")
+
+            # Seed standard evaluation datasets if not already present
+            from src.evalforge.datasets.seeder import seed_standard_datasets
+            await seed_standard_datasets(session)
         except Exception as exc:
-            logger.debug("Provider/model seed skipped: %s", exc)
+            logger.debug("Database seeding skipped or encountered: %s", exc)
 
 
 async def close_db() -> None:

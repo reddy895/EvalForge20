@@ -15,14 +15,50 @@ class DatasetRepository(BaseRepository[Dataset]):
         super().__init__(session=session, model_cls=Dataset)
 
     async def get_with_cases(self, dataset_id: str) -> Dataset | None:
-        """Fetch a dataset eager-loading all its test cases."""
+        """Fetch a dataset eager-loading all its test cases by ID, name, or benchmark slug."""
+        # 1. Try direct ID match
         stmt = (
             select(Dataset)
             .where(Dataset.id == dataset_id)
             .options(selectinload(Dataset.test_cases))
         )
         result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+        ds = result.scalar_one_or_none()
+        if ds and ds.test_cases:
+            return ds
+
+        # 2. Try match by name or slug in tags
+        stmt = (
+            select(Dataset)
+            .where(
+                (Dataset.name == dataset_id)
+                | (func.lower(Dataset.name) == func.lower(dataset_id))
+                | (Dataset.tags_json.like(f"%{dataset_id}%"))
+            )
+            .options(selectinload(Dataset.test_cases))
+        )
+        result = await self.session.execute(stmt)
+        ds = result.scalar_one_or_none()
+        if ds and ds.test_cases:
+            return ds
+
+        # 3. Seed standard evaluation benchmarks and check slug map
+        try:
+            from src.evalforge.datasets.seeder import seed_standard_datasets
+            slug_map = await seed_standard_datasets(self.session)
+            target_id = slug_map.get(dataset_id.lower())
+            if target_id:
+                stmt = (
+                    select(Dataset)
+                    .where(Dataset.id == target_id)
+                    .options(selectinload(Dataset.test_cases))
+                )
+                result = await self.session.execute(stmt)
+                return result.scalar_one_or_none()
+        except Exception:
+            pass
+
+        return None
 
     async def get_by_name(self, name: str) -> Dataset | None:
         """Fetch dataset by exact name."""

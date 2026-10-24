@@ -1,7 +1,7 @@
 """Hardware sizing and memory requirement calculator for local LLM inference."""
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 QuantizationType = Literal["Q4_K_M", "Q5_K_M", "Q8_0", "FP16"]
 
@@ -64,3 +64,23 @@ class HardwareConstraintAnalyzer:
             fits_in_32gb=fits_32,
             warning=warning,
         )
+
+    @classmethod
+    def analyze_context_scaling(
+        cls,
+        parameters_b: float,
+        quantization: QuantizationType = "Q4_K_M",
+        context_steps: list[int] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Project memory growth across varying context window sizes."""
+        steps = context_steps or [2048, 4096, 8192, 16384, 32768]
+        return [
+            {
+                "context_length": ctx,
+                "weights_ram_gb": cls.estimate_ram(parameters_b, quantization, ctx).weights_ram_gb,
+                "context_overhead_gb": cls.estimate_ram(parameters_b, quantization, ctx).context_overhead_gb,
+                "recommended_min_ram_gb": cls.estimate_ram(parameters_b, quantization, ctx).recommended_min_ram_gb,
+            }
+            for ctx in steps
+        ]
+

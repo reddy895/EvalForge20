@@ -93,7 +93,7 @@ class CaseRunner:
         except Exception as exc:
             logger.warning("Inference failed for case '%s': %s", case.id, exc)
             pred_text = ""
-            latency_ms = 0.0
+            latency_ms = None
             usage_dict = None
             error_msg = str(exc)
 

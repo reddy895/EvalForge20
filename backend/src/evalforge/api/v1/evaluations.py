@@ -126,6 +126,11 @@ async def get_evaluation_results(
         ass_type = m_dict.get("_assertion_type") or u_dict.get("assertion_type") or "exact_match"
         tps = u_dict.get("tokens_per_second") or m_dict.get("_tokens_per_second")
         load_ms = u_dict.get("load_duration_ms") or m_dict.get("_load_duration_ms")
+        case_latency = (
+            c.latency_ms
+            if (c.latency_ms is not None and c.latency_ms > 0 and not c.error_message)
+            else None
+        )
         case_items.append(
             CaseResultResponse(
                 id=c.id,
@@ -134,7 +139,7 @@ async def get_evaluation_results(
                 expected_output=c.expected_output,
                 actual_output=c.actual_output,
                 passed=c.passed,
-                latency_ms=c.latency_ms,
+                latency_ms=case_latency,
                 assertion_type=ass_type,
                 tokens_per_second=tps,
                 load_duration_ms=load_ms,

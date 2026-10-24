@@ -56,7 +56,7 @@ class CaseResultResponse(BaseModel):
     expected_output: str | None = None
     actual_output: str | None = None
     passed: bool
-    latency_ms: float
+    latency_ms: float | None = None
     assertion_type: str | None = None
     tokens_per_second: float | None = None
     load_duration_ms: float | None = None

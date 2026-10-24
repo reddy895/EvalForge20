@@ -30,11 +30,21 @@ export const AnalyticsView: React.FC = () => {
     totalCount: l.total_cases || 0,
   }));
 
-  const latencyData = leaderboard.map((l: any) => ({
-    modelName: l.model_name || l.model_id,
-    medianMs: Number((l.median_latency_ms || l.avg_latency_ms || 0).toFixed(1)),
-    p95Ms: Number((l.p95_latency_ms || (l.avg_latency_ms ? l.avg_latency_ms * 1.25 : 0)).toFixed(1)),
-  }));
+  const latencyData = leaderboard
+    .filter(
+      (l: any) =>
+        (l.median_latency_ms !== null && l.median_latency_ms !== undefined && l.median_latency_ms > 0) ||
+        (l.avg_latency_ms !== null && l.avg_latency_ms !== undefined && l.avg_latency_ms > 0)
+    )
+    .map((l: any) => {
+      const med = l.median_latency_ms !== null && l.median_latency_ms !== undefined ? l.median_latency_ms : l.avg_latency_ms;
+      const p95 = l.p95_latency_ms !== null && l.p95_latency_ms !== undefined ? l.p95_latency_ms : med;
+      return {
+        modelName: l.model_name || l.model_id,
+        medianMs: Number(med.toFixed(1)),
+        p95Ms: Number(p95.toFixed(1)),
+      };
+    });
 
   const efficiencyData = efficiency.map((e: any) => ({
     modelName: e.model_name || e.model_id,

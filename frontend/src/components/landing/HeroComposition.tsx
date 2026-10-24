@@ -100,7 +100,7 @@ export const HeroComposition: React.FC<{ onLaunchStudio: () => void }> = ({ onLa
   };
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto">
+    <div className="relative w-full max-w-6xl mx-auto">
       {/* Soft warm ambient background glow */}
       <div className="absolute -inset-1.5 rounded-[32px] bg-gradient-to-r from-[#D9823B]/20 via-[#D9823B]/10 to-[#D9823B]/20 blur-2xl opacity-75 pointer-events-none" />
 

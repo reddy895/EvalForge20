@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '../ui/Button';
 import { HeroComposition } from './HeroComposition';
-import { Sparkles, Terminal, ArrowRight, ShieldCheck, Cpu, Target } from 'lucide-react';
+import { ArrowRight, BarChart3, Cpu, Play, ShieldCheck, Sparkles, Target, Terminal } from 'lucide-react';
 import { NavRoute } from '../../types';
 
 interface HeroSectionProps {
@@ -10,72 +10,89 @@ interface HeroSectionProps {
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ onRouteChange }) => {
   return (
-    <section className="relative pt-12 pb-24 md:pt-20 md:pb-32 px-4 sm:px-8 lg:px-12 2xl:px-16 w-full overflow-hidden bg-tech-grid">
-      <div className="flex flex-col items-center text-center max-w-5xl mx-auto gap-8">
+    <section className="relative pt-16 pb-24 md:pt-24 md:pb-32 px-4 sm:px-6 lg:px-8 2xl:px-12 w-full overflow-hidden bg-tech-grid">
+      {/* Subtle ambient backdrop radial gradients */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-[#D9823B]/10 via-[#68B587]/5 to-transparent blur-3xl pointer-events-none -z-10" />
+
+      <div className="w-full max-w-7xl mx-auto flex flex-col items-center text-center gap-10">
         {/* Release Pill Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#242522]/90 border border-[#41413B] text-xs text-[#F5F0E7] shadow-sm backdrop-blur-sm hover:border-[#D9823B]/60 transition-colors">
-          <span className="flex h-2 w-2 rounded-full bg-[#D9823B] animate-pulse" />
-          <span className="font-mono text-[11px] text-[#A6A49D]">EvalForge20 v2.0</span>
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#242522]/90 border border-[#41413B] text-xs text-[#F5F0E7] shadow-sm backdrop-blur-md hover:border-[#D9823B]/60 transition-colors">
+          <span className="flex h-2 w-2 rounded-full bg-[#68B587] animate-pulse" />
+          <span className="font-mono text-[11px] text-[#A6A49D]">EvalForge20 Engine v2.1</span>
           <span className="text-[#41413B]">|</span>
           <span className="text-[#F5F0E7] font-medium flex items-center gap-1.5">
-            Local-First Model Intelligence <Sparkles size={12} className="text-[#D9823B]" />
+            Evidence-Backed Model Benchmarking <Sparkles size={12} className="text-[#D9823B]" />
           </span>
         </div>
 
-        {/* Powerful Main Headline */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#F5F0E7] leading-[1.08] max-w-4xl">
-          Find the right model <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D9823B] via-[#E5914C] to-[#F5F0E7]">
-            for every task.
-          </span>
-        </h1>
+        {/* Large, Confident Headline */}
+        <div className="space-y-4 max-w-4xl">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#F5F0E7] leading-[1.06]">
+            Evaluate LLMs & AI Agents with{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D9823B] via-[#E5914C] to-[#68B587]">
+              Reproducible Evidence
+            </span>
+          </h1>
 
-        {/* Subtitle */}
-        <p className="text-base sm:text-xl text-[#A6A49D] max-w-2xl leading-relaxed font-normal">
-          Local-first LLM evaluation platform designed for production engineers. Benchmark real
-          token throughput, function calling accuracy, and memory footprint across local Ollama
-          weights and cloud providers with complete privacy.
-        </p>
+          {/* Concise, Clear Value Proposition */}
+          <p className="text-base sm:text-xl text-[#A6A49D] max-w-3xl mx-auto leading-relaxed font-normal pt-2">
+            Production-grade evaluation engine for deterministic unit assertions, measured token
+            throughput, and local Ollama or cloud model profiling with zero data leakage.
+          </p>
+        </div>
 
-        {/* Dual Centered CTAs */}
-        <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
           <Button
             size="lg"
             variant="primary"
-            onClick={() => onRouteChange('models')}
+            onClick={() => onRouteChange('evaluate')}
+            iconLeft={<Play size={16} className="text-[#191A18] fill-[#191A18]" />}
             iconRight={<ArrowRight size={16} />}
           >
-            Explore Model Catalog
+            Start Evaluating
           </Button>
+
           <Button
             size="lg"
             variant="secondary"
-            onClick={() => onRouteChange('evaluate')}
+            onClick={() => onRouteChange('models')}
             iconLeft={<Terminal size={16} className="text-[#D9823B]" />}
           >
-            Run Live Benchmark
+            Explore Model Catalog
+          </Button>
+
+          <Button
+            size="lg"
+            variant="ghost"
+            onClick={() => onRouteChange('analytics')}
+            iconLeft={<BarChart3 size={16} className="text-[#68B587]" />}
+          >
+            View Telemetry
           </Button>
         </div>
 
-        {/* Centered Spec Badges Row */}
-        <div className="flex flex-wrap items-center justify-center gap-6 pt-2 text-xs text-[#A6A49D] font-mono">
-          <div className="flex items-center gap-2">
-            <ShieldCheck size={16} className="text-[#68B587]" />
-            <span>Zero cloud data leaks</span>
+        {/* Spec Badges Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full max-w-4xl pt-4 text-xs font-mono text-[#A6A49D]">
+          <div className="p-3 rounded-2xl bg-[#1F201D]/80 border border-white/5 flex items-center justify-center gap-2 text-center">
+            <ShieldCheck size={16} className="text-[#68B587] shrink-0" />
+            <span>Zero Cloud Leaks</span>
           </div>
-          <span className="text-[#41413B]">•</span>
-          <div className="flex items-center gap-2">
-            <Cpu size={16} className="text-[#D9823B]" />
-            <span>Hardware VRAM profiling</span>
+          <div className="p-3 rounded-2xl bg-[#1F201D]/80 border border-white/5 flex items-center justify-center gap-2 text-center">
+            <Target size={16} className="text-[#D9823B] shrink-0" />
+            <span>Unit Assertions</span>
           </div>
-          <span className="text-[#41413B]">•</span>
-          <div className="flex items-center gap-2">
-            <Target size={16} className="text-[#68B587]" />
-            <span>Deterministic unit assertions</span>
+          <div className="p-3 rounded-2xl bg-[#1F201D]/80 border border-white/5 flex items-center justify-center gap-2 text-center">
+            <Cpu size={16} className="text-[#68B587] shrink-0" />
+            <span>Local Ollama + APIs</span>
+          </div>
+          <div className="p-3 rounded-2xl bg-[#1F201D]/80 border border-white/5 flex items-center justify-center gap-2 text-center">
+            <BarChart3 size={16} className="text-[#D9823B] shrink-0" />
+            <span>Evidence-Based 2D Metrics</span>
           </div>
         </div>
 
-        {/* Centerpiece Interactive Workbench HUD */}
+        {/* Large Well-Composed Product Preview Workbench */}
         <div className="w-full pt-8">
           <HeroComposition onLaunchStudio={() => onRouteChange('evaluate')} />
         </div>

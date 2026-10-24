@@ -34,6 +34,7 @@ def _map_run_response(run: object) -> EvaluationResponse:
         passed_cases=run.passed_cases,  # type: ignore[attr-defined]
         failed_cases=run.failed_cases,  # type: ignore[attr-defined]
         pass_rate=run.pass_rate,  # type: ignore[attr-defined]
+        error_rate=summary.get("error_rate"),
         avg_latency_ms=run.avg_latency_ms,  # type: ignore[attr-defined]
         median_latency_ms=summary.get("p50_latency_ms") or summary.get("median_latency_ms"),
         p95_latency_ms=summary.get("p95_latency_ms"),
@@ -41,8 +42,16 @@ def _map_run_response(run: object) -> EvaluationResponse:
         load_duration_ms=summary.get("avg_load_duration_ms"),
         summary_metrics=summary,
         error_message=run.error_message,  # type: ignore[attr-defined]
-        created_at=run.created_at.isoformat(),  # type: ignore[attr-defined]
-        completed_at=run.completed_at.isoformat() if run.completed_at else None,  # type: ignore[attr-defined]
+        created_at=(
+            run.created_at.isoformat()  # type: ignore[attr-defined]
+            if hasattr(run.created_at, "isoformat")  # type: ignore[attr-defined]
+            else str(run.created_at or "")  # type: ignore[attr-defined]
+        ),
+        completed_at=(
+            run.completed_at.isoformat()  # type: ignore[attr-defined]
+            if run.completed_at and hasattr(run.completed_at, "isoformat")  # type: ignore[attr-defined]
+            else (str(run.completed_at) if run.completed_at else None)  # type: ignore[attr-defined]
+        ),
     )
 
 

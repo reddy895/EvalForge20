@@ -81,6 +81,7 @@ class EvaluationResponse(BaseModel):
     passed_cases: int
     failed_cases: int
     pass_rate: float | None = None
+    error_rate: float | None = None
     avg_latency_ms: float | None = None
     median_latency_ms: float | None = None
     p95_latency_ms: float | None = None

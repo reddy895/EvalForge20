@@ -32,8 +32,9 @@ import jwt
   };
 
   return (
-    <section id="local-first" className="py-20 px-4 sm:px-8 lg:px-12 2xl:px-16 w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+    <section id="local-first" className="py-24 px-4 sm:px-6 lg:px-8 2xl:px-12 w-full">
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         {/* Left Column: Copy & Benefits */}
         <div className="lg:col-span-6 flex flex-col gap-6">
           <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
@@ -156,6 +157,7 @@ import jwt
             </div>
           </div>
         </div>
+      </div>
       </div>
     </section>
   );

@@ -48,7 +48,8 @@ export const ModelDiscoveryPreview: React.FC<ModelDiscoveryPreviewProps> = ({
   }, [searchQuery, selectedTask]);
 
   return (
-    <section id="discovery" className="py-20 px-4 sm:px-8 lg:px-12 2xl:px-16 w-full">
+    <section id="discovery" className="py-24 px-4 sm:px-6 lg:px-8 2xl:px-12 w-full">
+      <div className="w-full max-w-7xl mx-auto">
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div className="flex flex-col gap-3">
@@ -194,6 +195,7 @@ export const ModelDiscoveryPreview: React.FC<ModelDiscoveryPreviewProps> = ({
             </Card>
           );
         })}
+      </div>
       </div>
     </section>
   );

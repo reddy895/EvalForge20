@@ -35,8 +35,9 @@ export const WhyEvalForgeSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 px-4 sm:px-8 lg:px-12 2xl:px-16 w-full bg-[#191A18]/40 border-y border-[#41413B]/40">
-      <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-16 gap-3">
+    <section className="py-24 px-4 sm:px-6 lg:px-8 2xl:px-12 w-full bg-[#191A18]/40 border-y border-[#41413B]/40">
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-16 gap-3">
         <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
           <Sparkles size={14} />
           <span>ARCHITECTURAL PRINCIPLES</span>
@@ -69,6 +70,7 @@ export const WhyEvalForgeSection: React.FC = () => {
             </div>
           </Card>
         ))}
+      </div>
       </div>
     </section>
   );

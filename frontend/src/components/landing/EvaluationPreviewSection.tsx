@@ -39,7 +39,8 @@ export const EvaluationPreviewSection: React.FC<EvaluationPreviewSectionProps> =
   ];
 
   return (
-    <section id="evaluation" className="py-20 px-4 sm:px-8 lg:px-12 2xl:px-16 w-full">
+    <section id="evaluation" className="py-24 px-4 sm:px-6 lg:px-8 2xl:px-12 w-full">
+      <div className="w-full max-w-7xl mx-auto">
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div className="flex flex-col gap-3">
@@ -201,6 +202,7 @@ export const EvaluationPreviewSection: React.FC<EvaluationPreviewSectionProps> =
             Open Test Studio
           </Button>
         </div>
+      </div>
       </div>
     </section>
   );

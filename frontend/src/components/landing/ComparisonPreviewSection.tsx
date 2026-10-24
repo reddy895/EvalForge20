@@ -18,7 +18,8 @@ export const ComparisonPreviewSection: React.FC<ComparisonPreviewSectionProps> =
   const [selectedMetric, setSelectedMetric] = useState<'benchmarks' | 'hardware'>('benchmarks');
 
   return (
-    <section id="comparison" className="py-20 px-4 sm:px-8 lg:px-12 2xl:px-16 w-full">
+    <section id="comparison" className="py-24 px-4 sm:px-6 lg:px-8 2xl:px-12 w-full">
+      <div className="w-full max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div className="flex flex-col gap-3">
@@ -200,6 +201,7 @@ export const ComparisonPreviewSection: React.FC<ComparisonPreviewSectionProps> =
             Launch Multi-Model Studio &rarr;
           </button>
         </div>
+      </div>
       </div>
     </section>
   );

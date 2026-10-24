@@ -115,7 +115,16 @@ class CaseRunner:
 
         for metric_name in metrics_to_run:
             evaluator = self.evaluators.get(metric_name)
-            if evaluator and error_msg is None:
+            if error_msg is not None:
+                metrics_dict[metric_name] = {
+                    "name": metric_name,
+                    "score": 0.0,
+                    "passed": False,
+                    "method": "inference_error",
+                    "details": {"error": error_msg},
+                }
+                all_passed = False
+            elif evaluator:
                 try:
                     metric_res = await evaluator.evaluate(
                         prediction=pred_text,
@@ -136,6 +145,15 @@ class CaseRunner:
                         "details": {"error": str(eval_exc)},
                     }
                     all_passed = False
+
+        if assertion_type and assertion_type not in metrics_dict:
+            metrics_dict[assertion_type] = {
+                "name": assertion_type,
+                "score": 1.0 if all_passed else 0.0,
+                "passed": all_passed,
+                "method": "assertion_check",
+                "details": {"error": error_msg} if error_msg else {},
+            }
 
         case_res = CaseResult(
             evaluation_id=evaluation_id,

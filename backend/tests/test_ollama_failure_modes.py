@@ -12,11 +12,12 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 
+from src.evalforge.evaluators.aggregator import aggregate_scorecard
 from src.evalforge.providers.ollama.provider import OllamaProvider
 from src.evalforge.providers.schemas import InferenceRequest
-from src.evalforge.evaluators.aggregator import aggregate_scorecard
 
 
 class TestOllamaFailureModes:

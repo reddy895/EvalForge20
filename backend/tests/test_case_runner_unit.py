@@ -1,6 +1,5 @@
 """Unit tests for CaseRunner — metric routing, assertion type selection, and error capture."""
 
-from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 

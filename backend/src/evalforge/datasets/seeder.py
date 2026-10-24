@@ -1,7 +1,6 @@
 """Standard reproducible benchmark suite seeder for local evaluation."""
 
-import json
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.evalforge.core.logging import get_logger

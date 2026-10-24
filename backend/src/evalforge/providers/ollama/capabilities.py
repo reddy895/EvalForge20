@@ -22,7 +22,7 @@ def parse_model_info(raw_tag: dict[str, Any]) -> ModelInfo:
     name = raw_tag.get("name", "unknown")
     caps = raw_tag.get("capabilities", [])
     is_remote = bool(raw_tag.get("remote_model") or raw_tag.get("remote_host") or ":cloud" in name)
-    
+
     size_bytes = raw_tag.get("size")
     param_size = details.get("parameter_size") or ""
     quant = details.get("quantization_level") or ("Cloud" if is_remote else "Unknown")

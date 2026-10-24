@@ -11,11 +11,12 @@ from __future__ import annotations
 
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 
+from src.evalforge.evaluators.aggregator import aggregate_scorecard
 from src.evalforge.experiments.case_runner import CaseRunner
 from src.evalforge.experiments.snapshot import FrozenTestCase
-from src.evalforge.evaluators.aggregator import aggregate_scorecard
 from src.evalforge.providers.schemas import InferenceResponse, TokenUsage
 from src.evalforge.schemas.evaluation import EvaluationConfig
 

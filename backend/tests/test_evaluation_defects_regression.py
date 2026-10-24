@@ -1,14 +1,15 @@
 """Regression tests verifying fixes for the 6 critical defects identified in EvalForge20."""
 
 import uuid
-import pytest
 from types import SimpleNamespace
+
+import pytest
 from fastapi.testclient import TestClient
 
-from src.evalforge.main import app
 from src.evalforge.evaluators.aggregator import aggregate_scorecard
 from src.evalforge.experiments.case_runner import CaseRunner
 from src.evalforge.experiments.snapshot import FrozenTestCase
+from src.evalforge.main import app
 from src.evalforge.schemas.evaluation import EvaluationConfig
 
 

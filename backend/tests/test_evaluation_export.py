@@ -1,9 +1,9 @@
 """Unit and API tests for evaluation results export (JSON and CSV)."""
 
-from unittest.mock import AsyncMock, patch
+from datetime import UTC, datetime
 from types import SimpleNamespace
-from datetime import datetime, UTC
-import pytest
+from unittest.mock import AsyncMock, patch
+
 from fastapi.testclient import TestClient
 
 from src.evalforge.main import app

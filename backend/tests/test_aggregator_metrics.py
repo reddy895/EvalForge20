@@ -9,7 +9,6 @@ from src.evalforge.evaluators.aggregator import (
     compute_percentile,
 )
 
-
 # ---------------------------------------------------------------------------
 # Percentile helper tests
 # ---------------------------------------------------------------------------

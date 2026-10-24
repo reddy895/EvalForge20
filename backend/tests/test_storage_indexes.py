@@ -1,6 +1,5 @@
 """Unit tests verifying database column index declarations for high-throughput query performance."""
 
-from src.evalforge.storage.base import TimestampMixin
 from src.evalforge.storage.models.dataset import Dataset, TestCase
 from src.evalforge.storage.models.evaluation import CaseResult, EvaluationRun
 

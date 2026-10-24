@@ -342,8 +342,27 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
                     </div>
                   </div>
 
+                  {/* Capability & Feature Badges */}
+                  <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-[#41413B]/40">
+                    {model.supports_structured_output && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-sans bg-[#68B587]/10 text-[#68B587] border border-[#68B587]/30">
+                        JSON Schema
+                      </span>
+                    )}
+                    {model.supports_tools && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-sans bg-[#D9823B]/10 text-[#D9823B] border border-[#D9823B]/30">
+                        Tool Calling
+                      </span>
+                    )}
+                    {model.license && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#191A18] text-[#A6A49D] border border-[#41413B]">
+                        {model.license}
+                      </span>
+                    )}
+                  </div>
+
                   {topScore && (
-                    <div className="mt-4 p-2.5 rounded-xl bg-[#191A18] border border-[#41413B] flex items-center justify-between">
+                    <div className="mt-3 p-2.5 rounded-xl bg-[#191A18] border border-[#41413B] flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs text-[#A6A49D]">
                         <CheckCircle2 size={13} className="text-[#68B587]" />
                         <span>{topScore.benchmark_name}</span>
@@ -419,6 +438,16 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
                             <Badge variant="installed" size="sm">
                               Local
                             </Badge>
+                          )}
+                          {model.supports_structured_output && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-sans bg-[#68B587]/10 text-[#68B587] border border-[#68B587]/30">
+                              JSON
+                            </span>
+                          )}
+                          {model.supports_tools && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-sans bg-[#D9823B]/10 text-[#D9823B] border border-[#D9823B]/30">
+                              Tools
+                            </span>
                           )}
                         </div>
                       </td>

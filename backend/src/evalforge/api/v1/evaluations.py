@@ -1,6 +1,8 @@
-"""API endpoints for Evaluation execution, progress monitoring, and results inspection."""
+import csv
+import io
+from typing import Any
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.evalforge.schemas.evaluation import (
@@ -157,3 +159,55 @@ async def cancel_evaluation(
     service = EvaluationService(db)
     run = await service.cancel_evaluation(evaluation_id)
     return _map_run_response(run)
+
+
+@evaluations_router.get(
+    "/{evaluation_id}/export",
+    summary="Export evaluation run results in JSON or CSV format",
+)
+async def export_evaluation(
+    evaluation_id: str,
+    format: str = Query("json", pattern="^(json|csv)$"),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    """Export the evaluation run and all case results for reproducibility and offline audit."""
+    service = EvaluationService(db)
+    run = await service.get_evaluation_with_results(evaluation_id)
+
+    if format == "csv":
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow([
+            "case_id",
+            "passed",
+            "latency_ms",
+            "tokens_per_second",
+            "prompt",
+            "expected_output",
+            "actual_output",
+            "error_message",
+        ])
+        for c in run.results:
+            u_dict = c.token_usage or {}
+            m_dict = c.metrics or {}
+            tps = u_dict.get("tokens_per_second") or m_dict.get("_tokens_per_second") or ""
+            writer.writerow([
+                c.case_id,
+                c.passed,
+                c.latency_ms,
+                tps,
+                c.prompt,
+                c.expected_output or "",
+                c.actual_output or "",
+                c.error_message or "",
+            ])
+        csv_data = output.getvalue()
+        return Response(
+            content=csv_data,
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="eval_{evaluation_id}.csv"'},
+        )
+
+    # JSON reproducible format
+    return await get_evaluation_results(evaluation_id=evaluation_id, db=db)
+

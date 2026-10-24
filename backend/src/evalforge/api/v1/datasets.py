@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile,
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.evalforge.datasets.exporter import export_dataset_to_jsonl
+from src.evalforge.datasets.exporter import export_dataset_to_csv, export_dataset_to_jsonl
 from src.evalforge.schemas.dataset import (
     DatasetCreate,
     DatasetDetailResponse,
@@ -122,18 +122,27 @@ async def import_dataset(
 
 @datasets_router.get(
     "/{dataset_id}/export",
-    summary="Export dataset to JSONL",
+    summary="Export dataset to JSONL or CSV",
     response_class=PlainTextResponse,
 )
 async def export_dataset(
     dataset_id: str,
+    format: str = Query("jsonl", pattern="^(jsonl|csv)$"),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Export all test cases in the dataset as a downloadable JSONL file."""
+    """Export all test cases in the dataset as a downloadable JSONL or CSV file."""
     service = DatasetService(db)
     dataset = await service.get_dataset_with_cases(dataset_id)
-    jsonl_text = export_dataset_to_jsonl(dataset)
+    if format == "csv":
+        csv_text = export_dataset_to_csv(dataset)
+        filename = f"{dataset.name.lower().replace(' ', '_')}_export.csv"
+        return Response(
+            content=csv_text,
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
 
+    jsonl_text = export_dataset_to_jsonl(dataset)
     filename = f"{dataset.name.lower().replace(' ', '_')}_export.jsonl"
     return Response(
         content=jsonl_text,

@@ -3,9 +3,9 @@
 import io
 import json
 
-from starlette.testclient import TestClient
+from fastapi.testclient import TestClient
 
-from src.evalforge.datasets.exporter import export_dataset_to_jsonl
+from src.evalforge.datasets.exporter import export_dataset_to_csv, export_dataset_to_jsonl
 from src.evalforge.datasets.importers.csv_importer import parse_csv_content
 from src.evalforge.datasets.importers.jsonl import parse_jsonl_content
 from src.evalforge.main import app
@@ -77,6 +77,20 @@ def test_export_dataset_to_jsonl() -> None:
     assert row1["expected_output"] == "Out 1"
 
 
+def test_export_dataset_to_csv() -> None:
+    ds = Dataset(name="TestDS", version=1)
+    tc1 = TestCase(id="c1", dataset_id="ds1", prompt="Prompt 1", expected_output="Out 1")
+    tc1.tags = ["tag1", "tag2"]
+    tc2 = TestCase(id="c2", dataset_id="ds1", prompt="Prompt 2", expected_output="Out 2")
+    ds.test_cases = [tc1, tc2]
+
+    csv_str = export_dataset_to_csv(ds)
+    lines = [line for line in csv_str.splitlines() if line.strip()]
+    assert len(lines) == 3
+    assert lines[0] == "id,prompt,expected_output,context,tags"
+    assert "Prompt 1,Out 1,,tag1,tag2" in lines[1] or "c1,Prompt 1,Out 1" in lines[1]
+
+
 def test_dataset_api_lifecycle() -> None:
     import uuid
 
@@ -133,11 +147,19 @@ def test_dataset_api_lifecycle() -> None:
         assert patch_res.json()["description"] == "Updated suite description"
         assert patch_res.json()["version"] >= 2
 
-        # 5. Export dataset
+        # 5. Export dataset (JSONL & CSV)
         export_res = client.get(f"/api/v1/datasets/{dataset_id}/export")
         assert export_res.status_code == 200
+        assert "application/x-ndjson" in export_res.headers.get("content-type", "")
         export_lines = [line for line in export_res.text.splitlines() if line.strip()]
         assert len(export_lines) == 2
+
+        export_csv_res = client.get(f"/api/v1/datasets/{dataset_id}/export?format=csv")
+        assert export_csv_res.status_code == 200
+        assert "text/csv" in export_csv_res.headers.get("content-type", "")
+        csv_lines = [line for line in export_csv_res.text.splitlines() if line.strip()]
+        assert len(csv_lines) == 3
+        assert csv_lines[0] == "id,prompt,expected_output,context,tags"
 
         # 6. Test multipart import
         file_bytes = (

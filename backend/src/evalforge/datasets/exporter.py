@@ -37,3 +37,24 @@ def stream_dataset_jsonl(dataset: Dataset) -> Iterator[str]:
             "evaluator_config": case.evaluator_config,
         }
         yield json.dumps(row, ensure_ascii=False) + "\n"
+
+
+def export_dataset_to_csv(dataset: Dataset) -> str:
+    """Serialize dataset test cases into a standard CSV document."""
+    import csv
+    import io
+
+    output = io.StringIO()
+    fieldnames = ["id", "prompt", "expected_output", "context", "tags"]
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    for case in dataset.test_cases:
+        writer.writerow({
+            "id": case.id,
+            "prompt": case.prompt,
+            "expected_output": case.expected_output or "",
+            "context": case.context or "",
+            "tags": ",".join(case.tags) if case.tags else "",
+        })
+    return output.getvalue()
+

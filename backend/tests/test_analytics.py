@@ -81,3 +81,26 @@ def test_analytics_api_endpoints() -> None:
         assert commits_data["total_verified_commits"] >= 56
         assert commits_data["target_achieved"] is True
         assert len(commits_data["daily_activity"]) > 0
+
+        # Latency distribution endpoints
+        lat_v1 = client.get("/api/v1/analytics/latency-distribution")
+        assert lat_v1.status_code == 200
+        assert isinstance(lat_v1.json(), list)
+
+        lat_mod = client.get("/api/analytics/latency-distribution")
+        assert lat_mod.status_code == 200
+        assert isinstance(lat_mod.json(), list)
+
+
+@pytest.mark.asyncio
+async def test_get_latency_distribution_service_empty_and_populated() -> None:
+    service = get_analytics_service()
+    session_factory = get_session_factory()
+    async with session_factory() as session:
+        dist = await service.get_latency_distribution(session)
+        assert isinstance(dist, list)
+        for item in dist:
+            assert item.model_id
+            assert item.min_ms <= item.p50_ms <= item.max_ms
+            assert item.p25_ms <= item.p75_ms
+            assert item.sample_count > 0

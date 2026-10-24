@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.evalforge.core.logging import get_logger
+from src.evalforge.evaluators.aggregator import compute_percentile
 from src.evalforge.providers.registry import get_provider_registry
 from src.evalforge.services.model_service import ModelService
 from src.evalforge.storage.models.agent import AgentEvaluation
@@ -18,6 +19,23 @@ from src.evalforge.storage.models.benchmark import BenchmarkComparison
 from src.evalforge.storage.models.evaluation import CaseResult, EvaluationRun
 
 logger = get_logger("evalforge.services.analytics")
+
+
+class LatencyDistributionItem(BaseModel):
+    model_id: str
+    model_name: str
+    sample_count: int
+    mean_ms: float
+    min_ms: float
+    p10_ms: float
+    p25_ms: float
+    p50_ms: float
+    p75_ms: float
+    p90_ms: float
+    p95_ms: float
+    p99_ms: float
+    max_ms: float
+    raw_samples: list[float] = Field(default_factory=list)
 
 
 class CommitItem(BaseModel):
@@ -427,6 +445,58 @@ class AnalyticsService:
             }
             for r in runs
         ]
+
+    @classmethod
+    async def get_latency_distribution(
+        cls, db: AsyncSession, model_id: str | None = None
+    ) -> list[LatencyDistributionItem]:
+        """Compute empirical latency distributions and percentiles across real evaluated cases."""
+        q = (
+            select(EvaluationRun.model_id, CaseResult.latency_ms)
+            .join(CaseResult, CaseResult.evaluation_id == EvaluationRun.id)
+            .where(CaseResult.latency_ms > 0)
+        )
+        if model_id:
+            q = q.where(EvaluationRun.model_id == model_id)
+
+        rows = (await db.execute(q)).all()
+        by_model: dict[str, list[float]] = {}
+        for m_id, lat in rows:
+            if lat is not None and lat > 0:
+                by_model.setdefault(m_id, []).append(float(lat))
+
+        all_models = await ModelService.get_all_models()
+        name_map = {m.id: m.name for m in all_models}
+        for m in all_models:
+            if m.model_identifier:
+                name_map[m.model_identifier] = m.name
+
+        items: list[LatencyDistributionItem] = []
+        for m_id, lats in by_model.items():
+            if not lats:
+                continue
+            sorted_lats = sorted(lats)
+            count = len(sorted_lats)
+            mean_val = round(sum(sorted_lats) / count, 2)
+            items.append(
+                LatencyDistributionItem(
+                    model_id=m_id,
+                    model_name=name_map.get(m_id, m_id),
+                    sample_count=count,
+                    mean_ms=mean_val,
+                    min_ms=round(sorted_lats[0], 2),
+                    p10_ms=compute_percentile(sorted_lats, 10.0),
+                    p25_ms=compute_percentile(sorted_lats, 25.0),
+                    p50_ms=compute_percentile(sorted_lats, 50.0),
+                    p75_ms=compute_percentile(sorted_lats, 75.0),
+                    p90_ms=compute_percentile(sorted_lats, 90.0),
+                    p95_ms=compute_percentile(sorted_lats, 95.0),
+                    p99_ms=compute_percentile(sorted_lats, 99.0),
+                    max_ms=round(sorted_lats[-1], 2),
+                    raw_samples=sorted_lats[:100],
+                )
+            )
+        return items
 
 
 _analytics_service: AnalyticsService | None = None

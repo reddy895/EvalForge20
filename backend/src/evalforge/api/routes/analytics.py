@@ -17,3 +17,10 @@ async def get_overview():
 def get_commits():
     service = get_analytics_service()
     return service.get_commit_analytics()
+
+
+@router.get("/latency-distribution")
+async def get_latency_distribution(model_id: str | None = None):
+    service = get_analytics_service()
+    async with get_db_context() as session:
+        return await service.get_latency_distribution(session, model_id=model_id)

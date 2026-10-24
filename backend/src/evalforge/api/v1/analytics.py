@@ -68,3 +68,15 @@ async def get_historical_trends(
 ) -> list[dict[str, Any]]:
     """Return chronologically ordered historical evaluation points."""
     return await AnalyticsService.get_historical_trends(db)
+
+
+@analytics_router.get(
+    "/latency-distribution",
+    summary="Get empirical latency percentiles and distribution per model",
+)
+async def get_latency_distribution(
+    model_id: str | None = None,
+    db: AsyncSession = Depends(get_db),
+) -> list[Any]:
+    """Return empirical latency distributions and percentiles across real evaluated cases."""
+    return await AnalyticsService.get_latency_distribution(db, model_id=model_id)

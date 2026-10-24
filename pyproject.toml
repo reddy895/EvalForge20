@@ -66,6 +66,9 @@ markers = [
     "integration: integration tests requiring external services (e.g. real Ollama)",
     "security: security and boundary validation tests",
 ]
+filterwarnings = [
+    "ignore:.*Using .httpx. with .starlette\\.testclient.*:Warning",
+]
 
 [tool.setuptools.packages.find]
 where = ["backend"]

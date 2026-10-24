@@ -67,7 +67,7 @@ markers = [
     "security: security and boundary validation tests",
 ]
 filterwarnings = [
-    "ignore:.*Using .httpx. with .starlette\\.testclient.*:Warning",
+    "ignore:.*is deprecated; install `httpx2` instead.*:DeprecationWarning",
 ]
 
 [tool.setuptools.packages.find]

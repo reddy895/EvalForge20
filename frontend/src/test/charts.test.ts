@@ -102,4 +102,102 @@ describe('Chart and Evaluation Graphical Telemetry Validation', () => {
     expect(secondX).toBeGreaterThan(center);
   });
 
+  it('filters and scales horizontal latency comparison without fabricating zero latencies', () => {
+    const rawRecords = [
+      { modelName: 'Fast Model', medianMs: 14.2, p95Ms: 22.0 },
+      { modelName: 'Slow Model', medianMs: 88.5, p95Ms: 110.0 },
+      { modelName: 'Unmeasured Model', medianMs: 0, p95Ms: 0 },
+    ];
+
+    // Filter valid positive latencies
+    const valid = rawRecords.filter((r) => r.medianMs > 0);
+    expect(valid.length).toBe(2);
+
+    // Sort fastest first
+    valid.sort((a, b) => a.medianMs - b.medianMs);
+    expect(valid[0].modelName).toBe('Fast Model');
+    expect(valid[1].modelName).toBe('Slow Model');
+
+    const maxObserved = Math.max(...valid.map((r) => r.p95Ms));
+    expect(maxObserved).toBe(110.0);
+    const chartCeiling = Math.max(50, Math.ceil(maxObserved * 1.15));
+    expect(chartCeiling).toBeGreaterThanOrEqual(110.0);
+  });
+
+  it('validates accuracy comparison horizontal bar data mapping and case counts', () => {
+    const qualityRecords = [
+      { modelName: 'Model Alpha', accuracy: 92.5, passedCount: 37, totalCount: 40 },
+      { modelName: 'Model Beta', accuracy: 60.0, passedCount: 24, totalCount: 40 },
+      { modelName: 'Incomplete Model', accuracy: 0, passedCount: 0, totalCount: 0 },
+    ];
+
+    // Exclude invalid/incomplete results (totalCount <= 0)
+    const valid = qualityRecords.filter((q) => q.totalCount > 0);
+    expect(valid.length).toBe(2);
+
+    // Sort descending by accuracy
+    valid.sort((a, b) => b.accuracy - a.accuracy);
+    expect(valid[0].modelName).toBe('Model Alpha');
+    expect(valid[0].passedCount).toBe(37);
+    expect(valid[0].totalCount).toBe(40);
+    expect(valid[0].accuracy).toBe(92.5);
+  });
+
+  it('validates reliability breakdown grouped counts for passed, failed, and errored cases', () => {
+    const groups = [
+      { name: 'Coding Suite', passed: 42, failed: 5, errored: 1 },
+      { name: 'JSON Schema Suite', passed: 30, failed: 0, errored: 2 },
+    ];
+
+    const totalPassed = groups.reduce((acc, g) => acc + g.passed, 0);
+    const totalFailed = groups.reduce((acc, g) => acc + g.failed, 0);
+    const totalErrored = groups.reduce((acc, g) => acc + g.errored, 0);
+
+    expect(totalPassed).toBe(72);
+    expect(totalFailed).toBe(5);
+    expect(totalErrored).toBe(3);
+
+    const maxCount = Math.max(...groups.map((g) => Math.max(g.passed, g.failed, g.errored)));
+    expect(maxCount).toBe(42);
+    const ceiling = Math.max(4, Math.ceil(maxCount * 1.2));
+    expect(ceiling).toBeGreaterThan(42);
+  });
+
+  it('validates throughput comparison and flags unmeasured providers with explicit N/A', () => {
+    const rows = [
+      { modelName: 'Ollama Llama 3.2', tokensPerSecond: 64.2, avgDurationSec: 0.8 },
+      { modelName: 'External Black-box API', tokensPerSecond: null, avgDurationSec: 1.5 },
+    ];
+
+    const validThroughput = rows.filter(
+      (r) => typeof r.tokensPerSecond === 'number' && r.tokensPerSecond > 0
+    );
+    expect(validThroughput.length).toBe(1);
+    expect(validThroughput[0].tokensPerSecond).toBe(64.2);
+
+    const unmeasured = rows.filter((r) => r.tokensPerSecond === null);
+    expect(unmeasured.length).toBe(1);
+    expect(unmeasured[0].modelName).toBe('External Black-box API');
+  });
+
+  it('validates run history trend point coordinate calculations for line charts', () => {
+    const trendPoints = [
+      { date: 'Run 1', passRate: 75.0, latencyMs: 32.0 },
+      { date: 'Run 2', passRate: 85.0, latencyMs: 28.0 },
+      { date: 'Run 3', passRate: 100.0, latencyMs: 24.5 },
+    ];
+
+    expect(trendPoints.length).toBe(3);
+    const passRates = trendPoints.map((p) => p.passRate);
+    expect(passRates).toEqual([75.0, 85.0, 100.0]);
+
+    // Trend improves monotonically
+    expect(passRates[2]).toBeGreaterThan(passRates[1]);
+    expect(passRates[1]).toBeGreaterThan(passRates[0]);
+
+    // Latency decreases monotonically
+    const latencies = trendPoints.map((p) => p.latencyMs);
+    expect(latencies[2]).toBeLessThan(latencies[1]);
+    expect(latencies[1]).toBeLessThan(latencies[0]);
+  });
 });

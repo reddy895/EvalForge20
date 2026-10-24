@@ -5,7 +5,7 @@ import time
 import uuid
 
 import pytest
-from starlette.testclient import TestClient
+from fastapi.testclient import TestClient
 
 from src.evalforge.experiments.case_runner import CaseRunner
 from src.evalforge.experiments.concurrency import BoundedConcurrencyPool
@@ -177,3 +177,79 @@ def test_evaluation_cancellation_flow() -> None:
         cancel_res = client.post(f"/api/v1/evaluations/{eval_id}/cancel")
         assert cancel_res.status_code == 200
         assert cancel_res.json()["status"] == "cancelled"
+
+
+def test_multi_model_distinct_evaluations_via_api() -> None:
+    """Verifies that two different models evaluated on the same dataset produce strictly isolated runs."""
+    unique_suffix = uuid.uuid4().hex[:8]
+    with TestClient(app) as client:
+        # Create dataset
+        ds_res = client.post(
+            "/api/v1/datasets",
+            json={
+                "name": f"Multi-Model Suite {unique_suffix}",
+                "cases": [
+                    {"prompt": "Say hello", "expected_output": "hello"},
+                    {"prompt": "Say goodbye", "expected_output": "goodbye"},
+                ],
+            },
+        )
+        assert ds_res.status_code == 201
+        dataset_id = ds_res.json()["id"]
+
+        # Run 1: Model A
+        run_a_res = client.post(
+            "/api/v1/evaluations",
+            json={
+                "name": f"Run Model A {unique_suffix}",
+                "model_id": "mock-llama-3.1-8b",
+                "provider": "mock",
+                "dataset_id": dataset_id,
+            },
+        )
+        assert run_a_res.status_code == 201
+        run_a_id = run_a_res.json()["id"]
+
+        # Run 2: Model B
+        run_b_res = client.post(
+            "/api/v1/evaluations",
+            json={
+                "name": f"Run Model B {unique_suffix}",
+                "model_id": "mock-qwen-2.5-7b",
+                "provider": "mock",
+                "dataset_id": dataset_id,
+            },
+        )
+        assert run_b_res.status_code == 201
+        run_b_id = run_b_res.json()["id"]
+
+        # Verify distinct identities
+        assert run_a_id != run_b_id
+
+        # Poll Run A
+        for _ in range(50):
+            time.sleep(0.05)
+            poll_a = client.get(f"/api/v1/evaluations/{run_a_id}").json()
+            if poll_a["status"] in ("completed", "failed"):
+                break
+
+        # Poll Run B
+        for _ in range(50):
+            time.sleep(0.05)
+            poll_b = client.get(f"/api/v1/evaluations/{run_b_id}").json()
+            if poll_b["status"] in ("completed", "failed"):
+                break
+
+        assert poll_a["model_id"] == "mock-llama-3.1-8b"
+        assert poll_b["model_id"] == "mock-qwen-2.5-7b"
+
+        # Check detail results
+        det_a = client.get(f"/api/v1/evaluations/{run_a_id}/results").json()
+        det_b = client.get(f"/api/v1/evaluations/{run_b_id}/results").json()
+
+        assert det_a["id"] == run_a_id
+        assert det_b["id"] == run_b_id
+        assert det_a["model_id"] != det_b["model_id"]
+        assert len(det_a["results"]) == 2
+        assert len(det_b["results"]) == 2
+

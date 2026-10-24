@@ -103,7 +103,7 @@ export interface EvaluationRun {
   model_name: string;
   benchmark_id: string;
   benchmark_name: string;
-  status: 'completed' | 'failed' | 'running';
+  status: 'idle' | 'queued' | 'running' | 'completed' | 'completed_with_errors' | 'failed' | 'cancelled';
   is_demo: boolean;
   pass_rate: number;
   passed_cases: number;

@@ -42,6 +42,29 @@ class DatasetRepository(BaseRepository[Dataset]):
         if ds and ds.test_cases:
             return ds
 
+        # 3. Fast standard benchmark slug map
+        slug_to_name: dict[str, str] = {
+            "coding_basics": "Python Algorithmic Synthesis",
+            "coding": "Python Algorithmic Synthesis",
+            "structured_json": "Constrained JSON Schema Extraction",
+            "json": "Constrained JSON Schema Extraction",
+            "reasoning_math": "Mathematical Word Logic",
+            "math": "Mathematical Word Logic",
+            "rag_retrieval": "Needle-in-a-Haystack Fact Recall",
+            "rag": "Needle-in-a-Haystack Fact Recall",
+        }
+        resolved_name = slug_to_name.get(dataset_id.lower())
+        if resolved_name:
+            stmt = (
+                select(Dataset)
+                .where(Dataset.name == resolved_name)
+                .options(selectinload(Dataset.test_cases))
+            )
+            result = await self.session.execute(stmt)
+            ds = result.scalar_one_or_none()
+            if ds and ds.test_cases:
+                return ds
+
         # 3. Seed standard evaluation benchmarks and check slug map
         try:
             from src.evalforge.datasets.seeder import seed_standard_datasets

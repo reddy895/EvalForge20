@@ -221,7 +221,9 @@ class ApiService {
         model_name: r.name || r.model_id,
         benchmark_id: r.dataset_id || 'default',
         benchmark_name: r.dataset_name || (r.dataset_id ? r.dataset_id.replace(/_/g, ' ') : 'Standard Benchmark Suite'),
-        status: r.status === 'completed' ? 'completed' : r.status === 'failed' ? 'failed' : 'running',
+        status: (['completed', 'completed_with_errors', 'failed', 'cancelled', 'queued', 'running'].includes(r.status)
+          ? r.status
+          : 'running') as any,
         is_demo: false,
         pass_rate: r.pass_rate || 0,
         passed_cases: r.passed_cases || 0,
@@ -251,13 +253,18 @@ class ApiService {
     model_id: string;
     provider?: string;
     dataset_id?: string;
+    benchmark_id?: string;
     name?: string;
     temperature?: number;
     max_cases?: number;
   }): Promise<any> {
+    const body = {
+      ...payload,
+      dataset_id: payload.dataset_id || payload.benchmark_id || 'coding_basics',
+    };
     return this.request('/evaluations', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
   }
 

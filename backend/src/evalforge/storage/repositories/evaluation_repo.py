@@ -82,7 +82,7 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
         values = {"status": status}
         if error_message is not None:
             values["error_message"] = error_message
-        if status in ("completed", "failed", "cancelled"):
+        if status in ("completed", "completed_with_errors", "failed", "cancelled"):
             values["completed_at"] = datetime.now(UTC)
 
         stmt = update(EvaluationRun).where(EvaluationRun.id == evaluation_id).values(**values)

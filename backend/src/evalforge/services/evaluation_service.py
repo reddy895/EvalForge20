@@ -137,6 +137,8 @@ class EvaluationService:
                 if scorecard.total_cases > 0 and scorecard.passed_cases == 0 and scorecard.error_count == scorecard.total_cases:
                     run.status = "failed"
                     run.error_message = run.error_message or "All test cases failed due to model inference errors or timeouts."
+                elif scorecard.error_count > 0:
+                    run.status = "completed_with_errors"
                 else:
                     run.status = "completed"
                 run.completed_cases = scorecard.completed_cases
@@ -195,7 +197,7 @@ class EvaluationService:
     async def cancel_evaluation(self, evaluation_id: str) -> EvaluationRun:
         """Cancel an in-flight evaluation run."""
         run = await self.get_evaluation(evaluation_id)
-        if run.status in ("completed", "failed", "cancelled"):
+        if run.status in ("completed", "completed_with_errors", "failed", "cancelled"):
             return run
 
         self.coordinator.cancel_run(evaluation_id)

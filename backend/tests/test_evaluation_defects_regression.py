@@ -196,3 +196,44 @@ class TestDefect5LeaderboardDeduplicationAndFiltering:
             for item in data_default:
                 assert item.get("provider") != "mock"
                 assert not str(item.get("model_id")).startswith("mock-")
+
+
+class TestDefect6EvaluationLifecycleAndSchemaParity:
+    @pytest.mark.asyncio
+    async def test_evaluation_creation_and_lifecycle_with_results(self) -> None:
+        """Verify starting an evaluation produces valid run ID, lifecycle status, and persisted results."""
+        with TestClient(app) as client:
+            payload = {
+                "model_id": "mock-test-llama",
+                "provider": "mock",
+                "dataset_id": "coding_basics",
+                "name": "Integration Test Lifecycle Run",
+                "max_cases": 2,
+            }
+            res = client.post("/api/evaluations", json=payload)
+            assert res.status_code == 201
+            data = res.json()
+            assert "id" in data
+            assert data["status"] in ("queued", "running", "completed")
+            assert data["total_cases"] == 2
+            assert data["model_id"] == "mock-test-llama"
+
+            eval_id = data["id"]
+            # Fetch results
+            res_results = client.get(f"/api/evaluations/{eval_id}/results")
+            assert res_results.status_code == 200
+            detail = res_results.json()
+            assert "results" in detail
+            assert "case_results" in detail
+            assert len(detail["results"]) == len(detail["case_results"])
+            assert "created_at" in detail
+
+    def test_missing_model_identifier_validation(self) -> None:
+        """Empty or invalid model identifier should fail validation immediately."""
+        with TestClient(app) as client:
+            res = client.post(
+                "/api/evaluations",
+                json={"model_id": "   ", "dataset_id": "coding_basics"},
+            )
+            assert res.status_code == 422
+

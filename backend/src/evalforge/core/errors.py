@@ -3,6 +3,7 @@
 from typing import Any
 
 from fastapi import FastAPI, Request, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -186,7 +187,7 @@ async def validation_exception_handler(_: Request, exc: RequestValidationError) 
             "error": {
                 "code": "REQUEST_VALIDATION_ERROR",
                 "message": "The request body or parameters failed validation.",
-                "details": exc.errors(),
+                "details": jsonable_encoder(exc.errors()),
                 "request_id": req_id,
             }
         },

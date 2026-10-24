@@ -8,13 +8,22 @@ from src.evalforge.storage.models.evaluation import CaseResult
 
 
 class EvaluationScorecard(BaseModel):
-    """Aggregate statistics and metric breakdown for an evaluation run."""
+    """Aggregate statistics and metric breakdown for an evaluation run.
+
+    Documented Metric Formulas:
+      pass_rate = passed_cases / total_cases (range 0.0 - 1.0)
+      error_rate = error_count / total_cases (range 0.0 - 1.0)
+      avg_latency_ms = sum(valid_measured_latencies) / len(valid_measured_latencies)
+      p95_latency_ms = 95th percentile using linear interpolation between closest ranks
+      avg_throughput_tok_s = completion_tokens / (measured_latency_ms / 1000)
+    """
 
     total_cases: int
     completed_cases: int
     passed_cases: int
     failed_cases: int
     pass_rate: float
+    error_rate: float = 0.0
     avg_latency_ms: float | None = None
     median_latency_ms: float | None = None
     p50_latency_ms: float | None = None
@@ -32,7 +41,7 @@ class EvaluationScorecard(BaseModel):
 
 
 def compute_percentile(values: list[float], percentile: float) -> float:
-    """Calculate percentile from a sorted list of float values."""
+    """Calculate percentile from a sorted list of float values using linear interpolation."""
     if not values:
         return 0.0
     sorted_v = sorted(values)
@@ -47,7 +56,7 @@ def compute_percentile(values: list[float], percentile: float) -> float:
 
 
 def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
-    """Compute aggregate pass rates, latency distributions, and metric averages."""
+    """Compute aggregate pass rates, latency distributions, and metric averages from actual results."""
     total = len(results)
     if total == 0:
         return EvaluationScorecard(
@@ -56,7 +65,9 @@ def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
             passed_cases=0,
             failed_cases=0,
             pass_rate=0.0,
+            error_rate=0.0,
             avg_latency_ms=0.0,
+            median_latency_ms=0.0,
             p50_latency_ms=0.0,
             p95_latency_ms=0.0,
             p99_latency_ms=0.0,
@@ -64,7 +75,7 @@ def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
 
     passed_count = sum(1 for r in results if r.passed)
     failed_count = total - passed_count
-    pass_rate = round(passed_count / total, 4)
+    pass_rate = round(passed_count / total, 4) if total > 0 else 0.0
 
     # Reliability and error tracking
     error_count = 0
@@ -165,6 +176,7 @@ def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
         passed_cases=passed_count,
         failed_cases=failed_count,
         pass_rate=pass_rate,
+        error_rate=round(error_count / total, 4) if total > 0 else 0.0,
         avg_latency_ms=avg_latency,
         median_latency_ms=p50,
         p50_latency_ms=p50,

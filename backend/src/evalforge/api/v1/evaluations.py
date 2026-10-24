@@ -20,6 +20,7 @@ evaluations_router = APIRouter(prefix="/evaluations", tags=["Evaluations"])
 
 def _map_run_response(run: object) -> EvaluationResponse:
     """Helper formatting EvaluationRun model to EvaluationResponse schema."""
+    summary = getattr(run, "summary_metrics", {}) or {}
     return EvaluationResponse(
         id=run.id,  # type: ignore[attr-defined]
         name=run.name,  # type: ignore[attr-defined]
@@ -34,7 +35,11 @@ def _map_run_response(run: object) -> EvaluationResponse:
         failed_cases=run.failed_cases,  # type: ignore[attr-defined]
         pass_rate=run.pass_rate,  # type: ignore[attr-defined]
         avg_latency_ms=run.avg_latency_ms,  # type: ignore[attr-defined]
-        summary_metrics=run.summary_metrics,  # type: ignore[attr-defined]
+        median_latency_ms=summary.get("p50_latency_ms") or summary.get("median_latency_ms"),
+        p95_latency_ms=summary.get("p95_latency_ms"),
+        tokens_per_second=summary.get("avg_tokens_per_second") or summary.get("avg_throughput_tok_s"),
+        load_duration_ms=summary.get("avg_load_duration_ms"),
+        summary_metrics=summary,
         error_message=run.error_message,  # type: ignore[attr-defined]
         created_at=run.created_at.isoformat(),  # type: ignore[attr-defined]
         completed_at=run.completed_at.isoformat() if run.completed_at else None,  # type: ignore[attr-defined]
@@ -143,6 +148,7 @@ async def get_evaluation_results(
     return EvaluationDetailResponse(
         **base_resp.model_dump(),
         results=case_items,
+        case_results=case_items,
     )
 
 

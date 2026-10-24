@@ -82,6 +82,10 @@ class EvaluationResponse(BaseModel):
     failed_cases: int
     pass_rate: float | None = None
     avg_latency_ms: float | None = None
+    median_latency_ms: float | None = None
+    p95_latency_ms: float | None = None
+    tokens_per_second: float | None = None
+    load_duration_ms: float | None = None
     summary_metrics: dict[str, Any] = Field(default_factory=dict)
     error_message: str | None = None
     created_at: str
@@ -90,6 +94,7 @@ class EvaluationResponse(BaseModel):
 
 class EvaluationDetailResponse(EvaluationResponse):
     results: list[CaseResultResponse] = Field(default_factory=list)
+    case_results: list[CaseResultResponse] = Field(default_factory=list)
 
 
 class EvaluationListResponse(BaseModel):

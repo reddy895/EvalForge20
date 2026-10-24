@@ -66,6 +66,7 @@ class CaseRunner:
             max_tokens=self.config.max_tokens,
             context_length=self.config.context_length,
             stop=self.config.stop,
+            timeout=self.config.timeout_seconds,
         )
 
         # Attach json schema if specified in case evaluator config

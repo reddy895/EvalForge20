@@ -108,13 +108,14 @@ class OllamaClient:
                 provider="ollama",
             )
 
-    async def generate(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def generate(self, payload: dict[str, Any], timeout: float | None = None) -> dict[str, Any]:
         """Execute a text completion generation request."""
         client = self._get_client()
         # Force stream=False for non-streaming batch evaluations
         payload["stream"] = False
+        effective_timeout = timeout if timeout is not None else self.timeout
         try:
-            response = await client.post("/api/generate", json=payload)
+            response = await client.post("/api/generate", json=payload, timeout=effective_timeout)
             if response.status_code == 404:
                 raise ModelNotFoundError(payload.get("model", "unknown"), provider="ollama")
             response.raise_for_status()
@@ -127,7 +128,7 @@ class OllamaClient:
             )
         except httpx.TimeoutException:
             raise ProviderError(
-                f"Ollama generation timed out after {self.timeout}s.",
+                f"Ollama generation timed out after {effective_timeout}s.",
                 provider="ollama",
             )
         except ModelNotFoundError:
@@ -135,12 +136,13 @@ class OllamaClient:
         except Exception as exc:
             raise ProviderError(f"Ollama generation failed: {exc}", provider="ollama")
 
-    async def chat(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def chat(self, payload: dict[str, Any], timeout: float | None = None) -> dict[str, Any]:
         """Execute a multi-turn chat request with optional tool calling."""
         client = self._get_client()
         payload["stream"] = False
+        effective_timeout = timeout if timeout is not None else self.timeout
         try:
-            response = await client.post("/api/chat", json=payload)
+            response = await client.post("/api/chat", json=payload, timeout=effective_timeout)
             if response.status_code == 404:
                 raise ModelNotFoundError(payload.get("model", "unknown"), provider="ollama")
             response.raise_for_status()
@@ -153,7 +155,7 @@ class OllamaClient:
             )
         except httpx.TimeoutException:
             raise ProviderError(
-                f"Ollama chat request timed out after {self.timeout}s.",
+                f"Ollama chat request timed out after {effective_timeout}s.",
                 provider="ollama",
             )
         except ModelNotFoundError:

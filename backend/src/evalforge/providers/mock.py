@@ -111,6 +111,8 @@ class MockProvider(BaseProvider):
             raise ModelNotFoundError(request.model, self.name)
 
         if self.latency_seconds > 0:
+            if request.timeout is not None and self.latency_seconds > request.timeout:
+                raise TimeoutError(f"Mock request timed out after {request.timeout}s")
             await asyncio.sleep(self.latency_seconds)
 
         start_time = time.perf_counter()

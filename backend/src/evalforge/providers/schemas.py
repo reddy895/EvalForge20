@@ -34,6 +34,7 @@ class InferenceRequest(BaseModel):
     json_schema: dict[str, Any] | None = None
     tools: list[ToolDefinition] | None = None
     stop: list[str] | None = None
+    timeout: float | None = None
 
 
 class TokenUsage(BaseModel):

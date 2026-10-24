@@ -21,6 +21,7 @@ class EvaluationConfig(BaseModel):
     stop: list[str] | None = None
     judge_model: str | None = None
     rubric: str | None = None
+    timeout_seconds: float = Field(default=120.0, ge=1.0, le=600.0, description="Per-case timeout limit in seconds")
 
 
 class EvaluationCreateRequest(BaseModel):

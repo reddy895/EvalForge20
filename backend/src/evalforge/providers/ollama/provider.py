@@ -121,7 +121,10 @@ class OllamaProvider(BaseProvider):
                     for t in request.tools
                 ]
 
-            raw_response = await self.client.chat(payload)
+            if request.timeout is not None:
+                raw_response = await self.client.chat(payload, timeout=request.timeout)
+            else:
+                raw_response = await self.client.chat(payload)
             msg = raw_response.get("message", {})
             response_text = msg.get("content", "")
 
@@ -139,7 +142,10 @@ class OllamaProvider(BaseProvider):
                     tool_calls.append(ToolCall(name=func.get("name", "unknown"), arguments=args))
         else:
             payload["prompt"] = request.prompt or ""
-            raw_response = await self.client.generate(payload)
+            if request.timeout is not None:
+                raw_response = await self.client.generate(payload, timeout=request.timeout)
+            else:
+                raw_response = await self.client.generate(payload)
             response_text = raw_response.get("response", "")
 
         wall_duration_ms = (time.perf_counter() - start_time) * 1000

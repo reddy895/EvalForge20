@@ -97,17 +97,26 @@ Evaluate candidate output now:
         # Parse score & reasoning
         raw_score = 3
         reasoning = raw_text
+        parsed_json = False
         try:
             match = re.search(r"\{[\s\S]*\}", raw_text)
             if match:
                 data = json.loads(match.group(0))
-                raw_score = int(data.get("score", 3))
-                reasoning = data.get("reasoning", raw_text)
+                if "score" in data:
+                    raw_score = int(data["score"])
+                    reasoning = str(data.get("reasoning", raw_text))
+                    parsed_json = True
         except Exception:
-            # Fallback regex search for digit 1-5
-            digit_match = re.search(r"\b([1-5])\b", raw_text)
-            if digit_match:
-                raw_score = int(digit_match.group(1))
+            parsed_json = False
+
+        if not parsed_json:
+            score_match = re.search(r"(?:score|rating|grade)\s*(?:of|is|:)?\s*([1-5])", raw_text, re.IGNORECASE)
+            if score_match:
+                raw_score = int(score_match.group(1))
+            else:
+                digit_match = re.search(r"\b([1-5])\b", raw_text)
+                if digit_match:
+                    raw_score = int(digit_match.group(1))
 
         # Normalize 1-5 scale to 0.0 - 1.0
         normalized_score = round(max(0.0, min(1.0, (raw_score - 1) / 4.0)), 2)

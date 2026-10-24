@@ -40,22 +40,25 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
   const passedCases = run.passed_cases ?? cases.filter((c: TestCaseResult) => c.passed).length;
   const passRatePercent = Math.round((run.pass_rate ?? (passedCases / totalCases)) * 100);
 
-  // Latency metrics
-  const latencies = cases.map((c: TestCaseResult) => c.latency_ms || 15.0);
-  const minLatency = latencies.length > 0 ? Math.min(...latencies) : 0;
-  const maxLatency = latencies.length > 0 ? Math.max(...latencies) : 0;
+  // Latency metrics: extract valid positive latencies
+  const validLatencies = cases
+    .map((c: TestCaseResult) => c.latency_ms)
+    .filter((l): l is number => typeof l === 'number' && l > 0);
+  const minLatency = validLatencies.length > 0 ? Math.min(...validLatencies) : null;
+  const maxLatency = validLatencies.length > 0 ? Math.max(...validLatencies) : null;
   const meanLatency =
-    run.avg_latency_ms ||
-    (latencies.length > 0 ? latencies.reduce((a: number, b: number) => a + b, 0) / latencies.length : 0);
+    run.avg_latency_ms !== undefined && run.avg_latency_ms !== null && run.avg_latency_ms > 0
+      ? run.avg_latency_ms
+      : (validLatencies.length > 0 ? validLatencies.reduce((a: number, b: number) => a + b, 0) / validLatencies.length : null);
+  const hasValidLatency = meanLatency !== null && meanLatency > 0;
   const slaThresholdMs = 35.0; // Standard local SLA benchmark reference
 
   // Latency chart max scaling
-  const chartMaxY = Math.max(50, Math.ceil((maxLatency * 1.25) / 10) * 10);
+  const chartMaxY = maxLatency ? Math.max(50, Math.ceil((maxLatency * 1.25) / 10) * 10) : 50;
 
   // Assertion type distribution
   const assertionBreakdown: Record<string, { total: number; passed: number }> = {};
   cases.forEach((c: TestCaseResult) => {
-
     const type = c.assertion_type || 'standard_eval';
     if (!assertionBreakdown[type]) {
       assertionBreakdown[type] = { total: 0, passed: 0 };
@@ -64,26 +67,68 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
     if (c.passed) assertionBreakdown[type].passed += 1;
   });
 
-  // Radar dimensions calculation (0 - 100)
-  const accuracyScore = passRatePercent;
-  const latencyScore = Math.max(15, Math.min(100, Math.round(100 - (meanLatency / 80) * 60)));
-  const schemaScore = assertionBreakdown['json_schema']
-    ? Math.round((assertionBreakdown['json_schema'].passed / assertionBreakdown['json_schema'].total) * 100)
-    : Math.min(100, passRatePercent + 5);
-  const instructionScore = Math.max(30, Math.min(100, passRatePercent >= 80 ? 95 : passRatePercent >= 50 ? 75 : 55));
-  const reasoningScore = assertionBreakdown['code_execution'] || assertionBreakdown['numeric_tolerance']
-    ? Math.round(passRatePercent * 0.95)
-    : Math.max(40, Math.round(passRatePercent * 0.9));
-  const reliabilityScore = run.status === 'completed' && passedCases > 0 ? 98 : 45;
+  // Evidence-backed dimensions calculation (Strictly grounded in executed cases)
+  interface RadarDim {
+    label: string;
+    value: number | null;
+    sampleSize: number;
+    formula: string;
+    description: string;
+  }
 
-  const radarDimensions = [
-    { label: 'Accuracy', value: accuracyScore, baseline: 82 },
-    { label: 'Latency Efficiency', value: latencyScore, baseline: 75 },
-    { label: 'Schema Validity', value: schemaScore, baseline: 88 },
-    { label: 'Instruction Adherence', value: instructionScore, baseline: 80 },
-    { label: 'Reasoning Depth', value: reasoningScore, baseline: 78 },
-    { label: 'Execution Stability', value: reliabilityScore, baseline: 92 },
-  ];
+  const accuracyDim: RadarDim = {
+    label: 'Overall Accuracy',
+    value: totalCases > 0 ? passRatePercent : null,
+    sampleSize: totalCases,
+    formula: 'passed_cases / total_cases * 100',
+    description: 'Empirical correctness on all executed test cases',
+  };
+
+  const latencyDim: RadarDim = {
+    label: 'Latency Efficiency',
+    value: hasValidLatency ? Math.max(0, Math.min(100, Math.round(100 - (meanLatency / 100) * 100))) : null,
+    sampleSize: validLatencies.length,
+    formula: '100 - (mean_latency_ms / 100) * 100',
+    description: 'Responsiveness relative to 100ms baseline SLA',
+  };
+
+  const schemaTotal = assertionBreakdown['json_schema']?.total || 0;
+  const schemaDim: RadarDim = {
+    label: 'Schema Adherence',
+    value: schemaTotal > 0 ? Math.round((assertionBreakdown['json_schema'].passed / schemaTotal) * 100) : null,
+    sampleSize: schemaTotal,
+    formula: 'passed_json_schemas / total_json_schemas * 100',
+    description: 'Validated typed JSON schema structural constraints',
+  };
+
+  const codeTotal = (assertionBreakdown['code_execution']?.total || 0) + (assertionBreakdown['exact_match']?.total || 0);
+  const codePassed = (assertionBreakdown['code_execution']?.passed || 0) + (assertionBreakdown['exact_match']?.passed || 0);
+  const codeDim: RadarDim = {
+    label: 'Code & Determinism',
+    value: codeTotal > 0 ? Math.round((codePassed / codeTotal) * 100) : null,
+    sampleSize: codeTotal,
+    formula: 'exact_and_code_matches / evaluated_cases * 100',
+    description: 'Deterministic program and exact match equivalence',
+  };
+
+  const kwTotal = assertionBreakdown['keyword_match']?.total || 0;
+  const keywordDim: RadarDim = {
+    label: 'Keyword Match',
+    value: kwTotal > 0 ? Math.round((assertionBreakdown['keyword_match'].passed / kwTotal) * 100) : null,
+    sampleSize: kwTotal,
+    formula: 'keyword_passes / keyword_total * 100',
+    description: 'Required & prohibited keyword containment',
+  };
+
+  const stabilityDim: RadarDim = {
+    label: 'Execution Stability',
+    value: totalCases > 0 ? Math.round(((totalCases - (run.status === 'failed' && passedCases === 0 ? totalCases : 0)) / totalCases) * 100) : null,
+    sampleSize: totalCases,
+    formula: '(total_cases - unhandled_errors) / total_cases * 100',
+    description: 'Successful inference completion without crash/timeout',
+  };
+
+  const radarDimensions: RadarDim[] = [accuracyDim, latencyDim, schemaDim, codeDim, keywordDim, stabilityDim];
 
   // SVG Radar coordinates generator
   const radarCenter = 120;
@@ -100,14 +145,8 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
 
   const modelPolygonPoints = radarDimensions
     .map((d, i) => {
-      const { x, y } = getCoordinates(d.value, i);
-      return `${x},${y}`;
-    })
-    .join(' ');
-
-  const baselinePolygonPoints = radarDimensions
-    .map((d, i) => {
-      const { x, y } = getCoordinates(d.baseline, i);
+      const val = d.value !== null ? d.value : 0;
+      const { x, y } = getCoordinates(val, i);
       return `${x},${y}`;
     })
     .join(' ');
@@ -122,7 +161,7 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
     name: run.model_name,
     isCurrent: true,
     passRate: passRatePercent,
-    latency: Number(meanLatency.toFixed(1)),
+    latency: meanLatency !== null ? Number(meanLatency.toFixed(1)) : 0,
     throughput: run.tokens_per_second ? Number(run.tokens_per_second.toFixed(1)) : null,
   };
 
@@ -214,10 +253,18 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
                 <Clock size={12} className="text-[#D9823B]" /> Mean Response Latency
               </span>
               <span className="text-xl font-mono font-bold text-[#F5F0E7]">
-                {meanLatency.toFixed(1)} <span className="text-xs font-normal text-[#A6A49D]">ms</span>
+                {hasValidLatency && meanLatency !== null ? (
+                  <>
+                    {meanLatency.toFixed(1)} <span className="text-xs font-normal text-[#A6A49D]">ms</span>
+                  </>
+                ) : (
+                  <span className="text-sm font-normal text-[#A6A49D]">N/A</span>
+                )}
               </span>
-              <span className="text-[10px] text-[#68B587] font-mono">
-                {meanLatency <= slaThresholdMs ? '✔ Within Target SLA (<35ms)' : '⚠ Exceeds Standard SLA'}
+              <span className="text-[10px] text-[#A6A49D] font-mono">
+                {hasValidLatency && meanLatency !== null
+                  ? (meanLatency <= slaThresholdMs ? '✔ Within Target SLA (<35ms)' : '⚠ Exceeds Standard SLA')
+                  : (run.status === 'failed' ? '✖ Run failed or timed out' : 'No latency recorded')}
               </span>
             </div>
 
@@ -226,8 +273,17 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
                 <Zap size={12} className="text-[#68B587]" /> {run.load_duration_ms ? 'Model Load' : 'Fastest Response'}
               </span>
               <span className="text-xl font-mono font-bold text-[#68B587]">
-                {run.load_duration_ms ? run.load_duration_ms.toFixed(1) : minLatency.toFixed(1)}{' '}
-                <span className="text-xs font-normal text-[#A6A49D]">ms</span>
+                {run.load_duration_ms !== undefined && run.load_duration_ms !== null ? (
+                  <>
+                    {run.load_duration_ms.toFixed(1)} <span className="text-xs font-normal text-[#A6A49D]">ms</span>
+                  </>
+                ) : minLatency !== null ? (
+                  <>
+                    {minLatency.toFixed(1)} <span className="text-xs font-normal text-[#A6A49D]">ms</span>
+                  </>
+                ) : (
+                  <span className="text-sm font-normal text-[#A6A49D]">N/A</span>
+                )}
               </span>
               <span className="text-[10px] text-[#A6A49D] font-mono">
                 {run.load_duration_ms ? 'Ollama memory load time' : 'Peak inference latency'}
@@ -239,8 +295,17 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
                 <TrendingUp size={12} className="text-[#E06C75]" /> P95 Latency
               </span>
               <span className="text-xl font-mono font-bold text-[#E06C75]">
-                {(run.p95_latency_ms !== undefined ? run.p95_latency_ms : maxLatency).toFixed(1)}{' '}
-                <span className="text-xs font-normal text-[#A6A49D]">ms</span>
+                {run.p95_latency_ms !== undefined && run.p95_latency_ms !== null ? (
+                  <>
+                    {run.p95_latency_ms.toFixed(1)} <span className="text-xs font-normal text-[#A6A49D]">ms</span>
+                  </>
+                ) : maxLatency !== null ? (
+                  <>
+                    {maxLatency.toFixed(1)} <span className="text-xs font-normal text-[#A6A49D]">ms</span>
+                  </>
+                ) : (
+                  <span className="text-sm font-normal text-[#A6A49D]">N/A</span>
+                )}
               </span>
               <span className="text-[10px] text-[#A6A49D] font-mono">95th percentile response</span>
             </div>
@@ -250,13 +315,16 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
                 <Sparkles size={12} className="text-[#61AFEF]" /> Generation Speed
               </span>
               <span className="text-xl font-mono font-bold text-[#61AFEF]">
-                {run.tokens_per_second !== undefined
-                  ? run.tokens_per_second.toFixed(1)
-                  : Math.round(1000 / (meanLatency || 20))}{' '}
-                <span className="text-xs font-normal text-[#A6A49D]">tok/s</span>
+                {run.tokens_per_second !== undefined && run.tokens_per_second !== null ? (
+                  <>
+                    {run.tokens_per_second.toFixed(1)} <span className="text-xs font-normal text-[#A6A49D]">tok/s</span>
+                  </>
+                ) : (
+                  <span className="text-sm font-normal text-[#A6A49D]">N/A</span>
+                )}
               </span>
               <span className="text-[10px] text-[#A6A49D] font-mono">
-                {run.tokens_per_second !== undefined ? 'Ollama measured throughput' : 'Estimated local throughput'}
+                {run.tokens_per_second !== undefined && run.tokens_per_second !== null ? 'Ollama measured throughput' : 'Requires valid eval_duration'}
               </span>
             </div>
           </div>
@@ -277,9 +345,11 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
                 <span className="flex items-center gap-1.5 text-[#68B587]">
                   <span className="w-3 border-t-2 border-dashed border-[#68B587]" /> Target SLA (35ms)
                 </span>
-                <span className="flex items-center gap-1.5 text-[#61AFEF]">
-                  <span className="w-3 border-t-2 border-[#61AFEF]" /> Mean ({meanLatency.toFixed(1)}ms)
-                </span>
+                {hasValidLatency && meanLatency !== null && (
+                  <span className="flex items-center gap-1.5 text-[#61AFEF]">
+                    <span className="w-3 border-t-2 border-[#61AFEF]" /> Mean ({meanLatency.toFixed(1)}ms)
+                  </span>
+                )}
               </div>
             </div>
 
@@ -325,7 +395,7 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
                 })()}
 
                 {/* Mean Latency Line */}
-                {(() => {
+                {hasValidLatency && meanLatency !== null && (() => {
                   const meanY = 190 - (meanLatency / chartMaxY) * 160;
                   return (
                     <g>
@@ -577,16 +647,6 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
                   );
                 })}
 
-                {/* Benchmark Baseline Polygon (Dashed gray) */}
-                <polygon
-                  points={baselinePolygonPoints}
-                  fill="#A6A49D"
-                  fillOpacity="0.1"
-                  stroke="#A6A49D"
-                  strokeWidth="1.5"
-                  strokeDasharray="3,3"
-                />
-
                 {/* Model Profile Polygon (Glowing Amber) */}
                 <polygon
                   points={modelPolygonPoints}
@@ -598,6 +658,7 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
 
                 {/* Vertex Dots */}
                 {radarDimensions.map((d, idx) => {
+                  if (d.value === null) return null;
                   const { x, y } = getCoordinates(d.value, idx);
                   return <circle key={idx} cx={x} cy={y} r="3.5" fill="#F5F0E7" stroke="#D9823B" strokeWidth="2" />;
                 })}
@@ -608,31 +669,33 @@ export const EvaluationResultCharts: React.FC<EvaluationResultChartsProps> = ({ 
               <span className="flex items-center gap-1.5 text-[#D9823B]">
                 <span className="w-3 h-1.5 rounded-full bg-[#D9823B]" /> {run.model_name}
               </span>
-              <span className="flex items-center gap-1.5 text-[#A6A49D]">
-                <span className="w-3 border-t-2 border-dashed border-[#A6A49D]" /> Baseline Median
-              </span>
             </div>
           </div>
 
           {/* Dimension Score Table */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-[#F5F0E7]">Normalized Capability Dimensions</h4>
+            <h4 className="text-sm font-semibold text-[#F5F0E7]">Evidence-Based Capability Dimensions</h4>
             <p className="text-xs text-[#A6A49D]">
-              Scores calculated by weighting assertion pass rates, latency responsiveness, and error penalties.
+              Scores derived strictly from executed test cases and recorded assertions. Missing dimensions reflect absence of test data.
             </p>
 
             <div className="space-y-2 mt-2">
               {radarDimensions.map((dim) => (
                 <div key={dim.label} className="p-3 rounded-xl bg-[#191A18] border border-[#41413B] flex justify-between items-center text-xs">
-                  <span className="font-medium text-[#F5F0E7]">{dim.label}</span>
-                  <div className="flex items-center gap-4 font-mono">
-                    <span className="text-[#A6A49D] text-[11px]">Baseline: {dim.baseline}</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium text-[#F5F0E7]">{dim.label}</span>
+                    <span className="text-[10px] text-[#A6A49D] font-mono">{dim.description}</span>
+                  </div>
+                  <div className="flex items-center gap-3 font-mono">
+                    <span className="text-[#A6A49D] text-[11px]">N={dim.sampleSize}</span>
                     <span
                       className={`font-bold px-2 py-0.5 rounded ${
-                        dim.value >= dim.baseline ? 'bg-[#68B587]/20 text-[#68B587]' : 'bg-[#D9823B]/20 text-[#D9823B]'
+                        dim.value !== null
+                          ? dim.value >= 75 ? 'bg-[#68B587]/20 text-[#68B587]' : 'bg-[#D9823B]/20 text-[#D9823B]'
+                          : 'bg-[#41413B]/30 text-[#A6A49D]'
                       }`}
                     >
-                      {dim.value}%
+                      {dim.value !== null ? `${dim.value}%` : 'N/A'}
                     </span>
                   </div>
                 </div>

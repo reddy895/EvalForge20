@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SAMPLE_MODELS } from '../../data/models';
-import { NavRoute, ModelProfile } from '../../types';
+import { NavRoute, ModelProfile, EvaluationRun } from '../../types';
 import { api } from '../../services/api';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -16,6 +16,8 @@ import {
   Award,
   Play,
   RotateCcw,
+  Clock,
+  Activity,
 } from 'lucide-react';
 
 interface ComparePageProps {
@@ -35,6 +37,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
 }) => {
   const [selectedDropdownModelId, setSelectedDropdownModelId] = useState<string>('');
   const [availableModels, setAvailableModels] = useState<ModelProfile[]>(SAMPLE_MODELS);
+  const [recentRuns, setRecentRuns] = useState<Record<string, EvaluationRun>>({});
 
   useEffect(() => {
     api.getModels({ limit: 100 })
@@ -42,6 +45,18 @@ export const ComparePage: React.FC<ComparePageProps> = ({
         if (res?.models && res.models.length > 0) {
           setAvailableModels(res.models);
         }
+      })
+      .catch(() => {});
+
+    api.getEvaluations({ limit: 100 })
+      .then((runs) => {
+        const map: Record<string, EvaluationRun> = {};
+        for (const r of runs) {
+          if (r.status === 'completed' && !map[r.model_id]) {
+            map[r.model_id] = r;
+          }
+        }
+        setRecentRuns(map);
       })
       .catch(() => {});
   }, []);
@@ -347,6 +362,82 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Section: Live Empirical Evaluation Telemetry */}
+          <div className="p-4 bg-[#191A18]/40 border-y border-[#41413B] text-xs font-mono font-bold text-[#68B587] uppercase tracking-wider flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <Activity size={14} /> Measured Runtime Telemetry (Local Evaluation Runs)
+            </span>
+            <span className="text-[11px] text-[#A6A49D] font-normal normal-case">
+              Calculated from actual inference executions via Ollama
+            </span>
+          </div>
+
+          <div
+            className="grid divide-y divide-[#41413B]/60 text-xs"
+            style={{
+              gridTemplateColumns: `220px repeat(${modelsToCompare.length}, minmax(220px, 1fr))`,
+            }}
+          >
+            {/* Live Pass Rate */}
+            <div className="p-4 text-[#A6A49D] font-mono border-r border-[#41413B] flex items-center gap-1.5 font-medium">
+              <CheckCircle2 size={14} className="text-[#68B587]" /> Evaluated Pass Rate
+            </div>
+            {modelsToCompare.map((m) => {
+              const run = recentRuns[m.id];
+              return (
+                <div key={m.id} className="p-4 font-mono border-r border-[#41413B] last:border-r-0 flex items-center justify-between">
+                  {run ? (
+                    <span className="font-bold text-sm text-[#68B587]">
+                      {(run.pass_rate * 100).toFixed(1)}%
+                    </span>
+                  ) : (
+                    <span className="text-[#78766F] italic">No local run yet</span>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Measured Latency */}
+            <div className="p-4 text-[#A6A49D] font-mono border-r border-[#41413B] flex items-center gap-1.5 font-medium">
+              <Clock size={14} className="text-[#D9823B]" /> Measured Latency (P50)
+            </div>
+            {modelsToCompare.map((m) => {
+              const run = recentRuns[m.id];
+              const lat = run?.median_latency_ms || run?.avg_latency_ms;
+              return (
+                <div key={m.id} className="p-4 font-mono border-r border-[#41413B] last:border-r-0 flex items-center justify-between">
+                  {lat ? (
+                    <span className="font-bold text-sm text-[#F5F0E7]">
+                      {lat.toFixed(1)} ms
+                    </span>
+                  ) : (
+                    <span className="text-[#78766F] italic">—</span>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Measured Tokens/sec */}
+            <div className="p-4 text-[#A6A49D] font-mono border-r border-[#41413B] flex items-center gap-1.5 font-medium">
+              <Zap size={14} className="text-[#D9823B]" /> Output Throughput
+            </div>
+            {modelsToCompare.map((m) => {
+              const run = recentRuns[m.id];
+              const tps = run?.tokens_per_second;
+              return (
+                <div key={m.id} className="p-4 font-mono border-r border-[#41413B] last:border-r-0 flex items-center justify-between">
+                  {tps ? (
+                    <span className="font-bold text-sm text-[#D9823B]">
+                      {tps.toFixed(1)} tok/s
+                    </span>
+                  ) : (
+                    <span className="text-[#78766F] italic">—</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Section 3: Ideal Tasks */}

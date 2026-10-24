@@ -180,6 +180,13 @@ class ApiService {
     return this.request<any[]>('/analytics/trends');
   }
 
+  // Empirical Latency Percentiles & Distribution
+  async getLatencyDistribution(modelId?: string): Promise<any[]> {
+    const q = modelId ? `?model_id=${encodeURIComponent(modelId)}` : '';
+    return this.request<any[]>(`/analytics/latency-distribution${q}`);
+  }
+
+
   // Datasets
   async getDatasets(): Promise<DatasetItem[]> {
     try {

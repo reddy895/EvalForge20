@@ -95,4 +95,38 @@ describe('Frontend API Service and Analytics Contract', () => {
       'Provider gateway timeout'
     );
   });
+
+  it('fetches empirical latency distributions with percentiles', async () => {
+    const mockLatencyDist = [
+      {
+        model_id: 'qwen2.5:1.5b',
+        model_name: 'Qwen 2.5 1.5B',
+        sample_count: 8,
+        mean_ms: 125.4,
+        min_ms: 45.0,
+        p10_ms: 50.0,
+        p25_ms: 80.0,
+        p50_ms: 120.0,
+        p75_ms: 160.0,
+        p90_ms: 210.0,
+        p95_ms: 220.0,
+        p99_ms: 225.0,
+        max_ms: 230.0,
+        raw_samples: [45.0, 80.0, 120.0, 230.0],
+      },
+    ];
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockLatencyDist,
+    } as unknown as Response);
+
+    const dist = await api.getLatencyDistribution();
+    expect(dist.length).toBe(1);
+    expect(dist[0].model_id).toBe('qwen2.5:1.5b');
+    expect(dist[0].p50_ms).toBe(120.0);
+    expect(dist[0].p95_ms).toBe(220.0);
+    expect(dist[0].sample_count).toBe(8);
+  });
 });
+

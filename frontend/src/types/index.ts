@@ -228,3 +228,21 @@ export interface DatasetItem {
   case_count?: number;
   created_at?: string;
 }
+
+export interface LatencyDistribution {
+  model_id: string;
+  model_name: string;
+  sample_count: number;
+  mean_ms: number;
+  min_ms: number;
+  p10_ms: number;
+  p25_ms: number;
+  p50_ms: number;
+  p75_ms: number;
+  p90_ms: number;
+  p95_ms: number;
+  p99_ms: number;
+  max_ms: number;
+  raw_samples: number[];
+}
+

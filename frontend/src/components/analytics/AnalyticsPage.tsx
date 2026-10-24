@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
-import { AnalyticsOverview, CommitAnalytics, DailyCommitActivity, NavRoute } from '../../types';
+import { AnalyticsOverview, CommitAnalytics, DailyCommitActivity, LatencyDistribution, NavRoute } from '../../types';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { useToast } from '../ui/Toast';
@@ -29,18 +29,21 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
   const [loading, setLoading] = useState<boolean>(true);
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
   const [commitData, setCommitData] = useState<CommitAnalytics | null>(null);
+  const [latencyDists, setLatencyDists] = useState<LatencyDistribution[]>([]);
   const [selectedDay, setSelectedDay] = useState<DailyCommitActivity | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'models' | 'commits'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'models' | 'latency' | 'commits'>('overview');
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [ov, cm] = await Promise.all([
+      const [ov, cm, ld] = await Promise.all([
         api.getAnalyticsOverview(),
         api.getCommitAnalytics(),
+        api.getLatencyDistribution().catch(() => []),
       ]);
       setOverview(ov);
       setCommitData(cm);
+      setLatencyDists(ld || []);
       if (cm?.daily_activity?.length > 0) {
         setSelectedDay(cm.daily_activity[cm.daily_activity.length - 1]);
       }
@@ -100,6 +103,16 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
               }`}
             >
               Model Benchmarks
+            </button>
+            <button
+              onClick={() => setActiveTab('latency')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                activeTab === 'latency'
+                  ? 'bg-[#191A18] text-[#68B587] shadow-sm font-semibold'
+                  : 'text-[#A6A49D] hover:text-[#F5F0E7]'
+              }`}
+            >
+              Latency & Percentiles
             </button>
             <button
               onClick={() => setActiveTab('commits')}
@@ -491,6 +504,141 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
           </div>
         </div>
       )}
+
+      {/* SECTION: LATENCY DISTRIBUTION & BOXPLOT PERCENTILES */}
+      {activeTab === 'latency' && (
+        <div className="flex flex-col gap-6">
+          <div className="p-6 sm:p-8 rounded-3xl bg-[#242522] border border-[#41413B] flex flex-col gap-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#41413B] gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-[#F5F0E7] flex items-center gap-2">
+                  <Clock size={18} className="text-[#D9823B]" />
+                  Empirical Latency Distributions & Percentile Spread
+                </h3>
+                <p className="text-xs text-[#A6A49D] mt-1 max-w-3xl">
+                  Statistical percentiles calculated across verified test-case executions. Whisker spans represent
+                  the full range (Min to Max), while colored bars highlight the Interquartile Range (P25 to P75)
+                  and Median (P50). Distinguishes true performance from artificial averages.
+                </p>
+              </div>
+              <Badge variant="success" size="sm">
+                Empirical Telemetry
+              </Badge>
+            </div>
+
+            {latencyDists.length === 0 ? (
+              <div className="p-10 rounded-2xl bg-[#191A18] border border-dashed border-[#41413B] text-center flex flex-col items-center justify-center gap-3">
+                <Clock size={28} className="text-[#A6A49D]" />
+                <span className="text-sm font-semibold text-[#F5F0E7]">No Latency Distributions Recorded Yet</span>
+                <p className="text-xs text-[#A6A49D] max-w-md">
+                  Execute evaluation runs on your local Ollama models to record execution durations and generate real percentile spreads.
+                </p>
+                <Button variant="primary" size="sm" onClick={() => onRouteChange('evaluate')}>
+                  Launch Model Evaluation
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                {latencyDists.map((d) => {
+                  const maxGlobal = Math.max(...latencyDists.map((x) => x.max_ms), 100);
+                  const p25Pct = (d.p25_ms / maxGlobal) * 100;
+                  const p50Pct = (d.p50_ms / maxGlobal) * 100;
+                  const p75Pct = (d.p75_ms / maxGlobal) * 100;
+                  const p95Pct = (d.p95_ms / maxGlobal) * 100;
+
+                  return (
+                    <div
+                      key={d.model_id}
+                      className="p-5 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col gap-3 font-mono text-xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[#F5F0E7] font-sans text-sm">{d.model_name}</span>
+                          <span className="text-[11px] text-[#A6A49D]">({d.model_id})</span>
+                        </div>
+                        <Badge variant="outline" size="sm">
+                          {d.sample_count} {d.sample_count === 1 ? 'observation' : 'observations'}
+                        </Badge>
+                      </div>
+
+                      {/* Stat Pills */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-[11px]">
+                        <div className="p-2 rounded-xl bg-[#242522] border border-[#41413B]/60 text-center">
+                          <span className="text-[#A6A49D] block text-[10px]">MIN</span>
+                          <span className="text-[#F5F0E7] font-bold">{d.min_ms} ms</span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-[#242522] border border-[#41413B]/60 text-center">
+                          <span className="text-[#A6A49D] block text-[10px]">P25</span>
+                          <span className="text-[#A6A49D] font-bold">{d.p25_ms} ms</span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-[#242522] border border-[#D9823B]/60 text-center ring-1 ring-[#D9823B]/40">
+                          <span className="text-[#D9823B] block text-[10px] font-semibold">MEDIAN (P50)</span>
+                          <span className="text-[#D9823B] font-bold">{d.p50_ms} ms</span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-[#242522] border border-[#41413B]/60 text-center">
+                          <span className="text-[#A6A49D] block text-[10px]">P75</span>
+                          <span className="text-[#A6A49D] font-bold">{d.p75_ms} ms</span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-[#242522] border border-[#41413B]/60 text-center">
+                          <span className="text-[#A6A49D] block text-[10px]">P95</span>
+                          <span className="text-[#D9823B] font-bold">{d.p95_ms} ms</span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-[#242522] border border-[#41413B]/60 text-center">
+                          <span className="text-[#A6A49D] block text-[10px]">MAX</span>
+                          <span className="text-[#F5F0E7] font-bold">{d.max_ms} ms</span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-[#242522] border border-[#68B587]/60 text-center">
+                          <span className="text-[#68B587] block text-[10px]">MEAN</span>
+                          <span className="text-[#68B587] font-bold">{d.mean_ms} ms</span>
+                        </div>
+                      </div>
+
+                      {/* Boxplot Visual Bar */}
+                      <div className="mt-2 flex flex-col gap-1">
+                        <div className="relative w-full bg-[#242522] h-6 rounded-xl overflow-hidden border border-[#41413B]/80 flex items-center">
+                          {/* Full span whisker */}
+                          <div
+                            className="absolute h-0.5 bg-[#78766F] top-1/2 -translate-y-1/2"
+                            style={{
+                              left: `${(d.min_ms / maxGlobal) * 100}%`,
+                              width: `${Math.max(2, ((d.max_ms - d.min_ms) / maxGlobal) * 100)}%`,
+                            }}
+                          />
+                          {/* IQR Box (P25 to P75) */}
+                          <div
+                            className="absolute h-3.5 bg-gradient-to-r from-[#D9823B]/60 to-[#68B587]/60 rounded-md border border-[#F5F0E7]/20"
+                            style={{
+                              left: `${p25Pct}%`,
+                              width: `${Math.max(4, p75Pct - p25Pct)}%`,
+                            }}
+                          />
+                          {/* Median Marker line */}
+                          <div
+                            className="absolute w-1 h-5 bg-[#F5F0E7] top-0.5 rounded-full shadow-md z-10"
+                            style={{ left: `calc(${p50Pct}% - 2px)` }}
+                            title={`Median: ${d.p50_ms} ms`}
+                          />
+                          {/* P95 Marker pip */}
+                          <div
+                            className="absolute w-0.5 h-3 bg-[#D9823B] top-1.5 rounded-full z-10 opacity-75"
+                            style={{ left: `${p95Pct}%` }}
+                            title={`P95: ${d.p95_ms} ms`}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-[#A6A49D] px-1">
+                          <span>0 ms</span>
+                          <span>Scale Max: {maxGlobal} ms</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
 
       {/* SECTION 3: RECENT EVALUATION RUNS SCORECARDS */}
       {overview?.recent_runs && overview.recent_runs.length > 0 && (

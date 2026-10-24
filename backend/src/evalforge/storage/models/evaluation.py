@@ -19,6 +19,7 @@ class EvaluationRun(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     dataset_id: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("datasets.id", ondelete="SET NULL"),
+        index=True,
         nullable=True,
     )
     dataset_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -79,7 +80,7 @@ class CaseResult(Base, UUIDPrimaryKeyMixin):
         index=True,
         nullable=False,
     )
-    case_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    case_id: Mapped[str] = mapped_column(String(36), index=True, nullable=False)
     prompt: Mapped[str] = mapped_column(Text, nullable=False)
     expected_output: Mapped[str | None] = mapped_column(Text, nullable=True)
     actual_output: Mapped[str | None] = mapped_column(Text, nullable=True)

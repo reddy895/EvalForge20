@@ -29,6 +29,7 @@ class TimestampMixin:
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         server_default=func.now(),
+        index=True,
         nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(

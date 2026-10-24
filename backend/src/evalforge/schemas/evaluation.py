@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class EvaluationConfig(BaseModel):
@@ -14,10 +14,10 @@ class EvaluationConfig(BaseModel):
     )
     concurrency: int = Field(default=4, ge=1, le=16, description="Parallel worker limit")
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
-    top_p: float | None = None
+    top_p: float | None = Field(default=None, ge=0.0, le=1.0)
     seed: int | None = None
-    max_tokens: int | None = None
-    context_length: int | None = None
+    max_tokens: int | None = Field(default=None, ge=1, le=131072)
+    context_length: int | None = Field(default=None, ge=128, le=1048576)
     stop: list[str] | None = None
     judge_model: str | None = None
     rubric: str | None = None
@@ -26,16 +26,24 @@ class EvaluationConfig(BaseModel):
 class EvaluationCreateRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    name: str | None = Field(None, description="Optional custom name for this evaluation run")
+    name: str | None = Field(None, max_length=120, description="Optional custom name for this evaluation run")
     model_id: str = Field(
-        ..., description="Target model identifier (e.g. 'llama3.2' or 'mock-llama-3.1-8b')"
+        ..., min_length=1, max_length=150, description="Target model identifier (e.g. 'llama3.2' or 'mock-llama-3.1-8b')"
     )
     provider: str = Field(
-        default="ollama", description="Inference provider name ('ollama' or 'mock')"
+        default="ollama", min_length=1, max_length=64, description="Inference provider name ('ollama' or 'mock')"
     )
-    dataset_id: str = Field(..., description="ID or slug of the dataset to evaluate")
-    max_cases: int | None = Field(None, description="Optional cap on test cases to evaluate")
+    dataset_id: str = Field(..., min_length=1, max_length=100, description="ID or slug of the dataset to evaluate")
+    max_cases: int | None = Field(None, ge=1, le=10000, description="Optional cap on test cases to evaluate")
     config: EvaluationConfig | None = Field(default_factory=EvaluationConfig)
+
+    @field_validator("model_id", "dataset_id", "provider")
+    @classmethod
+    def sanitize_identifiers(cls, val: str) -> str:
+        s = val.strip()
+        if not s:
+            raise ValueError("Field cannot be empty or solely whitespace.")
+        return s
 
 
 class CaseResultResponse(BaseModel):

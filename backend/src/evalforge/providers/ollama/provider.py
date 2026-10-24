@@ -4,6 +4,7 @@ import json
 import time
 from typing import Any
 
+from src.evalforge.core.errors import ProviderError
 from src.evalforge.providers.base import BaseProvider
 from src.evalforge.providers.ollama.capabilities import detect_capabilities, parse_model_info
 from src.evalforge.providers.ollama.client import OllamaClient, get_ollama_client
@@ -49,12 +50,13 @@ class OllamaProvider(BaseProvider):
         return detect_capabilities(show_data, model_id)
 
     async def generate(self, request: InferenceRequest) -> InferenceResponse:
-        start_time = time.perf_counter()
+        if not request.model or not request.model.strip():
+            raise ProviderError("Target model identifier must be specified.", provider=self.name)
 
         # Normalize model identifier (strip ollama: prefix and resolve catalog models)
-        model_to_use = request.model
+        model_to_use = request.model.strip()
         if model_to_use.startswith("ollama:"):
-            model_to_use = model_to_use[7:]
+            model_to_use = model_to_use[7:].strip()
         else:
             try:
                 from src.evalforge.services.model_service import VERIFIED_CATALOG_MODELS
@@ -64,6 +66,8 @@ class OllamaProvider(BaseProvider):
                         break
             except Exception:
                 pass
+
+        start_time = time.perf_counter()
 
         options: dict[str, Any] = {
             "temperature": request.temperature,

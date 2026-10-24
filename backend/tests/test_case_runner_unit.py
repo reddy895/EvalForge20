@@ -88,7 +88,7 @@ class TestCaseRunnerExecution:
         assert result.passed is False
         assert result.error_message is not None
         assert "Ollama not reachable" in result.error_message
-        assert result.latency_ms == 0.0
+        assert result.latency_ms is None
 
     @pytest.mark.asyncio
     async def test_token_usage_stored_in_result(self) -> None:

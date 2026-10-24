@@ -187,7 +187,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
           </span>
           <div className="mt-3">
             <span className="text-2xl font-bold text-[#F5F0E7]">
-              {overview?.average_latency_ms ? `${overview.average_latency_ms} ms` : '5.0 ms'}
+              {overview?.average_latency_ms ? `${overview.average_latency_ms} ms` : '—'}
             </span>
             <span className="text-[11px] text-[#A6A49D] block font-sans mt-0.5">Tested runs</span>
           </div>
@@ -200,10 +200,10 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
           </span>
           <div className="mt-3">
             <span className="text-2xl font-bold text-[#68B587]">
-              {overview?.overall_pass_rate_percent ?? 100}%
+              {overview !== null && overview !== undefined ? `${overview.overall_pass_rate_percent}%` : '—'}
             </span>
             <span className="text-[11px] text-[#A6A49D] block font-sans mt-0.5">
-              {overview?.total_test_cases_evaluated ?? 48} cases
+              {overview?.total_test_cases_evaluated ?? 0} cases
             </span>
           </div>
         </div>
@@ -216,10 +216,10 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
           </span>
           <div className="mt-3">
             <span className="text-2xl font-bold text-[#F5F0E7]">
-              {commitData?.total_verified_commits ?? 392}
+              {commitData?.total_verified_commits ?? '—'}
             </span>
             <span className="text-[11px] text-[#68B587] block font-sans mt-0.5 font-medium">
-              Target: 56 (Exceeded)
+              Target: {commitData?.target_commits ?? 56} {commitData?.target_achieved ? '(Achieved)' : '(In Progress)'}
             </span>
           </div>
         </div>

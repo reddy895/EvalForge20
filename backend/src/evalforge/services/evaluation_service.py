@@ -131,8 +131,14 @@ class EvaluationService:
 
             async with session_factory() as session:
                 repo = EvaluationRepository(session)
-                run = await repo.get_or_fail(evaluation_id)
-                run.status = "completed"
+                run = await repo.get(evaluation_id)
+                if not run:
+                    return
+                if scorecard.total_cases > 0 and scorecard.passed_cases == 0 and scorecard.error_count == scorecard.total_cases:
+                    run.status = "failed"
+                    run.error_message = run.error_message or "All test cases failed due to model inference errors or timeouts."
+                else:
+                    run.status = "completed"
                 run.completed_cases = scorecard.completed_cases
                 run.passed_cases = scorecard.passed_cases
                 run.failed_cases = scorecard.failed_cases

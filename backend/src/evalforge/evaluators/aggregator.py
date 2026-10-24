@@ -15,11 +15,11 @@ class EvaluationScorecard(BaseModel):
     passed_cases: int
     failed_cases: int
     pass_rate: float
-    avg_latency_ms: float
-    median_latency_ms: float = 0.0
-    p50_latency_ms: float
-    p95_latency_ms: float
-    p99_latency_ms: float
+    avg_latency_ms: float | None = None
+    median_latency_ms: float | None = None
+    p50_latency_ms: float | None = None
+    p95_latency_ms: float | None = None
+    p99_latency_ms: float | None = None
     total_prompt_tokens: int | None = None
     total_completion_tokens: int | None = None
     avg_throughput_tok_s: float | None = None
@@ -92,13 +92,18 @@ def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
     valid_latencies = [
         r.latency_ms
         for r in results
-        if r.latency_ms is not None and not (getattr(r, "error_message", None) and r.latency_ms <= 0)
+        if r.latency_ms is not None and not (getattr(r, "error_message", None) and r.latency_ms <= 0) and r.latency_ms > 0
     ]
-    latencies = valid_latencies if valid_latencies else [0.0]
-    avg_latency = round(sum(latencies) / len(latencies), 2) if latencies else 0.0
-    p50 = compute_percentile(latencies, 50.0)
-    p95 = compute_percentile(latencies, 95.0)
-    p99 = compute_percentile(latencies, 99.0)
+    if valid_latencies:
+        avg_latency = round(sum(valid_latencies) / len(valid_latencies), 2)
+        p50 = compute_percentile(valid_latencies, 50.0)
+        p95 = compute_percentile(valid_latencies, 95.0)
+        p99 = compute_percentile(valid_latencies, 99.0)
+    else:
+        avg_latency = None
+        p50 = None
+        p95 = None
+        p99 = None
 
     # Token aggregation
     prompt_tokens_list: list[int] = []
@@ -116,8 +121,8 @@ def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
 
     # Calculate average throughput
     avg_throughput: float | None = None
-    if tot_comp and sum(latencies) > 0:
-        avg_throughput = round(tot_comp / (sum(latencies) / 1000.0), 2)
+    if tot_comp and valid_latencies and sum(valid_latencies) > 0:
+        avg_throughput = round(tot_comp / (sum(valid_latencies) / 1000.0), 2)
 
     # Calculate accurate tokens-per-second and load durations when reported
     tps_list = [

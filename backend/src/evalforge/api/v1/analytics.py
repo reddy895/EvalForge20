@@ -42,10 +42,11 @@ async def get_commit_analytics() -> CommitAnalyticsResponse:
     summary="Get empirical model performance leaderboard",
 )
 async def get_leaderboard(
+    include_mock: bool = False,
     db: AsyncSession = Depends(get_db),
 ) -> list[dict[str, Any]]:
-    """Return ranked model leaderboard from completed evaluations."""
-    return await AnalyticsService.get_leaderboard(db)
+    """Return ranked model leaderboard from completed evaluations, excluding mock runs by default."""
+    return await AnalyticsService.get_leaderboard(db, include_mock=include_mock)
 
 
 @analytics_router.get(

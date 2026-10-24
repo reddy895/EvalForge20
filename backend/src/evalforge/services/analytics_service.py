@@ -334,8 +334,10 @@ class AnalyticsService:
         )
 
     @classmethod
-    async def get_leaderboard(cls, db: AsyncSession) -> list[dict[str, Any]]:
-        """Compute live empirical leaderboard from completed evaluation runs."""
+    async def get_leaderboard(
+        cls, db: AsyncSession, include_mock: bool = False
+    ) -> list[dict[str, Any]]:
+        """Compute live empirical leaderboard from completed evaluation runs, deduplicating per model and excluding mock entries."""
         from src.evalforge.analytics.leaderboard import generate_leaderboard
 
         q = await db.execute(
@@ -353,20 +355,43 @@ class AnalyticsService:
             if m.model_identifier:
                 model_names[m.model_identifier] = m.name
 
-        runs_data = []
+        # Deduplicate per model: keep the best completed run (highest pass rate, then most recent)
+        best_runs: dict[str, EvaluationRun] = {}
         for r in runs:
+            # Exclude mock models unless explicitly requested
+            is_mock = r.provider == "mock" or r.model_id.startswith("mock-")
+            if is_mock and not include_mock:
+                continue
+
+            # Exclude runs with 0% pass rate and no valid latency (unexecuted/errored)
+            if (r.pass_rate is None or r.pass_rate == 0.0) and (r.avg_latency_ms is None or r.avg_latency_ms <= 0):
+                continue
+
+            if r.model_id not in best_runs:
+                best_runs[r.model_id] = r
+            else:
+                current_best = best_runs[r.model_id]
+                if (r.pass_rate or 0.0) > (current_best.pass_rate or 0.0):
+                    best_runs[r.model_id] = r
+
+        runs_data = []
+        for r in best_runs.values():
             summary = r.summary_metrics or {}
+            raw_lat = summary.get("p50_latency_ms") or summary.get("median_latency_ms") or r.avg_latency_ms
             runs_data.append({
                 "model_id": r.model_id,
                 "model_name": model_names.get(r.model_id, r.name or r.model_id),
                 "benchmark_name": r.dataset_name or "Standard Benchmark",
                 "quality_score": round((r.pass_rate or 0.0) * 100.0, 1),
                 "pass_rate": round((r.pass_rate or 0.0) * 100.0, 1),
-                "median_latency_ms": summary.get("p50_latency_ms") or summary.get("median_latency_ms") or r.avg_latency_ms or 0.0,
-                "avg_latency_ms": r.avg_latency_ms or 0.0,
+                "median_latency_ms": raw_lat,
+                "p95_latency_ms": summary.get("p95_latency_ms"),
+                "avg_latency_ms": r.avg_latency_ms,
                 "tokens_per_second": summary.get("avg_tokens_per_second") or summary.get("avg_throughput_tok_s"),
                 "total_cases": r.total_cases,
-                "is_local": r.provider == "ollama" or "mock" in r.model_id or "qwen" in r.model_id or "llama" in r.model_id,
+                "provider": r.provider,
+                "run_status": r.status,
+                "timestamp": r.created_at.isoformat() if r.created_at else None,
             })
 
         entries = generate_leaderboard(runs_data)
@@ -378,9 +403,13 @@ class AnalyticsService:
                 "benchmark_name": e.benchmark_name,
                 "quality_score": e.quality_score,
                 "median_latency_ms": e.median_latency_ms,
+                "p95_latency_ms": e.p95_latency_ms,
                 "tokens_per_second": e.tokens_per_second,
                 "pass_rate_percent": e.pass_rate_percent,
                 "sample_count": e.sample_count,
+                "provider": e.provider,
+                "run_status": e.run_status,
+                "timestamp": e.timestamp,
             }
             for e in entries
         ]

@@ -31,10 +31,11 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
         status: str | None = None,
         model_id: str | None = None,
         dataset_id: str | None = None,
+        query: str | None = None,
         offset: int = 0,
         limit: int = 50,
     ) -> tuple[list[EvaluationRun], int]:
-        """Filter evaluations with pagination, descending timestamp order, and total matching count."""
+        """Filter evaluations with pagination, search, descending timestamp order, and total matching count."""
         count_stmt = select(func.count(EvaluationRun.id))
         stmt = select(EvaluationRun)
         if status:
@@ -46,6 +47,14 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
         if dataset_id:
             count_stmt = count_stmt.where(EvaluationRun.dataset_id == dataset_id)
             stmt = stmt.where(EvaluationRun.dataset_id == dataset_id)
+        if query:
+            search_clause = (
+                EvaluationRun.name.ilike(f"%{query}%")
+                | EvaluationRun.model_id.ilike(f"%{query}%")
+                | EvaluationRun.dataset_name.ilike(f"%{query}%")
+            )
+            count_stmt = count_stmt.where(search_clause)
+            stmt = stmt.where(search_clause)
 
         total_res = await self.session.execute(count_stmt)
         total = total_res.scalar() or 0

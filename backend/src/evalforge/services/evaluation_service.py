@@ -182,14 +182,16 @@ class EvaluationService:
         status: str | None = None,
         model_id: str | None = None,
         dataset_id: str | None = None,
+        query: str | None = None,
         offset: int = 0,
         limit: int = 50,
     ) -> tuple[list[EvaluationRun], int]:
-        """List evaluations filtered by status, model, or dataset, returning matching runs and total count."""
+        """List evaluations filtered by status, model, dataset, or query, returning matching runs and total count."""
         return await self.eval_repo.list_evaluations(
             status=status,
             model_id=model_id,
             dataset_id=dataset_id,
+            query=query,
             offset=offset,
             limit=limit,
         )

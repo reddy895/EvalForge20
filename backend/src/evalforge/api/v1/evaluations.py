@@ -71,16 +71,18 @@ async def list_evaluations(
     status_filter: str | None = Query(None, alias="status"),
     model_id: str | None = Query(None),
     dataset_id: str | None = Query(None),
+    query: str | None = Query(None),
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ) -> EvaluationListResponse:
-    """List evaluations filtered by status, target model, or source dataset."""
+    """List evaluations filtered by status, target model, source dataset, or search query."""
     service = EvaluationService(db)
     runs, total = await service.list_evaluations(
         status=status_filter,
         model_id=model_id,
         dataset_id=dataset_id,
+        query=query,
         offset=offset,
         limit=limit,
     )

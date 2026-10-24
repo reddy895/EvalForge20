@@ -72,7 +72,7 @@ async def list_evaluations(
 ) -> EvaluationListResponse:
     """List evaluations filtered by status, target model, or source dataset."""
     service = EvaluationService(db)
-    runs = await service.list_evaluations(
+    runs, total = await service.list_evaluations(
         status=status_filter,
         model_id=model_id,
         dataset_id=dataset_id,
@@ -80,7 +80,7 @@ async def list_evaluations(
         limit=limit,
     )
     return EvaluationListResponse(
-        total=len(runs),
+        total=total,
         items=[_map_run_response(r) for r in runs],
     )
 

@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import desc, select, update
+from sqlalchemy import desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -26,6 +26,34 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def list_evaluations(
+        self,
+        status: str | None = None,
+        model_id: str | None = None,
+        dataset_id: str | None = None,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> tuple[list[EvaluationRun], int]:
+        """Filter evaluations with pagination, descending timestamp order, and total matching count."""
+        count_stmt = select(func.count(EvaluationRun.id))
+        stmt = select(EvaluationRun)
+        if status:
+            count_stmt = count_stmt.where(EvaluationRun.status == status)
+            stmt = stmt.where(EvaluationRun.status == status)
+        if model_id:
+            count_stmt = count_stmt.where(EvaluationRun.model_id == model_id)
+            stmt = stmt.where(EvaluationRun.model_id == model_id)
+        if dataset_id:
+            count_stmt = count_stmt.where(EvaluationRun.dataset_id == dataset_id)
+            stmt = stmt.where(EvaluationRun.dataset_id == dataset_id)
+
+        total_res = await self.session.execute(count_stmt)
+        total = total_res.scalar() or 0
+
+        stmt = stmt.order_by(desc(EvaluationRun.created_at)).offset(offset).limit(limit)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all()), total
+
     async def list_by_filter(
         self,
         status: str | None = None,
@@ -35,17 +63,14 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
         limit: int = 50,
     ) -> list[EvaluationRun]:
         """Filter evaluations with pagination and descending timestamp order."""
-        stmt = select(EvaluationRun)
-        if status:
-            stmt = stmt.where(EvaluationRun.status == status)
-        if model_id:
-            stmt = stmt.where(EvaluationRun.model_id == model_id)
-        if dataset_id:
-            stmt = stmt.where(EvaluationRun.dataset_id == dataset_id)
-
-        stmt = stmt.order_by(desc(EvaluationRun.created_at)).offset(offset).limit(limit)
-        result = await self.session.execute(stmt)
-        return list(result.scalars().all())
+        runs, _ = await self.list_evaluations(
+            status=status,
+            model_id=model_id,
+            dataset_id=dataset_id,
+            offset=offset,
+            limit=limit,
+        )
+        return runs
 
     async def update_status(
         self,

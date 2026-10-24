@@ -9,9 +9,22 @@ from src.evalforge.storage.repositories.evaluation_repo import EvaluationReposit
 router = APIRouter(prefix="/evaluations", tags=["evaluations"])
 
 @router.get("")
-async def list_evaluations(limit: int = 50, offset: int = 0, db: AsyncSession = Depends(get_db)):
+async def list_evaluations(
+    status: str | None = None,
+    model_id: str | None = None,
+    dataset_id: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db),
+):
     repo = EvaluationRepository(db)
-    runs, total = await repo.list_evaluations(limit=limit, offset=offset)
+    runs, total = await repo.list_evaluations(
+        status=status,
+        model_id=model_id,
+        dataset_id=dataset_id,
+        limit=limit,
+        offset=offset,
+    )
     return {"total": total, "items": runs}
 
 

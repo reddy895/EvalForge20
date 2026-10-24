@@ -176,9 +176,9 @@ class EvaluationService:
         dataset_id: str | None = None,
         offset: int = 0,
         limit: int = 50,
-    ) -> list[EvaluationRun]:
-        """List evaluations filtered by status, model, or dataset."""
-        return await self.eval_repo.list_by_filter(
+    ) -> tuple[list[EvaluationRun], int]:
+        """List evaluations filtered by status, model, or dataset, returning matching runs and total count."""
+        return await self.eval_repo.list_evaluations(
             status=status,
             model_id=model_id,
             dataset_id=dataset_id,

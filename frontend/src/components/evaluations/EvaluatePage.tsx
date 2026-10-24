@@ -128,15 +128,23 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
         setProgressStatus(`Executing test cases (${pct}% complete)...`);
       });
 
-      const cases = (runDetails.case_results || []).map((c: any) => ({
+      const rawCases = runDetails.case_results || runDetails.results || [];
+      const cases = rawCases.map((c: any) => ({
         case_id: c.case_id,
         prompt: c.prompt,
         expected_output: c.expected_output || '',
         actual_output: c.actual_output || '',
         passed: Boolean(c.passed),
-        latency_ms: Number((c.latency_ms || 0).toFixed(1)),
-        assertion_type: c.assertion_type || 'exact_match',
+        latency_ms: c.latency_ms !== undefined && c.latency_ms !== null ? Number(c.latency_ms.toFixed(1)) : 0,
+        assertion_type: c.assertion_type || (c.metrics && c.metrics._assertion_type) || 'exact_match',
       }));
+
+      const summary = runDetails.summary_metrics || {};
+      const avgLat = runDetails.avg_latency_ms !== undefined ? runDetails.avg_latency_ms : summary.avg_latency_ms;
+      const medLat = runDetails.median_latency_ms !== undefined ? runDetails.median_latency_ms : (summary.p50_latency_ms ?? summary.median_latency_ms);
+      const p95Lat = runDetails.p95_latency_ms !== undefined ? runDetails.p95_latency_ms : summary.p95_latency_ms;
+      const tps = runDetails.tokens_per_second !== undefined ? runDetails.tokens_per_second : (summary.avg_tokens_per_second ?? summary.avg_throughput_tok_s);
+      const loadMs = runDetails.load_duration_ms !== undefined ? runDetails.load_duration_ms : summary.avg_load_duration_ms;
 
       const result: EvaluationRun = {
         id: runDetails.id,
@@ -149,11 +157,11 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
         pass_rate: Number((runDetails.pass_rate || 0).toFixed(2)),
         passed_cases: runDetails.passed_cases || 0,
         total_cases: runDetails.total_cases || sampleLimit,
-        avg_latency_ms: Number((runDetails.avg_latency_ms || 0).toFixed(1)),
-        median_latency_ms: runDetails.median_latency_ms ? Number(runDetails.median_latency_ms.toFixed(1)) : undefined,
-        p95_latency_ms: runDetails.p95_latency_ms ? Number(runDetails.p95_latency_ms.toFixed(1)) : undefined,
-        tokens_per_second: runDetails.tokens_per_second ? Number(runDetails.tokens_per_second.toFixed(1)) : undefined,
-        load_duration_ms: runDetails.load_duration_ms ? Number(runDetails.load_duration_ms.toFixed(1)) : undefined,
+        avg_latency_ms: avgLat !== null && avgLat !== undefined ? Number(avgLat.toFixed(1)) : undefined,
+        median_latency_ms: medLat !== null && medLat !== undefined ? Number(medLat.toFixed(1)) : undefined,
+        p95_latency_ms: p95Lat !== null && p95Lat !== undefined ? Number(p95Lat.toFixed(1)) : undefined,
+        tokens_per_second: tps !== null && tps !== undefined ? Number(tps.toFixed(1)) : undefined,
+        load_duration_ms: loadMs !== null && loadMs !== undefined ? Number(loadMs.toFixed(1)) : undefined,
         case_results: cases,
         created_at: runDetails.created_at || new Date().toISOString(),
       };

@@ -123,10 +123,11 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
   const totalCases = historyRuns.reduce((sum, r) => sum + r.total_cases, 0);
   const totalPassed = historyRuns.reduce((sum, r) => sum + r.passed_cases, 0);
   const avgPassRate = totalCases > 0 ? (totalPassed / totalCases) * 100 : 0;
+  const runsWithLatency = historyRuns.filter((r) => r.avg_latency_ms !== undefined && r.avg_latency_ms > 0);
   const avgLatency =
-    totalRuns > 0
-      ? (historyRuns.reduce((sum, r) => sum + r.avg_latency_ms, 0) / totalRuns).toFixed(1)
-      : '0.0';
+    runsWithLatency.length > 0
+      ? (runsWithLatency.reduce((sum, r) => sum + (r.avg_latency_ms || 0), 0) / runsWithLatency.length).toFixed(1)
+      : 'N/A';
 
   return (
     <div className="py-10 px-4 sm:px-8 lg:px-12 2xl:px-16 w-full flex flex-col gap-8">

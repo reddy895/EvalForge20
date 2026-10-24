@@ -108,7 +108,7 @@ export interface EvaluationRun {
   pass_rate: number;
   passed_cases: number;
   total_cases: number;
-  avg_latency_ms: number;
+  avg_latency_ms?: number;
   median_latency_ms?: number;
   p95_latency_ms?: number;
   tokens_per_second?: number;

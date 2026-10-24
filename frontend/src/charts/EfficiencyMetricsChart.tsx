@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gauge, HelpCircle, Zap } from 'lucide-react';
+import { HelpCircle, Zap } from 'lucide-react';
 
 export interface EfficiencyRow {
   modelName: string;

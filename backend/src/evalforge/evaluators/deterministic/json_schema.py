@@ -37,6 +37,7 @@ class JsonSchemaEvaluator(BaseEvaluator):
         required_fields: list[str] | None = None,
         **kwargs: Any,
     ) -> MetricResult:
+        effective_schema = schema or kwargs.get("json_schema")
         json_str = self.extract_json_str(prediction)
 
         # 1. Syntax Check
@@ -57,8 +58,8 @@ class JsonSchemaEvaluator(BaseEvaluator):
 
         # 2. Schema / Field Check
         req_fields = list(required_fields or [])
-        if schema and "required" in schema and isinstance(schema["required"], list):
-            req_fields.extend(schema["required"])
+        if effective_schema and "required" in effective_schema and isinstance(effective_schema["required"], list):
+            req_fields.extend(effective_schema["required"])
         req_fields = list(set(req_fields))
 
         missing_fields: list[str] = []
@@ -70,8 +71,8 @@ class JsonSchemaEvaluator(BaseEvaluator):
                     missing_fields.append(field)
 
             # Check property types if schema specified
-            if schema and "properties" in schema and isinstance(schema["properties"], dict):
-                for prop_name, prop_def in schema["properties"].items():
+            if effective_schema and "properties" in effective_schema and isinstance(effective_schema["properties"], dict):
+                for prop_name, prop_def in effective_schema["properties"].items():
                     if prop_name in parsed and "type" in prop_def:
                         expected_type = prop_def["type"]
                         val = parsed[prop_name]

@@ -56,6 +56,22 @@ class TestOllamaFailureModes:
         with pytest.raises(RuntimeError, match="not found"):
             await provider.generate(req)
 
+    @pytest.mark.asyncio
+    async def test_local_binary_detection_when_daemon_stopped(self) -> None:
+        """When local binary is present but server is down, readiness probe indicates installed_not_running."""
+        mock_client = MagicMock()
+        mock_client.diagnose = AsyncMock(return_value=SimpleNamespace(
+            model_ready=False,
+            connectivity_state="installed_not_running",
+            remediation_hint="Ollama is installed locally, but the service is stopped. Run 'ollama serve' to start it.",
+            available_models=[],
+        ))
+        provider = OllamaProvider(client=mock_client)
+        status = await provider.check_model_readiness("qwen2.5:1.5b")
+        assert status["ready"] is False
+        assert status["connectivity_state"] == "installed_not_running"
+        assert "ollama serve" in status["remediation_hint"]
+
 
 class TestAggregatorReliabilityMetrics:
     """Tests for reliability metric tracking, failure counting, and error classification."""

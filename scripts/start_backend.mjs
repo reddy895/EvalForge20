@@ -57,8 +57,23 @@ function loadEnv() {
 
 loadEnv();
 
-const HOST = process.env.HOST || '127.0.0.1';
-const PORT = parseInt(process.env.PORT || '8000', 10);
+// Parse CLI flags
+const args = process.argv.slice(2);
+let customPort = null;
+let customHost = null;
+const isDryRun = args.includes('--dry-run') || args.includes('--check');
+
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--port' && args[i + 1]) {
+    customPort = parseInt(args[i + 1], 10);
+  }
+  if (args[i] === '--host' && args[i + 1]) {
+    customHost = args[i + 1];
+  }
+}
+
+const HOST = customHost || process.env.HOST || '127.0.0.1';
+const PORT = customPort || parseInt(process.env.PORT || '8000', 10);
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 const DATABASE_URL = process.env.DATABASE_URL || 'sqlite+aiosqlite:///./evalforge.db';
 
@@ -154,6 +169,11 @@ async function main() {
   console.log(`[EvalForge20] Listening URL: http://${HOST}:${PORT}`);
   console.log(`[EvalForge20] OpenAPI Documentation: http://${HOST}:${PORT}/docs`);
   console.log('====================================================');
+
+  if (isDryRun) {
+    console.log('[EvalForge20] Dry run / verification check passed successfully.');
+    process.exit(0);
+  }
 
   const child = spawn(runner.cmd, uvicornArgs, {
     cwd: REPO_ROOT,

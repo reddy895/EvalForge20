@@ -1,5 +1,7 @@
 """Unit tests for deterministic evaluation metrics: Token F1, JSON schema validity, and SLA."""
 
+import pytest
+
 from src.evalforge.evaluation.metrics_json import validate_json_validity
 from src.evalforge.evaluation.metrics_sla import evaluate_sla_latency
 from src.evalforge.evaluation.metrics_token import compute_token_f1
@@ -35,3 +37,87 @@ def test_evaluation_scorer_summary() -> None:
     summary = EvaluationScorer.compute_summary_score(cases)
     assert summary["pass_rate"] == 66.7
     assert summary["total_cases"] == 3
+
+
+@pytest.mark.asyncio
+async def test_genuine_zero_score_persistence_and_retrieval_after_simulated_reload() -> None:
+    """A genuine zero score (valid inferences that all failed assertions) persists 0.0 and retrieves accurately."""
+    import uuid
+    from datetime import UTC, datetime
+    import pytest
+    from src.evalforge.evaluators.aggregator import aggregate_scorecard, is_genuine_zero_score
+    from src.evalforge.storage.database import get_session_factory
+    from src.evalforge.storage.models.evaluation import CaseResult, EvaluationRun
+    from src.evalforge.storage.repositories.evaluation_repo import EvaluationRepository
+
+    session_factory = get_session_factory()
+    run_id = f"eval-zero-{uuid.uuid4().hex[:8]}"
+
+    # Two test cases that executed with genuine inference, but completely failed assertion
+    c1 = CaseResult(
+        evaluation_id=run_id,
+        case_id="c1",
+        prompt="Write a poem about rust",
+        expected_output="Oxidized metal",
+        actual_output="I am an AI created by OpenAI",
+        passed=False,
+        latency_ms=120.0,
+        error_message=None,
+    )
+    c1.metrics = {"exact_match": {"name": "exact_match", "score": 0.0, "passed": False}}
+
+    c2 = CaseResult(
+        evaluation_id=run_id,
+        case_id="c2",
+        prompt="Return valid JSON with key status",
+        expected_output="{\"status\": \"ok\"}",
+        actual_output="Invalid non-json output",
+        passed=False,
+        latency_ms=150.0,
+        error_message=None,
+    )
+    c2.metrics = {"exact_match": {"name": "exact_match", "score": 0.0, "passed": False}}
+
+    scorecard = aggregate_scorecard([c1, c2])
+    assert is_genuine_zero_score(scorecard) is True
+    assert scorecard.pass_rate == 0.0
+    assert scorecard.error_count == 0
+
+    # Persist in session 1
+    async with session_factory() as session1:
+        async with session1.begin():
+            repo1 = EvaluationRepository(session1)
+            run = EvaluationRun(
+                id=run_id,
+                name="Genuine Zero Run",
+                model_id="zero-candidate-model",
+                provider="mock",
+                status="completed",
+                total_cases=2,
+                completed_cases=2,
+                passed_cases=0,
+                failed_cases=2,
+                pass_rate=0.0,
+                avg_latency_ms=135.0,
+                completed_at=datetime.now(UTC),
+            )
+            run.summary_metrics = {
+                **scorecard.model_dump(),
+                "is_genuine_zero": True,
+            }
+            await repo1.add(run)
+            await repo1.add_case_results(run_id, [c1, c2])
+
+    # Simulate fresh page reload / new session
+    async with session_factory() as session2:
+        repo2 = EvaluationRepository(session2)
+        reloaded_run = await repo2.get_with_results(run_id)
+        assert reloaded_run is not None
+        assert reloaded_run.status == "completed"
+        # Crucial: Genuine 0.0 must be preserved as 0.0, NOT null and NOT an error
+        assert reloaded_run.pass_rate == 0.0
+        assert reloaded_run.avg_latency_ms == 135.0
+        assert reloaded_run.passed_cases == 0
+        assert reloaded_run.failed_cases == 2
+        assert reloaded_run.summary_metrics.get("is_genuine_zero") is True
+        assert len(reloaded_run.results) == 2

@@ -157,7 +157,11 @@ async def get_evaluation_results(
                 metrics=m_dict,
                 token_usage=u_dict,
                 error_message=c.error_message,
-                created_at=c.created_at.isoformat(),
+                created_at=(
+                    c.created_at.isoformat()
+                    if hasattr(c.created_at, "isoformat")
+                    else str(c.created_at or "")
+                ),
             )
         )
 

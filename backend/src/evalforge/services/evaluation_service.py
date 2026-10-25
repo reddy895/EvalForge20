@@ -28,10 +28,15 @@ logger = get_logger("evalforge.services.evaluation")
 class EvaluationService:
     """Orchestrates evaluation run lifecycle, bounded execution, and result aggregation."""
 
-    def __init__(self, session: AsyncSession):
+    def __init__(
+        self,
+        session: AsyncSession | None = None,
+        eval_repo: EvaluationRepository | None = None,
+        dataset_repo: DatasetRepository | None = None,
+    ):
         self.session = session
-        self.eval_repo = EvaluationRepository(session)
-        self.dataset_repo = DatasetRepository(session)
+        self.eval_repo = eval_repo or (EvaluationRepository(session) if session else None)
+        self.dataset_repo = dataset_repo or (DatasetRepository(session) if session else None)
         self.registry = get_provider_registry()
         self.coordinator = get_lifecycle_coordinator()
 

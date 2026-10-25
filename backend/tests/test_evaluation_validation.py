@@ -59,3 +59,29 @@ class TestEvaluationValidation:
             EvaluationCreateRequest(model_id="m1", dataset_id="d1", max_cases=0)
         with pytest.raises(ValidationError):
             EvaluationCreateRequest(model_id="m1", dataset_id="d1", max_cases=50000)
+
+    def test_missing_model_id_field_rejected(self) -> None:
+        with pytest.raises(ValidationError) as exc:
+            EvaluationCreateRequest(dataset_id="d1")  # type: ignore
+        assert "Field required" in str(exc.value) or "model_id" in str(exc.value)
+
+    @pytest.mark.asyncio
+    async def test_evaluation_service_validates_model_identifier(self) -> None:
+        from unittest.mock import AsyncMock, MagicMock
+        from src.evalforge.core.errors import DataValidationError
+        from src.evalforge.services.evaluation_service import EvaluationService
+
+        mock_eval_repo = MagicMock()
+        mock_ds_repo = MagicMock()
+        mock_dataset = MagicMock()
+        mock_dataset.test_cases = [MagicMock()]
+        mock_dataset.name = "Test DS"
+        mock_ds_repo.get_with_cases = AsyncMock(return_value=mock_dataset)
+
+        service = EvaluationService(eval_repo=mock_eval_repo, dataset_repo=mock_ds_repo)
+
+        req = EvaluationCreateRequest(model_id="qwen2.5:1.5b", dataset_id="ds-1")
+        req.model_id = ""  # Bypass pydantic to test service defense-in-depth
+
+        with pytest.raises(DataValidationError, match="Target model identifier must be specified"):
+            await service.create_and_start_run(req)

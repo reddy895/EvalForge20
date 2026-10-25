@@ -85,3 +85,37 @@ class TestEvaluationValidation:
 
         with pytest.raises(DataValidationError, match="Target model identifier must be specified"):
             await service.create_and_start_run(req)
+
+    @pytest.mark.asyncio
+    async def test_duplicate_evaluation_request_throttling(self) -> None:
+        """When an identical evaluation is requested within the debounce window, existing run is returned."""
+        from unittest.mock import AsyncMock, MagicMock
+        from src.evalforge.services.evaluation_service import EvaluationService
+        from src.evalforge.storage.models.evaluation import EvaluationRun
+
+        mock_eval_repo = MagicMock()
+        mock_ds_repo = MagicMock()
+        mock_dataset = MagicMock()
+        mock_dataset.id = "ds-1"
+        mock_dataset.test_cases = [MagicMock()]
+        mock_dataset.name = "Test DS"
+        mock_ds_repo.get_with_cases = AsyncMock(return_value=mock_dataset)
+
+        existing_run = EvaluationRun(
+            id="existing-run-id-123",
+            name="Existing Run",
+            model_id="qwen2.5:1.5b",
+            provider="ollama",
+            dataset_id="ds-1",
+            status="running",
+        )
+        mock_eval_repo.find_recent_duplicate = AsyncMock(return_value=existing_run)
+        mock_eval_repo.add = AsyncMock()
+
+        service = EvaluationService(eval_repo=mock_eval_repo, dataset_repo=mock_ds_repo)
+
+        req = EvaluationCreateRequest(model_id="qwen2.5:1.5b", dataset_id="ds-1")
+        returned_run = await service.create_and_start_run(req)
+
+        assert returned_run.id == "existing-run-id-123"
+        mock_eval_repo.add.assert_not_called()  # Reused existing run, didn't create duplicate!

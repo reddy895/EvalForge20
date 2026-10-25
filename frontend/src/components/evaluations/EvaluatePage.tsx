@@ -526,8 +526,16 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
                         Case {String(i + 1).padStart(2, '0')}
                       </span>
                       <span className="font-mono text-[#A6A49D]">({c.case_id})</span>
-                      <span className="text-[10px] text-[#A6A49D] font-mono px-2 py-0.5 rounded bg-[#242522]">
-                        {c.assertion_type}
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                        c.assertion_type === 'code_execution'
+                          ? 'bg-[#68B587]/15 text-[#68B587] border-[#68B587]/30'
+                          : c.assertion_type === 'numeric_tolerance'
+                          ? 'bg-[#D9823B]/15 text-[#D9823B] border-[#D9823B]/30'
+                          : c.assertion_type === 'json_schema'
+                          ? 'bg-[#4B88A2]/15 text-[#4B88A2] border-[#4B88A2]/30'
+                          : 'bg-[#242522] text-[#A6A49D] border-[#41413B]'
+                      }`}>
+                        {c.assertion_type.replace(/_/g, ' ')}
                       </span>
                     </div>
 

@@ -213,7 +213,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
           </span>
           <div className="mt-3">
             <span className="text-2xl font-bold text-[#F5F0E7]">
-              {overview?.average_latency_ms ? `${overview.average_latency_ms} ms` : '—'}
+              {overview && overview.total_evaluation_runs > 0 && overview.average_latency_ms ? `${overview.average_latency_ms} ms` : '—'}
             </span>
             <span className="text-[11px] text-[#A6A49D] block font-sans mt-0.5">Tested runs</span>
           </div>
@@ -226,10 +226,10 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
           </span>
           <div className="mt-3">
             <span className="text-2xl font-bold text-[#68B587]">
-              {overview !== null && overview !== undefined ? `${overview.overall_pass_rate_percent}%` : '—'}
+              {overview && overview.total_evaluation_runs > 0 ? `${overview.overall_pass_rate_percent}%` : '—'}
             </span>
             <span className="text-[11px] text-[#A6A49D] block font-sans mt-0.5">
-              {overview?.total_test_cases_evaluated ?? 0} cases
+              {overview && overview.total_evaluation_runs > 0 ? `${overview.total_test_cases_evaluated} cases` : 'No runs yet'}
             </span>
           </div>
         </div>

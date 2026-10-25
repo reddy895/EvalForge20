@@ -97,7 +97,7 @@ class TestDefect3FailedCasesAssertionBreakdown:
         # Ensure metrics dictionary is populated with failed assertion records
         assert "exact_match" in result.metrics
         assert result.metrics["exact_match"]["passed"] is False
-        assert result.metrics["exact_match"]["score"] == 0.0
+        assert result.metrics["exact_match"]["score"] is None
         assert "error" in result.metrics["exact_match"]["details"]
 
 

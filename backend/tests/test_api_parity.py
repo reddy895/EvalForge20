@@ -29,7 +29,7 @@ def test_evaluation_detail_response_matches_database_case_records() -> None:
         ds_res = client.post(
             "/api/v1/datasets",
             json={
-                "name": "Parity Test Dataset",
+                "name": f"Parity Test Dataset {time.time()}",
                 "cases": [
                     {"prompt": "Echo 1", "expected_output": "1"},
                     {"prompt": "Echo 2", "expected_output": "2"},

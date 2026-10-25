@@ -49,6 +49,17 @@ class OllamaProvider(BaseProvider):
         show_data = await self.client.show_model(model_id)
         return detect_capabilities(show_data, model_id)
 
+    async def check_model_readiness(self, model_id: str) -> dict[str, Any]:
+        """Verify whether target model is installed locally and ready for inference."""
+        diag = await self.client.diagnose(requested_model=model_id)
+        return {
+            "model_id": model_id,
+            "ready": diag.model_ready,
+            "connectivity_state": diag.connectivity_state,
+            "remediation_hint": diag.remediation_hint,
+            "installed_models": diag.available_models,
+        }
+
     async def generate(self, request: InferenceRequest) -> InferenceResponse:
         if not request.model or not request.model.strip():
             raise ProviderError("Target model identifier must be specified.", provider=self.name)

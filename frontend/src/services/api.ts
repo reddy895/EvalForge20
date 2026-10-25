@@ -59,14 +59,21 @@ class ApiService {
     return this.request('/health');
   }
 
-  async getOllamaHealth(): Promise<{
+  async getOllamaHealth(model?: string): Promise<{
     status: string;
     base_url: string;
     reachable: boolean;
+    connectivity_state?: string;
     version: string | null;
+    installed_locally?: boolean;
+    installed_models_count?: number;
+    available_models?: string[];
+    model_ready?: boolean;
     suggestion: string | null;
+    last_checked_at?: string | null;
   }> {
-    return this.request('/providers/ollama/health');
+    const q = model ? `?model=${encodeURIComponent(model)}` : '';
+    return this.request(`/providers/ollama/health${q}`);
   }
 
   async getOllamaModels(): Promise<{ total: number; models: any[] }> {

@@ -148,3 +148,23 @@ class TestAggregateScorecard:
         cases = [_make_case(True, float(i * 10)) for i in range(1, 11)]
         sc = aggregate_scorecard(cases)
         assert sc.median_latency_ms == sc.p50_latency_ms
+
+    def test_is_genuine_zero_score_detection(self) -> None:
+        from src.evalforge.evaluators.aggregator import is_genuine_zero_score
+
+        # Case 1: All cases completed without error but got wrong answer -> Genuine zero
+        wrong_cases = [_make_case(False, 100.0), _make_case(False, 120.0)]
+        sc_wrong = aggregate_scorecard(wrong_cases)
+        assert sc_wrong.pass_rate == 0.0
+        assert is_genuine_zero_score(sc_wrong) is True
+
+        # Case 2: Cases failed due to error -> Not genuine zero
+        error_case = _make_case(False, 0.0)
+        error_case.error_message = "Connection refused to Ollama"
+        sc_error = aggregate_scorecard([error_case])
+        assert is_genuine_zero_score(sc_error) is False
+
+        # Case 3: Empty results -> Not genuine zero
+        sc_empty = aggregate_scorecard([])
+        assert is_genuine_zero_score(sc_empty) is False
+

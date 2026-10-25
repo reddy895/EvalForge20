@@ -35,13 +35,20 @@ def parse_model_info(raw_tag: dict[str, Any]) -> ModelInfo:
     # Compute sensible RAM requirements based on parameter count
     min_ram = 4.0
     rec_ram = 8.0
-    if "7b" in param_size.lower() or "8b" in param_size.lower():
+    param_lower = param_size.lower()
+    if "1." in param_lower or "1b" in param_lower:
+        min_ram = 2.0
+        rec_ram = 4.0
+    elif "3b" in param_lower:
+        min_ram = 4.0
+        rec_ram = 8.0
+    elif "7b" in param_lower or "8b" in param_lower:
         min_ram = 8.0
         rec_ram = 16.0
-    elif "14b" in param_size.lower():
+    elif "14b" in param_lower:
         min_ram = 16.0
         rec_ram = 32.0
-    elif "70b" in param_size.lower():
+    elif "70b" in param_lower:
         min_ram = 48.0
         rec_ram = 64.0
 

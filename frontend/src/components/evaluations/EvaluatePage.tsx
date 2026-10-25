@@ -186,7 +186,11 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
       onSaveToHistory(result);
 
       if (result.status === 'completed') {
-        success('Evaluation Complete', `Tested ${result.total_cases} cases: ${result.passed_cases} passed (${(result.pass_rate * 100).toFixed(0)}%).`);
+        success('Evaluation Complete', `Tested ${result.total_cases} cases: ${result.passed_cases} passed (${((result.pass_rate ?? 0) * 100).toFixed(0)}%).`);
+      } else if (result.status === 'failed') {
+        const failureReason = runDetails.error_message || 'All test cases failed due to model inference errors or provider unavailability.';
+        setRunError(failureReason);
+        showError('Evaluation Failed', failureReason);
       } else {
         showError('Evaluation Incomplete', 'Some test cases failed or encountered model timeout.');
       }

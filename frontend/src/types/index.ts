@@ -93,7 +93,7 @@ export interface TestCaseResult {
   expected_output: string;
   actual_output: string;
   passed: boolean;
-  latency_ms: number;
+  latency_ms?: number | null;
   assertion_type: string;
 }
 

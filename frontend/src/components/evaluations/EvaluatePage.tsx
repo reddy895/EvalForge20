@@ -149,7 +149,7 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
         expected_output: c.expected_output || '',
         actual_output: c.actual_output || '',
         passed: Boolean(c.passed),
-        latency_ms: c.latency_ms !== undefined && c.latency_ms !== null ? Number(c.latency_ms.toFixed(1)) : 0,
+        latency_ms: c.latency_ms !== undefined && c.latency_ms !== null && c.latency_ms > 0 ? Number(c.latency_ms.toFixed(1)) : null,
         assertion_type: c.assertion_type || (c.metrics && c.metrics._assertion_type) || 'exact_match',
       }));
 
@@ -466,7 +466,7 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
             <div>
               <span className="text-[#A6A49D] block text-[11px] mb-1">Mean Latency</span>
               <span className="text-[#F5F0E7] font-bold text-base">
-                {activeRunResult.avg_latency_ms} ms
+                {activeRunResult.avg_latency_ms !== undefined && activeRunResult.avg_latency_ms !== null ? `${activeRunResult.avg_latency_ms} ms` : '—'}
               </span>
             </div>
             <div>
@@ -525,7 +525,9 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <span className="font-mono text-[#A6A49D]">{c.latency_ms} ms</span>
+                      <span className="font-mono text-[#A6A49D]">
+                        {c.latency_ms !== null && c.latency_ms !== undefined && c.latency_ms > 0 ? `${c.latency_ms} ms` : '—'}
+                      </span>
                       <Badge variant={c.passed ? "installed" : "error"} size="sm">
                         {c.passed ? 'PASSED' : 'FAILED'}
                       </Badge>

@@ -488,18 +488,32 @@ class ModelService:
             for om in ollama_models:
                 # Check if this matches a known model
                 matched = False
-                for cat_model in models_by_id.values():
+                om_tag = om.id.lower().strip()
+                for cat_model in list(models_by_id.values()):
+                    if not cat_model.model_identifier:
+                        continue
+                    cat_id = cat_model.model_identifier.lower().strip()
                     if (
-                        cat_model.model_identifier
-                        and om.id.startswith(cat_model.model_identifier)
-                        or (om.name and cat_model.model_identifier and cat_model.model_identifier in om.name)
+                        om_tag == cat_id
+                        or om_tag == f"{cat_id}:latest"
+                        or f"{om_tag}:latest" == cat_id
+                        or om_tag.startswith(cat_id)
+                        or (om.name and cat_id in om.name.lower())
                     ):
                         cat_model.is_installed = True
                         cat_model.is_local = True
-                        cat_model.size_bytes = om.size_bytes
+                        cat_model.size_bytes = om.size_bytes or cat_model.size_bytes
                         cat_model.quantization = om.quantization or cat_model.quantization
                         cat_model.parameter_count = om.parameter_size or cat_model.parameter_count
                         matched = True
+                        # Also expose under direct Ollama tag so user can select by raw tag
+                        if om.id not in models_by_id:
+                            tag_alias = cat_model.model_copy(deep=True)
+                            tag_alias.id = om.id
+                            tag_alias.name = om.name or om.id
+                            tag_alias.model_identifier = om.id
+                            tag_alias.is_installed = True
+                            models_by_id[om.id] = tag_alias
                         break
 
                 if not matched:

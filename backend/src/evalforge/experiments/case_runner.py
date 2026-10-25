@@ -4,12 +4,14 @@ from typing import Any
 
 from src.evalforge.core.logging import get_logger
 from src.evalforge.evaluators.base import BaseEvaluator
+from src.evalforge.evaluators.deterministic.code_execution import CodeExecutionEvaluator
 from src.evalforge.evaluators.deterministic.exact_match import (
     ExactMatchEvaluator,
     NormalizedExactMatchEvaluator,
 )
 from src.evalforge.evaluators.deterministic.json_schema import JsonSchemaEvaluator
 from src.evalforge.evaluators.deterministic.keywords import KeywordEvaluator
+from src.evalforge.evaluators.deterministic.numeric_tolerance import NumericToleranceEvaluator
 from src.evalforge.evaluators.deterministic.token_f1 import TokenF1Evaluator
 from src.evalforge.evaluators.llm_judge import LLMJudgeEvaluator
 from src.evalforge.evaluators.semantic import SemanticSimilarityEvaluator
@@ -43,6 +45,8 @@ class CaseRunner:
             "token_f1": TokenF1Evaluator(),
             "keyword_match": KeywordEvaluator(),
             "json_schema": JsonSchemaEvaluator(),
+            "code_execution": CodeExecutionEvaluator(),
+            "numeric_tolerance": NumericToleranceEvaluator(),
             "semantic_similarity": SemanticSimilarityEvaluator(),
         }
         # Model judge if enabled in metrics
@@ -108,8 +112,8 @@ class CaseRunner:
 
         # Dynamically determine metrics to evaluate
         metrics_to_run = list(self.config.metrics)
-        if assertion_type == "json_schema" and "json_schema" not in metrics_to_run:
-            metrics_to_run.append("json_schema")
+        if assertion_type in self.evaluators and assertion_type not in metrics_to_run:
+            metrics_to_run.append(assertion_type)
 
         all_passed = error_msg is None
 
@@ -155,15 +159,28 @@ class CaseRunner:
                 "details": {"error": error_msg} if error_msg else {},
             }
 
+        # Case pass/fail is determined by the specific target assertion
+        case_passed = error_msg is None
+        case_error = error_msg
+        if error_msg is not None:
+            case_passed = False
+        elif assertion_type in metrics_dict and isinstance(metrics_dict[assertion_type], dict):
+            case_passed = bool(metrics_dict[assertion_type].get("passed", False))
+            assertion_details = metrics_dict[assertion_type].get("details") or {}
+            if not case_passed and not case_error and assertion_details.get("error"):
+                case_error = str(assertion_details.get("error"))
+        else:
+            case_passed = all_passed
+
         case_res = CaseResult(
             evaluation_id=evaluation_id,
             case_id=case.id,
             prompt=case.prompt,
             expected_output=case.expected_output,
             actual_output=pred_text,
-            passed=all_passed,
+            passed=case_passed,
             latency_ms=latency_ms,
-            error_message=error_msg,
+            error_message=case_error,
         )
         case_res.metrics = metrics_dict
         if usage_dict:

@@ -10,7 +10,10 @@ from src.evalforge.core.errors import (
     NotFoundError,
 )
 from src.evalforge.core.logging import get_logger
-from src.evalforge.evaluators.aggregator import aggregate_scorecard
+from src.evalforge.evaluators.aggregator import (
+    aggregate_scorecard,
+    is_genuine_zero_score,
+)
 from src.evalforge.experiments.case_runner import CaseRunner
 from src.evalforge.experiments.concurrency import BoundedConcurrencyPool
 from src.evalforge.experiments.lifecycle import get_lifecycle_coordinator
@@ -143,7 +146,11 @@ class EvaluationService:
                 run = await repo.get(evaluation_id)
                 if not run:
                     return
-                if scorecard.total_cases > 0 and scorecard.passed_cases == 0 and scorecard.error_count == scorecard.total_cases:
+                if scorecard.total_cases == 0:
+                    run.status = "completed"
+                    run.pass_rate = None
+                    run.avg_latency_ms = None
+                elif scorecard.passed_cases == 0 and scorecard.error_count == scorecard.total_cases:
                     run.status = "failed"
                     run.error_message = run.error_message or "All test cases failed due to model inference errors or timeouts."
                     run.pass_rate = None
@@ -159,7 +166,10 @@ class EvaluationService:
                 run.completed_cases = scorecard.completed_cases
                 run.passed_cases = scorecard.passed_cases
                 run.failed_cases = scorecard.failed_cases
-                run.summary_metrics = scorecard.model_dump()
+
+                metrics_payload = scorecard.model_dump()
+                metrics_payload["is_genuine_zero"] = is_genuine_zero_score(scorecard)
+                run.summary_metrics = metrics_payload
                 run.completed_at = datetime.now(UTC)
 
                 await repo.add_case_results(evaluation_id, case_results)

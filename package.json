@@ -1,0 +1,26 @@
+{
+  "name": "evalforge20",
+  "version": "2.1.0",
+  "private": true,
+  "description": "EvalForge20 — Enterprise-Grade LLM and Agent Evaluation Platform",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/start_backend.mjs",
+    "dev:backend": "node scripts/start_backend.mjs",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "test": "pytest && npm test --prefix frontend",
+    "test:backend": "pytest",
+    "test:frontend": "npm test --prefix frontend"
+  },
+  "keywords": [
+    "llm-evaluation",
+    "ollama",
+    "benchmarks",
+    "ai-agents",
+    "fastapi",
+    "react"
+  ],
+  "author": "EvalForge Team",
+  "license": "Apache-2.0"
+}

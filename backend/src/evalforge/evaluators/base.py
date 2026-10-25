@@ -20,12 +20,25 @@ class MetricResult(BaseModel):
     )
 
 
+EvaluationResult = MetricResult
+
+
 class BaseEvaluator(ABC):
     """Abstract contract that all deterministic and model-assisted metrics adhere to."""
 
     name: str = "base"
     version: str = "1.0.0"
     is_deterministic: bool = True
+
+    def __init__(
+        self,
+        name: str | None = None,
+        description: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        if name:
+            self.name = name
+        self.description = description or ""
 
     @abstractmethod
     async def evaluate(

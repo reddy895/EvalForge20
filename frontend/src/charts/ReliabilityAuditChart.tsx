@@ -127,9 +127,9 @@ export const ReliabilityAuditChart: React.FC<ReliabilityAuditChartProps> = ({
               </div>
 
               {/* Grouped Bars Container */}
-              <div className="space-y-2 pt-1">
+              <div className="space-y-2 pt-1" data-testid="outcomes-breakdown">
                 {/* 1. Passed Series Bar */}
-                <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-3 text-xs" data-testid="outcome-passed-row">
                   <span className="w-16 shrink-0 font-mono text-[11px] text-[#68B587] flex items-center gap-1">
                     <CheckCircle2 size={12} /> Passed
                   </span>
@@ -137,15 +137,16 @@ export const ReliabilityAuditChart: React.FC<ReliabilityAuditChartProps> = ({
                     <div
                       className="h-3 bg-[#68B587] rounded transition-all duration-500"
                       style={{ width: `${Math.max(group.passed > 0 ? 2 : 0, passedWidth)}%` }}
+                      data-testid="outcome-passed-bar"
                     />
-                    <span className="ml-2 font-mono text-xs font-bold text-[#F5F0E7]">
+                    <span className="ml-2 font-mono text-xs font-bold text-[#F5F0E7]" data-testid="outcome-passed-count">
                       {group.passed}
                     </span>
                   </div>
                 </div>
 
                 {/* 2. Failed Series Bar */}
-                <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-3 text-xs" data-testid="outcome-failed-row">
                   <span className="w-16 shrink-0 font-mono text-[11px] text-[#E06C75] flex items-center gap-1">
                     <XCircle size={12} /> Failed
                   </span>
@@ -153,15 +154,16 @@ export const ReliabilityAuditChart: React.FC<ReliabilityAuditChartProps> = ({
                     <div
                       className="h-3 bg-[#E06C75] rounded transition-all duration-500"
                       style={{ width: `${Math.max(group.failed > 0 ? 2 : 0, failedWidth)}%` }}
+                      data-testid="outcome-failed-bar"
                     />
-                    <span className="ml-2 font-mono text-xs font-bold text-[#F5F0E7]">
+                    <span className="ml-2 font-mono text-xs font-bold text-[#F5F0E7]" data-testid="outcome-failed-count">
                       {group.failed}
                     </span>
                   </div>
                 </div>
 
                 {/* 3. Errored / Timeout Series Bar */}
-                <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-3 text-xs" data-testid="outcome-errored-row">
                   <span className="w-16 shrink-0 font-mono text-[11px] text-[#D9823B] flex items-center gap-1">
                     <Clock size={12} /> Errored
                   </span>
@@ -169,8 +171,9 @@ export const ReliabilityAuditChart: React.FC<ReliabilityAuditChartProps> = ({
                     <div
                       className="h-3 bg-[#D9823B] rounded transition-all duration-500"
                       style={{ width: `${Math.max(group.errored > 0 ? 2 : 0, erroredWidth)}%` }}
+                      data-testid="outcome-errored-bar"
                     />
-                    <span className="ml-2 font-mono text-xs font-bold text-[#F5F0E7]">
+                    <span className="ml-2 font-mono text-xs font-bold text-[#F5F0E7]" data-testid="outcome-errored-count">
                       {group.errored}
                     </span>
                   </div>

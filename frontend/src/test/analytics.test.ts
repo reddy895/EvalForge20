@@ -128,5 +128,47 @@ describe('Frontend API Service and Analytics Contract', () => {
     expect(dist[0].p95_ms).toBe(220.0);
     expect(dist[0].sample_count).toBe(8);
   });
+
+  it('handles empty evaluation dashboard state without fabricating zero metrics', async () => {
+    const emptyOverview: AnalyticsOverview = {
+      total_providers: 2,
+      healthy_providers: 1,
+      total_models: 2,
+      local_models_count: 2,
+      cloud_models_count: 0,
+      total_evaluation_runs: 0,
+      completed_runs: 0,
+      failed_runs: 0,
+      running_runs: 0,
+      cancelled_runs: 0,
+      overall_pass_rate_percent: 0.0,
+      overall_reliability_percent: 0.0,
+      average_latency_ms: 0.0,
+      total_test_cases_evaluated: 0,
+      total_benchmark_comparisons: 0,
+      total_agent_evaluations: 0,
+      recent_runs: [],
+      model_scorecards: [],
+      timestamp: new Date().toISOString(),
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => emptyOverview,
+    } as unknown as Response);
+
+    const data = await api.getAnalyticsOverview();
+    expect(data.total_evaluation_runs).toBe(0);
+    expect(data.completed_runs).toBe(0);
+    expect(data.total_test_cases_evaluated).toBe(0);
+    expect(data.recent_runs).toHaveLength(0);
+
+    // Verify format logic: when total_evaluation_runs === 0, UI displays '—' instead of '0.0%'
+    const displayPassRate = data.total_evaluation_runs === 0 ? '—' : `${data.overall_pass_rate_percent.toFixed(1)}%`;
+    const displayLatency = data.total_evaluation_runs === 0 ? '—' : `${data.average_latency_ms.toFixed(0)} ms`;
+
+    expect(displayPassRate).toBe('—');
+    expect(displayLatency).toBe('—');
+  });
 });
 

@@ -130,6 +130,21 @@ class OllamaClient:
                 raise ModelNotFoundError(payload.get("model", "unknown"), provider="ollama")
             response.raise_for_status()
             return response.json()
+        except httpx.HTTPStatusError as exc:
+            err_text = ""
+            try:
+                err_json = exc.response.json()
+                if isinstance(err_json, dict) and "error" in err_json:
+                    err_text = str(err_json["error"])
+            except Exception:
+                err_text = exc.response.text[:200] if exc.response else ""
+            if exc.response.status_code == 404:
+                raise ModelNotFoundError(payload.get("model", "unknown"), provider="ollama")
+            raise ProviderError(
+                f"Ollama returned HTTP {exc.response.status_code}: {err_text or exc}",
+                provider="ollama",
+                status_code=exc.response.status_code,
+            )
         except httpx.ConnectError:
             raise ProviderConnectionError(
                 "Could not connect to Ollama daemon.",
@@ -157,6 +172,21 @@ class OllamaClient:
                 raise ModelNotFoundError(payload.get("model", "unknown"), provider="ollama")
             response.raise_for_status()
             return response.json()
+        except httpx.HTTPStatusError as exc:
+            err_text = ""
+            try:
+                err_json = exc.response.json()
+                if isinstance(err_json, dict) and "error" in err_json:
+                    err_text = str(err_json["error"])
+            except Exception:
+                err_text = exc.response.text[:200] if exc.response else ""
+            if exc.response.status_code == 404:
+                raise ModelNotFoundError(payload.get("model", "unknown"), provider="ollama")
+            raise ProviderError(
+                f"Ollama returned HTTP {exc.response.status_code}: {err_text or exc}",
+                provider="ollama",
+                status_code=exc.response.status_code,
+            )
         except httpx.ConnectError:
             raise ProviderConnectionError(
                 "Could not connect to Ollama daemon.",

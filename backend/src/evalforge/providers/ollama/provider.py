@@ -163,6 +163,9 @@ class OllamaProvider(BaseProvider):
                 raw_response = await self.client.generate(payload)
             response_text = raw_response.get("response", "")
 
+        if "error" in raw_response and not response_text:
+            raise ProviderError(f"Ollama inference error: {raw_response['error']}", provider=self.name)
+
         wall_duration_ms = (time.perf_counter() - start_time) * 1000
 
         # Extract token usage if provided by Ollama

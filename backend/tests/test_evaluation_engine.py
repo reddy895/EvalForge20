@@ -253,3 +253,75 @@ def test_multi_model_distinct_evaluations_via_api() -> None:
         assert len(det_a["results"]) == 2
         assert len(det_b["results"]) == 2
 
+
+@pytest.mark.asyncio
+async def test_evaluation_engine_marks_failed_status_when_all_cases_drop_connection() -> None:
+    """When all cases encounter provider network failure, run status becomes 'failed' and pass_rate is null."""
+    from unittest.mock import AsyncMock, MagicMock
+    from src.evalforge.providers.base import BaseProvider
+    from src.evalforge.providers.registry import get_provider_registry
+    from src.evalforge.services.evaluation_service import EvaluationService
+    from src.evalforge.storage.database import get_session_factory
+    from src.evalforge.storage.models.evaluation import EvaluationRun
+    from src.evalforge.storage.repositories.evaluation_repo import EvaluationRepository
+
+    class FailingProvider(BaseProvider):
+        def __init__(self) -> None:
+            super().__init__(name="failing_test_provider", display_name="Failing Provider")
+
+        async def generate(self, request: Any) -> Any:
+            raise ConnectionRefusedError("Could not connect to model daemon at 127.0.0.1:11434")
+
+        async def health_check(self) -> bool:
+            return False
+
+        async def list_models(self) -> list[Any]:
+            return []
+
+        async def get_model_capabilities(self, model_id: str) -> Any:
+            return None
+
+    # Register provider
+    reg = get_provider_registry()
+    fail_prov = FailingProvider()
+    reg.register("failing_test_provider", fail_prov)
+
+    # Setup snapshot with 2 cases
+    tc1 = FrozenTestCase(id="c1", prompt="Prompt 1", expected_output="Expected 1")
+    tc2 = FrozenTestCase(id="c2", prompt="Prompt 2", expected_output="Expected 2")
+    snapshot = create_dataset_snapshot(Dataset(name="Failure Test", version=1))
+    snapshot.cases = [tc1, tc2]
+
+    # Create run record
+    session_factory = get_session_factory()
+    run_id = f"test-fail-{uuid.uuid4().hex[:8]}"
+    async with session_factory() as session:
+        repo = EvaluationRepository(session)
+        run = EvaluationRun(
+            id=run_id,
+            name="Failing Network Test Run",
+            model_id="failing-model",
+            provider="failing_test_provider",
+            status="queued",
+            total_cases=2,
+        )
+        await repo.add(run)
+        await session.commit()
+
+    # Execute background task
+    cfg = EvaluationConfig(metrics=["exact_match"], concurrency=1)
+    await EvaluationService._execute_evaluation_task(
+        run_id, snapshot, "failing-model", "failing_test_provider", cfg
+    )
+
+    # Verify run state in database
+    async with session_factory() as session:
+        repo = EvaluationRepository(session)
+        finished_run = await repo.get(run_id)
+        assert finished_run is not None
+        assert finished_run.status == "failed"
+        assert finished_run.pass_rate is None  # Must NOT be 0.0 synthetic score
+        assert finished_run.avg_latency_ms is None
+        assert finished_run.error_message is not None
+        assert "inference error" in finished_run.error_message.lower() or "timeout" in finished_run.error_message.lower()
+

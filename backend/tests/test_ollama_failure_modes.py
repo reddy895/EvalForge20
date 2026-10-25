@@ -57,6 +57,19 @@ class TestOllamaFailureModes:
             await provider.generate(req)
 
     @pytest.mark.asyncio
+    async def test_inference_error_payload_raises_provider_error(self) -> None:
+        """When Ollama returns a JSON response containing an error key, ProviderError is raised."""
+        from src.evalforge.core.errors import ProviderError
+        mock_client = MagicMock()
+        mock_client.generate = AsyncMock(return_value={"error": "cuda out of memory", "response": ""})
+        provider = OllamaProvider(client=mock_client)
+
+        req = InferenceRequest(model="qwen2.5:1.5b", prompt="Hello")
+        with pytest.raises(ProviderError) as exc_info:
+            await provider.generate(req)
+        assert "cuda out of memory" in str(exc_info.value)
+
+    @pytest.mark.asyncio
     async def test_local_binary_detection_when_daemon_stopped(self) -> None:
         """When local binary is present but server is down, readiness probe indicates installed_not_running."""
         mock_client = MagicMock()

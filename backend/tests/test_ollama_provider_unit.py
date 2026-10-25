@@ -194,3 +194,34 @@ class TestOllamaProviderToolCalls:
         assert len(resp.tool_calls) == 1
         assert resp.tool_calls[0].name == "calculator"
         assert resp.tool_calls[0].arguments["expression"] == "25 * 4"
+
+    @pytest.mark.asyncio
+    async def test_check_model_readiness_distinguishes_timeout_and_refused(self) -> None:
+        from types import SimpleNamespace
+
+        # Timeout scenario
+        client_timeout = MagicMock()
+        client_timeout.diagnose = AsyncMock(return_value=SimpleNamespace(
+            model_ready=False,
+            connectivity_state="timeout",
+            remediation_hint="Connection timed out after 3.0s",
+            available_models=[],
+        ))
+        prov_timeout = OllamaProvider(client=client_timeout)
+        st_timeout = await prov_timeout.check_model_readiness("qwen2.5:1.5b")
+        assert st_timeout["ready"] is False
+        assert st_timeout["connectivity_state"] == "timeout"
+
+        # Connection refused scenario
+        client_refused = MagicMock()
+        client_refused.diagnose = AsyncMock(return_value=SimpleNamespace(
+            model_ready=False,
+            connectivity_state="connection_refused",
+            remediation_hint="Connection refused at http://localhost:11434",
+            available_models=[],
+        ))
+        prov_refused = OllamaProvider(client=client_refused)
+        st_refused = await prov_refused.check_model_readiness("qwen2.5:1.5b")
+        assert st_refused["ready"] is False
+        assert st_refused["connectivity_state"] == "connection_refused"
+

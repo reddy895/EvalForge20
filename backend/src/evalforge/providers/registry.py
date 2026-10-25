@@ -65,7 +65,21 @@ class ProviderRegistry:
 
     def get(self, name: str = "ollama") -> BaseProvider:
         """Resolve a provider instance by name (case-insensitive)."""
-        key = name.lower()
+        key = name.lower().strip()
+        aliases: dict[str, str] = {
+            "alibaba": "ollama",
+            "alibaba / qwen": "ollama",
+            "qwen": "ollama",
+            "meta": "ollama",
+            "meta / llama": "ollama",
+            "google": "gemini",
+            "google gemini": "gemini",
+            "azure_openai": "azure",
+            "aws_bedrock": "bedrock",
+            "local": "ollama",
+        }
+        key = aliases.get(key, key)
+
         if key in self._providers:
             return self._providers[key]
 

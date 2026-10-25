@@ -309,21 +309,24 @@ async def test_evaluation_engine_marks_failed_status_when_all_cases_drop_connect
         await session.commit()
 
     # Execute background task
-    cfg = EvaluationConfig(metrics=["exact_match"], concurrency=1)
-    await EvaluationService._execute_evaluation_task(
-        run_id, snapshot, "failing-model", "failing_test_provider", cfg
-    )
+    try:
+        cfg = EvaluationConfig(metrics=["exact_match"], concurrency=1)
+        await EvaluationService._execute_evaluation_task(
+            run_id, snapshot, "failing-model", "failing_test_provider", cfg
+        )
 
-    # Verify run state in database
-    async with session_factory() as session:
-        repo = EvaluationRepository(session)
-        finished_run = await repo.get(run_id)
-        assert finished_run is not None
-        assert finished_run.status == "failed"
-        assert finished_run.pass_rate is None  # Must NOT be 0.0 synthetic score
-        assert finished_run.avg_latency_ms is None
-        assert finished_run.error_message is not None
-        assert "inference error" in finished_run.error_message.lower() or "timeout" in finished_run.error_message.lower()
+        # Verify run state in database
+        async with session_factory() as session:
+            repo = EvaluationRepository(session)
+            finished_run = await repo.get(run_id)
+            assert finished_run is not None
+            assert finished_run.status == "failed"
+            assert finished_run.pass_rate is None  # Must NOT be 0.0 synthetic score
+            assert finished_run.avg_latency_ms is None
+            assert finished_run.error_message is not None
+            assert "inference error" in finished_run.error_message.lower() or "timeout" in finished_run.error_message.lower()
+    finally:
+        reg.unregister("failing_test_provider")
 
 
 @pytest.mark.asyncio
@@ -383,20 +386,23 @@ async def test_evaluation_engine_marks_completed_with_errors_when_partial_failur
         await repo.add(run)
         await session.commit()
 
-    cfg = EvaluationConfig(metrics=["exact_match"], concurrency=1)
-    await EvaluationService._execute_evaluation_task(
-        run_id, snapshot, "flaky-model", "flaky_test_provider", cfg
-    )
+    try:
+        cfg = EvaluationConfig(metrics=["exact_match"], concurrency=1)
+        await EvaluationService._execute_evaluation_task(
+            run_id, snapshot, "flaky-model", "flaky_test_provider", cfg
+        )
 
-    async with session_factory() as session:
-        repo = EvaluationRepository(session)
-        finished_run = await repo.get_with_results(run_id)
-        assert finished_run is not None
-        assert finished_run.status == "completed_with_errors"
-        assert finished_run.pass_rate == 0.5
-        assert finished_run.passed_cases == 1
-        assert finished_run.failed_cases == 1
-        assert len(finished_run.results) == 2
-        assert any(r.passed is True for r in finished_run.results)
-        assert any(r.error_message and "timed out" in r.error_message.lower() for r in finished_run.results)
+        async with session_factory() as session:
+            repo = EvaluationRepository(session)
+            finished_run = await repo.get_with_results(run_id)
+            assert finished_run is not None
+            assert finished_run.status == "completed_with_errors"
+            assert finished_run.pass_rate == 0.5
+            assert finished_run.passed_cases == 1
+            assert finished_run.failed_cases == 1
+            assert len(finished_run.results) == 2
+            assert any(r.passed is True for r in finished_run.results)
+            assert any(r.error_message and "timed out" in r.error_message.lower() for r in finished_run.results)
+    finally:
+        reg.unregister("flaky_test_provider")
 

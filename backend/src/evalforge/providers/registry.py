@@ -59,6 +59,11 @@ class ProviderRegistry:
         """Register an active provider instance."""
         self._providers[name.lower()] = provider
 
+    def unregister(self, name: str) -> None:
+        """Remove a provider registration by name."""
+        self._providers.pop(name.lower(), None)
+        self._factories.pop(name.lower(), None)
+
     def register_factory(self, name: str, factory: Callable[[], BaseProvider]) -> None:
         """Register a lazy provider constructor."""
         self._factories[name.lower()] = factory

@@ -66,6 +66,20 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
   const selectedModel =
     availableModels.find((m) => m.id === selectedModelId) || availableModels[0] || SAMPLE_MODELS[0];
 
+  const isSelectedModelReady = React.useMemo(() => {
+    if (!selectedModel) return true;
+    if (selectedModel.id.startsWith('mock-')) return true;
+    if (!selectedModel.is_local && !selectedModel.provider?.toLowerCase().includes('ollama')) return true;
+    if (!ollamaStatus.reachable) return false;
+    const tag = (selectedModel.model_identifier || selectedModel.id).toLowerCase();
+    return (
+      selectedModel.is_installed ||
+      ollamaStatus.availableModels.some(
+        (m) => m.toLowerCase() === tag || m.toLowerCase().startsWith(tag) || tag.startsWith(m.toLowerCase())
+      )
+    );
+  }, [selectedModel, ollamaStatus.reachable, ollamaStatus.availableModels]);
+
 
   const benchmarksList = [
     {
@@ -239,15 +253,27 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           {ollamaStatus.reachable ? (
             <Badge variant="installed" size="md">
-              Ollama Connected ({ollamaStatus.version || 'Local'}) • {ollamaStatus.installedModels} Models
+              Ollama Online ({ollamaStatus.version || 'Local'}) • {ollamaStatus.installedModels} Models
             </Badge>
           ) : (
             <Badge variant="warning" size="md">
-              Ollama Offline • Local Inference Disabled
+              Ollama Offline • {ollamaStatus.connectivityState.replace(/_/g, ' ')}
             </Badge>
+          )}
+
+          {selectedModel && !selectedModel.id.startsWith('mock-') && (
+            isSelectedModelReady ? (
+              <Badge variant="installed" size="md">
+                Model Ready: {selectedModel.model_identifier || selectedModel.id}
+              </Badge>
+            ) : (
+              <Badge variant="warning" size="md">
+                Model Missing: Run `ollama pull {selectedModel.model_identifier || selectedModel.id}`
+              </Badge>
+            )
           )}
         </div>
       </div>

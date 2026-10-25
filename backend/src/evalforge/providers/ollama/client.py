@@ -47,6 +47,16 @@ class OllamaClient:
             logger.warning("Ollama health check encounter unexpected error: %s", exc)
             return False
 
+    async def diagnose(self, requested_model: str | None = None) -> Any:
+        """Run comprehensive connectivity diagnostics against configured endpoint."""
+        from src.evalforge.providers.ollama.diagnostics import run_ollama_diagnostics
+
+        return await run_ollama_diagnostics(
+            base_url=self.base_url,
+            requested_model=requested_model,
+            timeout=min(self.timeout, 5.0),
+        )
+
     async def get_version(self) -> str:
         """Fetch version string from Ollama daemon."""
         client = self._get_client()

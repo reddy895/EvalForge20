@@ -47,6 +47,16 @@ SAFE_BUILTINS: dict[str, Any] = {
     "None": None,
 }
 
+
+def _safe_import(name: str, *args: Any, **kwargs: Any) -> Any:
+    allowed_modules = {"math", "string", "re", "collections", "itertools", "functools", "time"}
+    if name in allowed_modules:
+        return __import__(name, *args, **kwargs)
+    raise ImportError(f"Import of '{name}' is prohibited in sandbox.")
+
+
+SAFE_BUILTINS["__import__"] = _safe_import
+
 # Standard test fixtures for algorithmic benchmark problems
 BENCHMARK_TEST_SUITES: dict[str, list[dict[str, Any]]] = {
     "reverse_string": [
@@ -84,6 +94,22 @@ def extract_python_code(text: str) -> str:
     if match:
         return match.group(1).strip()
     return text.strip()
+def validate_code_security(tree: ast.AST) -> tuple[bool, str | None]:
+    """Inspect AST for prohibited imports and dangerous builtins."""
+    disallowed_calls = {"eval", "exec", "compile", "__import__", "open"}
+    allowed_modules = {"math", "string", "re", "collections", "itertools", "functools", "time"}
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name not in allowed_modules:
+                        return False, f"Security violation: import of module '{alias.name}' is prohibited."
+            elif isinstance(node, ast.ImportFrom) and node.module not in allowed_modules:
+                return False, f"Security violation: import from module '{node.module}' is prohibited."
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            if node.func.id in disallowed_calls:
+                return False, f"Security violation: call to '{node.func.id}' is prohibited."
+    return True, None
 
 
 def run_sandboxed_sync(
@@ -103,29 +129,12 @@ def run_sandboxed_sync(
         }
 
     # 2. Check for disallowed AST nodes (e.g. imports)
-    disallowed_calls = {"eval", "exec", "compile", "__import__", "open"}
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
-            # Allow common safe modules (math, string, re)
-            allowed_modules = {"math", "string", "re", "collections", "itertools", "functools"}
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    if alias.name not in allowed_modules:
-                        return False, 0.0, {
-                            "error": f"Security violation: import of module '{alias.name}' is prohibited.",
-                            "error_type": "security_violation",
-                        }
-            elif isinstance(node, ast.ImportFrom) and node.module not in allowed_modules:
-                return False, 0.0, {
-                    "error": f"Security violation: import from module '{node.module}' is prohibited.",
-                    "error_type": "security_violation",
-                }
-        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-            if node.func.id in disallowed_calls:
-                return False, 0.0, {
-                    "error": f"Security violation: call to '{node.func.id}' is prohibited.",
-                    "error_type": "security_violation",
-                }
+    is_safe, sec_err = validate_code_security(tree)
+    if not is_safe:
+        return False, 0.0, {
+            "error": sec_err,
+            "error_type": "security_violation",
+        }
 
     # 3. Create sandboxed execution scope
     safe_env: dict[str, Any] = {"__builtins__": SAFE_BUILTINS}
@@ -247,15 +256,7 @@ class CodeExecutionEvaluator(BaseEvaluator):
         if not test_suite:
             # If no specific suite found, execute syntax verification and reference exact match fallback
             try:
-                ast.parse(code_str)
-                is_valid = bool(fn_name and fn_name in code_str)
-                return EvaluationResult(
-                    name=self.name,
-                    score=1.0 if is_valid else 0.5,
-                    passed=is_valid,
-                    method="syntax_and_structure_validation",
-                    details={"is_valid_syntax": True, "function_name": fn_name},
-                )
+                tree = ast.parse(code_str)
             except SyntaxError as e:
                 return EvaluationResult(
                     name=self.name,
@@ -264,6 +265,23 @@ class CodeExecutionEvaluator(BaseEvaluator):
                     method="syntax_validation",
                     details={"error": f"SyntaxError: {e.msg}", "error_type": "invalid_code"},
                 )
+            is_safe, sec_err = validate_code_security(tree)
+            if not is_safe:
+                return EvaluationResult(
+                    name=self.name,
+                    score=0.0,
+                    passed=False,
+                    method="security_validation",
+                    details={"error": sec_err, "error_type": "security_violation"},
+                )
+            is_valid = bool(fn_name and fn_name in code_str)
+            return EvaluationResult(
+                name=self.name,
+                score=1.0 if is_valid else 0.5,
+                passed=is_valid,
+                method="syntax_and_structure_validation",
+                details={"is_valid_syntax": True, "function_name": fn_name},
+            )
 
         # Run with timeout to prevent infinite loops
         try:

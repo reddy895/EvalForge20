@@ -275,6 +275,16 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
               </Badge>
             )
           )}
+
+          <button
+            onClick={() => ollamaStatus.refresh()}
+            disabled={ollamaStatus.loading}
+            title={ollamaStatus.lastChecked ? `Last checked: ${ollamaStatus.lastChecked}. Click to re-check.` : 'Re-check Ollama status'}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono bg-[#242522] border border-[#41413B] text-[#A6A49D] hover:text-[#F5F0E7] hover:border-[#D9823B] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <RotateCcw size={12} className={ollamaStatus.loading ? 'animate-spin text-[#D9823B]' : ''} />
+            <span>{ollamaStatus.lastChecked ? ollamaStatus.lastChecked : 'Check Status'}</span>
+          </button>
         </div>
       </div>
 

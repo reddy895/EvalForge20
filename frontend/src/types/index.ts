@@ -105,7 +105,7 @@ export interface EvaluationRun {
   benchmark_name: string;
   status: 'idle' | 'queued' | 'running' | 'completed' | 'completed_with_errors' | 'failed' | 'cancelled';
   is_demo: boolean;
-  pass_rate: number;
+  pass_rate: number | null;
   passed_cases: number;
   total_cases: number;
   avg_latency_ms?: number;

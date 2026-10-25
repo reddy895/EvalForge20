@@ -165,10 +165,9 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
         model_id: runDetails.model_id,
         model_name: selectedModel.name,
         benchmark_id: selectedBenchmarkId,
-        benchmark_name: benchmarksList.find((b) => b.id === selectedBenchmarkId)?.name || 'Benchmark Suite',
-        status: runDetails.status === 'completed' ? 'completed' : 'failed',
+        status: runDetails.status || (runDetails.error_message ? 'failed' : 'completed'),
         is_demo: false,
-        pass_rate: Number((runDetails.pass_rate || 0).toFixed(2)),
+        pass_rate: runDetails.pass_rate !== null && runDetails.pass_rate !== undefined ? Number(runDetails.pass_rate.toFixed(2)) : (runDetails.status === 'failed' ? null : 0),
         passed_cases: runDetails.passed_cases || 0,
         total_cases: runDetails.total_cases || sampleLimit,
         avg_latency_ms: avgLat !== null && avgLat !== undefined ? Number(avgLat.toFixed(1)) : undefined,
@@ -453,9 +452,17 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 p-6 border-b border-[#41413B] bg-[#191A18]/30 font-mono text-xs">
             <div>
               <span className="text-[#A6A49D] block text-[11px] mb-1">Pass Rate</span>
-              <span className="text-[#68B587] font-bold text-base">
-                {(activeRunResult.pass_rate * 100).toFixed(0)}%
-              </span>
+              {activeRunResult.status === 'failed' && activeRunResult.pass_rate === null ? (
+                <span className="text-[#E26D5C] font-bold text-base">Failed</span>
+              ) : activeRunResult.pass_rate === 0 ? (
+                <span className="text-[#A6A49D] font-bold text-base" title="Evaluation completed with genuine 0% pass rate">
+                  0% <span className="text-[10px] text-[#A6A49D] font-normal font-sans">(Genuine 0)</span>
+                </span>
+              ) : (
+                <span className="text-[#68B587] font-bold text-base">
+                  {((activeRunResult.pass_rate ?? 0) * 100).toFixed(0)}%
+                </span>
+              )}
             </div>
             <div>
               <span className="text-[#A6A49D] block text-[11px] mb-1">Passed Cases</span>

@@ -40,6 +40,11 @@ class EvaluationScorecard(BaseModel):
     metric_averages: dict[str, float] = Field(default_factory=dict)
 
 
+def is_genuine_zero_score(scorecard: EvaluationScorecard) -> bool:
+    """Return True if the evaluation executed completely and achieved a legitimate 0.0 pass rate."""
+    return scorecard.total_cases > 0 and scorecard.passed_cases == 0 and scorecard.error_count == 0
+
+
 def compute_percentile(values: list[float], percentile: float) -> float:
     """Calculate percentile from a sorted list of float values using linear interpolation."""
     if not values:

@@ -39,56 +39,75 @@ Enterprise-grade, local-first evaluation, benchmarking, and analytics platform f
 
 ## Quick Start & Running the Services
 
-> [!IMPORTANT]
-> The **backend** is a Python 3.11+ FastAPI service (`uvicorn`), while the **frontend** is a Node.js React application (`npm`). Never run `npm run dev` inside the `backend/` directory.
+### Prerequisites
+- **Node.js**: v18+ and `npm`
+- **Python**: 3.11+ (managed via `uv` or system Python)
+- **Ollama**: Local LLM server ([ollama.com](https://ollama.com))
 
-### 1. Running Both Backend & Frontend (Single Command)
+---
+
+### 1. Starting the Backend
 
 From the **repository root directory**:
 ```bash
-./scripts/run_dev.sh
+npm run dev
 ```
-This script launches the FastAPI backend at `http://127.0.0.1:8000` and Vite dev server at `http://localhost:5173`.
+This executes `node scripts/start_backend.mjs`, which:
+- Detects `uv` or active Python virtual environments.
+- Verifies port availability (defaults to `8000`, configurable via `PORT`).
+- Gracefully handles startup and shutdown signals (`SIGINT`, `SIGTERM`).
+- Launches the FastAPI backend with hot reloading at `http://localhost:8000`.
+
+#### Verifying Backend Health Endpoints
+- **API Readiness Check**: `curl http://localhost:8000/health` (Reports `{ "status": "ok", "app": "EvalForge20" }`)
+- **Ollama Provider Diagnostics**: `curl http://localhost:8000/api/v1/health` (Reports detailed 8-state Ollama connectivity, model counts, and latency)
+- **Interactive OpenAPI Documentation**: `http://localhost:8000/docs`
 
 ---
 
-### 2. Running the Backend Standalone (FastAPI / Python)
+### 2. Setting Up Ollama & Pulling Models
 
-Make sure local Ollama is running (`ollama serve`) if evaluating local models.
-
-#### Option A: Using `uv` (Recommended)
-From the repository root:
+1. Start the Ollama daemon:
 ```bash
-cd backend
-uv run uvicorn src.evalforge.main:app --app-dir . --reload --port 8000
+ollama serve
 ```
-
-#### Option B: Using Python Virtual Environment (`venv`)
-From the repository root:
+2. In a separate terminal, pull a lightweight model for evaluation:
 ```bash
-# Activate virtual environment
-source .venv/bin/activate
-
-# Start uvicorn server
-uvicorn src.evalforge.main:app --app-dir backend --host 127.0.0.1 --port 8000 --reload
+ollama pull qwen2.5:1.5b
+# or a compact 0.5B model for rapid local testing:
+ollama pull qwen2.5:0.5b
 ```
-
-#### Verifying Backend Health
-Once running, verify the backend is healthy:
-- Health check: `curl http://127.0.0.1:8000/api/health`
-- Interactive OpenAPI Docs: `http://127.0.0.1:8000/docs`
+3. Verify models are installed:
+```bash
+ollama list
+```
 
 ---
 
-### 3. Running the Frontend Standalone (React / Node.js)
+### 3. Starting the Frontend
 
 From the repository root:
+```bash
+npm run dev:frontend
+```
+Or directly from the `frontend/` directory:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 Open `http://localhost:5173` in your browser.
+
+---
+
+### 4. Running Both Backend & Frontend Concurrently
+
+To start both services in parallel:
+```bash
+npm run dev:all
+# or using the shell wrapper:
+./scripts/run_dev.sh
+```
 
 ---
 

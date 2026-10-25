@@ -204,6 +204,12 @@ class OllamaProvider(BaseProvider):
         eval_dur_ms = round(eval_dur_ns / 1e6, 2) if eval_dur_ns is not None else None
         prompt_eval_dur_ms = round(prompt_eval_dur_ns / 1e6, 2) if prompt_eval_dur_ns is not None else None
 
+        phase_breakdown = {
+            "load_ms": load_dur_ms,
+            "prompt_eval_ms": prompt_eval_dur_ms,
+            "eval_ms": eval_dur_ms,
+        }
+
         return InferenceResponse(
             text=response_text,
             model=request.model,
@@ -225,6 +231,7 @@ class OllamaProvider(BaseProvider):
                 "wall_latency_ms": round(wall_duration_ms, 2),
                 "eval_count": completion_tokens,
                 "prompt_eval_count": prompt_tokens,
+                "phase_breakdown": phase_breakdown,
             },
         )
 

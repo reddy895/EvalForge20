@@ -177,7 +177,7 @@ def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
 
     return EvaluationScorecard(
         total_cases=total,
-        completed_cases=total,
+        completed_cases=max(0, total - error_count),
         passed_cases=passed_count,
         failed_cases=failed_count,
         pass_rate=pass_rate,

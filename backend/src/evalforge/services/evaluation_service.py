@@ -45,6 +45,10 @@ class EvaluationService:
         if not dataset.test_cases:
             raise DataValidationError(f"Dataset '{dataset.name}' has no test cases to evaluate.")
 
+        # Validate model identifier
+        if not request.model_id or not request.model_id.strip():
+            raise DataValidationError("Target model identifier must be specified.")
+
         # Validate provider
         provider_name = request.provider or "ollama"
         if request.model_id.startswith("mock-"):

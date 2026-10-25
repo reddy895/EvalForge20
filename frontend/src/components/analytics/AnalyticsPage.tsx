@@ -18,6 +18,7 @@ import {
   Calendar,
   Users,
   Award,
+  Play,
 } from 'lucide-react';
 
 interface AnalyticsPageProps {
@@ -136,6 +137,31 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
           </Button>
         </div>
       </div>
+
+      {/* Initial Empty State Onboarding Banner */}
+      {overview && overview.total_evaluation_runs === 0 && (
+        <div className="p-8 rounded-3xl bg-[#242522] border border-[#D9823B]/30 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#D9823B]/15 border border-[#D9823B]/30 flex items-center justify-center text-[#D9823B] shrink-0">
+              <Play size={24} className="fill-current" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <h3 className="text-base font-bold text-[#F5F0E7]">No evaluations recorded yet</h3>
+              <p className="text-xs text-[#A6A49D] max-w-xl">
+                Ready to verify local models? Launch the Evaluation Studio to run your first benchmark test suite against Ollama.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => onRouteChange('evaluate')}
+            iconRight={<Play size={14} className="fill-current" />}
+          >
+            Start First Evaluation
+          </Button>
+        </div>
+      )}
 
       {/* KPI Overview Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 font-mono">

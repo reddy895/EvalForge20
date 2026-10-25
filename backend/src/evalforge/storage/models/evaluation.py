@@ -85,7 +85,7 @@ class CaseResult(Base, UUIDPrimaryKeyMixin):
     expected_output: Mapped[str | None] = mapped_column(Text, nullable=True)
     actual_output: Mapped[str | None] = mapped_column(Text, nullable=True)
     passed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    latency_ms: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    latency_ms: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     token_usage_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     metrics_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)

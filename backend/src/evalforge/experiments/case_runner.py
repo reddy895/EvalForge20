@@ -122,7 +122,7 @@ class CaseRunner:
             if error_msg is not None:
                 metrics_dict[metric_name] = {
                     "name": metric_name,
-                    "score": 0.0,
+                    "score": None,
                     "passed": False,
                     "method": "inference_error",
                     "details": {"error": error_msg},
@@ -143,7 +143,7 @@ class CaseRunner:
                     logger.warning("Metric '%s' computation error: %s", metric_name, eval_exc)
                     metrics_dict[metric_name] = {
                         "name": metric_name,
-                        "score": 0.0,
+                        "score": None,
                         "passed": False,
                         "method": "evaluation_error",
                         "details": {"error": str(eval_exc)},

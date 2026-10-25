@@ -1,6 +1,7 @@
 """Database engine configuration and async session management."""
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import (
@@ -82,6 +83,43 @@ async def init_db() -> None:
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+        def _check_and_migrate_sqlite(sync_conn: Any) -> None:
+            try:
+                info = sync_conn.exec_driver_sql("PRAGMA table_info(case_results);").fetchall()
+                latency_col = next((c for c in info if c[1] == "latency_ms"), None)
+                if latency_col and latency_col[3] == 1:
+                    sync_conn.exec_driver_sql("PRAGMA foreign_keys=OFF;")
+                    sync_conn.exec_driver_sql("""
+                        CREATE TABLE case_results_new (
+                            evaluation_id VARCHAR(36) NOT NULL,
+                            case_id VARCHAR(36) NOT NULL,
+                            prompt TEXT NOT NULL,
+                            expected_output TEXT,
+                            actual_output TEXT,
+                            passed BOOLEAN NOT NULL,
+                            latency_ms FLOAT,
+                            token_usage_json TEXT,
+                            metrics_json TEXT,
+                            error_message TEXT,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                            id VARCHAR(36) NOT NULL,
+                            PRIMARY KEY (id),
+                            FOREIGN KEY(evaluation_id) REFERENCES evaluation_runs (id) ON DELETE CASCADE
+                        );
+                    """)
+                    sync_conn.exec_driver_sql("""
+                        INSERT INTO case_results_new SELECT evaluation_id, case_id, prompt, expected_output, actual_output, passed, latency_ms, token_usage_json, metrics_json, error_message, created_at, id FROM case_results;
+                    """)
+                    sync_conn.exec_driver_sql("DROP TABLE case_results;")
+                    sync_conn.exec_driver_sql("ALTER TABLE case_results_new RENAME TO case_results;")
+                    sync_conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_case_results_case_id ON case_results (case_id);")
+                    sync_conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_case_results_evaluation_id ON case_results (evaluation_id);")
+                    sync_conn.exec_driver_sql("PRAGMA foreign_keys=ON;")
+            except Exception:
+                pass
+
+        await conn.run_sync(_check_and_migrate_sqlite)
     logger.info("Database schema initialized successfully.")
 
     # Seed default providers and catalog models if table is empty

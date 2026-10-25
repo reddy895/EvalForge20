@@ -105,4 +105,34 @@ describe('Evaluation History and Export Utilities', () => {
     expect(parsed.metrics.pass_rate).toBe(0.85);
     expect(parsed.metrics.tokens_per_second).toBe(48.2);
   });
+
+  it('formats latency safely without fabricating 0 ms for null or unmeasured runs', () => {
+    const formatLatency = (lat: number | null | undefined): string => {
+      if (lat !== null && lat !== undefined && lat > 0) {
+        return `${lat.toFixed(1)} ms`;
+      }
+      return '—';
+    };
+
+    expect(formatLatency(142.5)).toBe('142.5 ms');
+    expect(formatLatency(null)).toBe('—');
+    expect(formatLatency(undefined)).toBe('—');
+    expect(formatLatency(0)).toBe('—');
+  });
+
+  it('distinguishes completed genuine zero score from failed evaluation outcome', () => {
+    const formatRunOutcome = (run: { status: string; pass_rate: number | null }): string => {
+      if (run.status === 'failed' && run.pass_rate === null) {
+        return 'Failed';
+      }
+      if (run.status === 'completed' && run.pass_rate === 0) {
+        return '0% (Genuine 0)';
+      }
+      return `${((run.pass_rate ?? 0) * 100).toFixed(0)}%`;
+    };
+
+    expect(formatRunOutcome({ status: 'completed', pass_rate: 0 })).toBe('0% (Genuine 0)');
+    expect(formatRunOutcome({ status: 'failed', pass_rate: null })).toBe('Failed');
+    expect(formatRunOutcome({ status: 'completed', pass_rate: 0.85 })).toBe('85%');
+  });
 });

@@ -121,8 +121,8 @@ export const AccuracyQualityChart: React.FC<AccuracyQualityChartProps> = ({
 
                   {/* Horizontal Bar (0 to 100%) */}
                   <div
-                    className={`h-4 bg-gradient-to-r ${barColor} rounded-lg transition-all duration-500 relative group-hover:brightness-110`}
-                    style={{ width: `${Math.max(2, item.accuracy)}%` }}
+                    className={`h-4 bg-gradient-to-r ${barColor} rounded-lg transition-all duration-500 relative group-hover:brightness-110 ${item.accuracy === 0 ? 'opacity-40' : ''}`}
+                    style={{ width: `${item.accuracy === 0 ? 0 : Math.max(2, item.accuracy)}%` }}
                   />
 
                   {/* Score & Evaluated Cases count */}
@@ -131,7 +131,7 @@ export const AccuracyQualityChart: React.FC<AccuracyQualityChartProps> = ({
                       {item.accuracy.toFixed(1)}%
                     </span>
                     <span className="text-[11px] text-[#A7A29A]">
-                      ({item.passedCount}/{item.totalCount} passed)
+                      ({item.passedCount}/{item.totalCount} passed{item.accuracy === 0 ? ' • 0% score' : ''})
                     </span>
                   </div>
                 </div>

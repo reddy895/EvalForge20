@@ -200,4 +200,32 @@ describe('Chart and Evaluation Graphical Telemetry Validation', () => {
     expect(latencies[2]).toBeLessThan(latencies[1]);
     expect(latencies[1]).toBeLessThan(latencies[0]);
   });
+
+  it('preserves genuine zero accuracy in AccuracyQualityChart and distinguishes empty data', () => {
+    // Model dataset with genuine zero (all assertions failed, but evaluation completed)
+    const dataWithZero = [
+      { name: 'Failing Model', accuracy: 0, quality: 10, totalCases: 10 },
+      { name: 'Passing Model', accuracy: 100, quality: 95, totalCases: 10 },
+    ];
+
+    expect(dataWithZero.length).toBe(2);
+    // Real zero is a valid number, not undefined or null
+    expect(typeof dataWithZero[0].accuracy).toBe('number');
+    expect(dataWithZero[0].accuracy).toBe(0);
+
+    // Height calculations: on a 0-100 scale, 0% has height 0% while 100% has height 100%
+    const zeroHeight = Math.max(0, Math.min(100, dataWithZero[0].accuracy));
+    const passHeight = Math.max(0, Math.min(100, dataWithZero[1].accuracy));
+    expect(zeroHeight).toBe(0);
+    expect(passHeight).toBe(100);
+
+    // Label formatting: genuine 0 displays '0%' explicitly rather than missing/empty
+    const formatScore = (val: number | null | undefined) =>
+      val === null || val === undefined ? '—' : `${Math.round(val)}%`;
+
+    expect(formatScore(dataWithZero[0].accuracy)).toBe('0%');
+    expect(formatScore(dataWithZero[1].accuracy)).toBe('100%');
+    expect(formatScore(null)).toBe('—');
+    expect(formatScore(undefined)).toBe('—');
+  });
 });

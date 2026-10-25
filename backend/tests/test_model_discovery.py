@@ -112,3 +112,45 @@ def test_api_models_endpoint() -> None:
             assert h_data["connectivity_state"] == "requested_model_missing"
             assert "ollama pull" in (h_data["suggestion"] or "").lower()
 
+
+@pytest.mark.asyncio
+async def test_dynamic_discovery_synchronizes_installed_flag_with_ollama_tags() -> None:
+    """When Ollama lists models, matching catalog models are marked installed and direct tags are registered."""
+    from unittest.mock import AsyncMock, MagicMock
+    from src.evalforge.providers.registry import get_provider_registry
+    from src.evalforge.providers.schemas import ModelInfo
+    from src.evalforge.services.model_service import ModelService
+
+    mock_ollama = MagicMock()
+    mock_ollama.list_models = AsyncMock(return_value=[
+        ModelInfo(
+            id="qwen2.5:1.5b",
+            name="Qwen 2.5 1.5B (Local)",
+            provider="Ollama (Local)",
+            size_bytes=980000000,
+            parameter_size="1.54B",
+            quantization="Q4_K_M",
+            is_local=True,
+            is_installed=True,
+        )
+    ])
+
+    reg = get_provider_registry()
+    orig_get = reg.get
+    try:
+        reg.get = lambda name: mock_ollama if name == "ollama" else orig_get(name)
+        discovered = await ModelService.get_all_models(force_refresh=True)
+
+        # 1. Matching catalog model marked as installed
+        qwen_cat = next((m for m in discovered if m.id == "qwen-2.5-1.5b-instruct"), None)
+        assert qwen_cat is not None
+        assert qwen_cat.is_installed is True
+
+        # 2. Direct tag registered and selectable
+        tag_model = next((m for m in discovered if m.id == "qwen2.5:1.5b"), None)
+        assert tag_model is not None
+        assert tag_model.is_installed is True
+        assert tag_model.parameter_size == "1.54B"
+    finally:
+        reg.get = orig_get
+

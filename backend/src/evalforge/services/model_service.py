@@ -504,6 +504,7 @@ class ModelService:
                         cat_model.is_local = True
                         cat_model.size_bytes = om.size_bytes or cat_model.size_bytes
                         cat_model.quantization = om.quantization or cat_model.quantization
+                        cat_model.parameter_size = om.parameter_size or getattr(cat_model, "parameter_size", None)
                         cat_model.parameter_count = om.parameter_size or cat_model.parameter_count
                         matched = True
                         # Also expose under direct Ollama tag so user can select by raw tag
@@ -512,6 +513,7 @@ class ModelService:
                             tag_alias.id = om.id
                             tag_alias.name = om.name or om.id
                             tag_alias.model_identifier = om.id
+                            tag_alias.parameter_size = om.parameter_size or getattr(cat_model, "parameter_size", None)
                             tag_alias.is_installed = True
                             models_by_id[om.id] = tag_alias
                         break

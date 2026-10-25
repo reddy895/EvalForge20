@@ -42,6 +42,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
     logger.info("Initiating graceful shutdown...")
+    # Cleanly cancel any in-flight evaluations
+    try:
+        from src.evalforge.experiments.lifecycle import get_lifecycle_coordinator
+
+        coordinator = get_lifecycle_coordinator()
+        for eval_id in list(coordinator._cancellation_events.keys()):
+            coordinator.cancel_run(eval_id)
+    except Exception as exc:
+        logger.warning("Error cancelling runs during shutdown: %s", exc)
+
     # Cleanly close database connection pools and client sessions
     try:
         from src.evalforge.providers.ollama.client import close_ollama_client

@@ -63,6 +63,19 @@ class EvaluationService:
             provider_name = "mock"
         self.registry.get(provider_name)
 
+        # Prevent rapid duplicate submissions for identical model and dataset
+        duplicate = await self.eval_repo.find_recent_duplicate(
+            request.model_id, dataset.id, within_seconds=5
+        )
+        if duplicate:
+            logger.info(
+                "Duplicate evaluation request throttled for model '%s' and dataset '%s' (reusing %s)",
+                request.model_id,
+                dataset.id,
+                duplicate.id,
+            )
+            return duplicate
+
         config = request.config or EvaluationConfig()
         # For local Ollama inference, constrain concurrency to prevent resource thrashing
         if provider_name == "ollama" and config.concurrency > 2:

@@ -1,6 +1,6 @@
 """EvaluationRun and CaseResult specialized repository."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,6 +22,28 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
             select(EvaluationRun)
             .where(EvaluationRun.id == evaluation_id)
             .options(selectinload(EvaluationRun.results))
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def find_recent_duplicate(
+        self,
+        model_id: str,
+        dataset_id: str,
+        within_seconds: int = 5,
+    ) -> EvaluationRun | None:
+        """Detect rapid identical duplicate evaluation requests created within a short debounce window."""
+        cutoff = datetime.now(UTC) - timedelta(seconds=within_seconds)
+        stmt = (
+            select(EvaluationRun)
+            .where(
+                EvaluationRun.model_id == model_id,
+                EvaluationRun.dataset_id == dataset_id,
+                EvaluationRun.status.in_(["queued", "running"]),
+                EvaluationRun.created_at >= cutoff,
+            )
+            .order_by(desc(EvaluationRun.created_at))
+            .limit(1)
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()

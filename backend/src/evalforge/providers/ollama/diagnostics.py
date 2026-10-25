@@ -92,13 +92,22 @@ async def run_ollama_diagnostics(
 
             if resp.status_code != 200:
                 # State 8: Invalid configuration / unsupported endpoint
+                hint = (
+                    f"Ollama endpoint {clean_url}/api/tags returned 404. Ensure your server is a compatible Ollama instance."
+                    if resp.status_code == 404
+                    else (
+                        f"Ollama daemon returned internal server error HTTP {resp.status_code}. Check daemon logs."
+                        if resp.status_code >= 500
+                        else f"Verify that {clean_url} points to an authentic Ollama REST API instance."
+                    )
+                )
                 return OllamaDiagnosticReport(
                     reachable=False,
                     connectivity_state="invalid_config",
                     base_url=clean_url,
                     installed_locally=installed_locally,
                     error_message=f"Endpoint returned HTTP {resp.status_code}",
-                    remediation_hint=f"Verify that {clean_url} points to an authentic Ollama REST API instance.",
+                    remediation_hint=hint,
                     last_checked_at=now_iso,
                 )
 

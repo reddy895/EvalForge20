@@ -30,3 +30,22 @@ def test_start_backend_custom_port_and_host() -> None:
     assert "Host: 0.0.0.0" in res.stdout
     assert "Port: 8085" in res.stdout
     assert "Listening URL: http://0.0.0.0:8085" in res.stdout
+
+
+def test_port_conflict_detection() -> None:
+    """Verify that port conflict is caught and reported with a clean error message."""
+    import socket
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        bound_port = s.getsockname()[1]
+
+        res = subprocess.run(
+            ["node", "scripts/start_backend.mjs", "--port", str(bound_port)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        assert res.returncode == 1
+        assert f"Port {bound_port} is currently in use" in res.stderr
+

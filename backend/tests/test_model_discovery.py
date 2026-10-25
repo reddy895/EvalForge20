@@ -100,3 +100,15 @@ def test_api_models_endpoint() -> None:
         assert refresh_data["success"] is True
         assert refresh_data["total_models"] >= 10
         assert "refreshed_at" in refresh_data
+
+        # Test model readiness probe in ollama health endpoint
+        h_resp = client.get("/api/providers/ollama/health?model=nonexistent_test_model_xyz")
+        assert h_resp.status_code == 200
+        h_data = h_resp.json()
+        assert "connectivity_state" in h_data
+        assert "model_ready" in h_data
+        if h_data["reachable"]:
+            assert h_data["model_ready"] is False
+            assert h_data["connectivity_state"] == "requested_model_missing"
+            assert "ollama pull" in (h_data["suggestion"] or "").lower()
+

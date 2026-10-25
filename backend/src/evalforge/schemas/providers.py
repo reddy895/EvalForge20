@@ -21,8 +21,14 @@ class OllamaHealthCheckResponse(BaseModel):
     status: str
     base_url: str
     reachable: bool
+    connectivity_state: str = "reachable"
     version: str | None = None
+    installed_locally: bool = False
+    installed_models_count: int = 0
+    available_models: list[str] = Field(default_factory=list)
+    model_ready: bool = False
     suggestion: str | None = None
+    last_checked_at: str | None = None
 
 
 class OllamaModelsListResponse(BaseModel):

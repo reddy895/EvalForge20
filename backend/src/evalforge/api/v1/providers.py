@@ -5,7 +5,6 @@ from typing import Any
 from fastapi import APIRouter, Depends
 
 from src.evalforge.core.config import Settings, get_settings
-from src.evalforge.providers.ollama.client import get_ollama_client
 from src.evalforge.providers.registry import get_provider_registry
 from src.evalforge.providers.schemas import InferenceRequest
 from src.evalforge.schemas.providers import (
@@ -59,31 +58,29 @@ async def get_provider(provider_name: str) -> dict[str, Any]:
 
 @providers_router.get("/ollama/health", response_model=OllamaHealthCheckResponse)
 async def check_ollama_health(
+    model: str | None = None,
     settings: Settings = Depends(get_settings),
 ) -> OllamaHealthCheckResponse:
-    """Check connectivity to the local Ollama daemon and inspect its version."""
-    client = get_ollama_client()
-    reachable = await client.check_health()
-    version = None
-    suggestion = None
+    """Check connectivity to the local Ollama daemon, probe version, and test model readiness."""
+    from src.evalforge.providers.ollama.diagnostics import run_ollama_diagnostics
 
-    if reachable:
-        try:
-            version = await client.get_version()
-        except Exception:
-            version = "unknown"
-    else:
-        suggestion = (
-            f"Ollama daemon is not reachable at {settings.OLLAMA_BASE_URL}. "
-            "Please install Ollama (https://ollama.com) and start it with 'ollama serve'."
-        )
+    diag = await run_ollama_diagnostics(
+        base_url=settings.OLLAMA_BASE_URL,
+        requested_model=model,
+    )
 
     return OllamaHealthCheckResponse(
-        status="healthy" if reachable else "unreachable",
-        base_url=settings.OLLAMA_BASE_URL,
-        reachable=reachable,
-        version=version,
-        suggestion=suggestion,
+        status="healthy" if diag.reachable else "unreachable",
+        base_url=diag.base_url,
+        reachable=diag.reachable,
+        connectivity_state=diag.connectivity_state,
+        version=diag.version,
+        installed_locally=diag.installed_locally,
+        installed_models_count=diag.installed_models_count,
+        available_models=diag.available_models,
+        model_ready=diag.model_ready,
+        suggestion=diag.remediation_hint,
+        last_checked_at=diag.last_checked_at,
     )
 
 

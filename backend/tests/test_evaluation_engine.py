@@ -325,3 +325,78 @@ async def test_evaluation_engine_marks_failed_status_when_all_cases_drop_connect
         assert finished_run.error_message is not None
         assert "inference error" in finished_run.error_message.lower() or "timeout" in finished_run.error_message.lower()
 
+
+@pytest.mark.asyncio
+async def test_evaluation_engine_marks_completed_with_errors_when_partial_failure() -> None:
+    """When some test cases succeed and others fail inference, run becomes 'completed_with_errors'."""
+    from src.evalforge.providers.base import BaseProvider
+    from src.evalforge.providers.registry import get_provider_registry
+    from src.evalforge.providers.schemas import InferenceResponse
+    from src.evalforge.services.evaluation_service import EvaluationService
+    from src.evalforge.storage.database import get_session_factory
+    from src.evalforge.storage.models.evaluation import EvaluationRun
+    from src.evalforge.storage.repositories.evaluation_repo import EvaluationRepository
+
+    class FlakyProvider(BaseProvider):
+        def __init__(self) -> None:
+            super().__init__(name="flaky_test_provider", display_name="Flaky Provider")
+
+        async def generate(self, request: Any) -> Any:
+            if "fail" in request.prompt.lower():
+                raise TimeoutError("Inference timed out after 30s")
+            return InferenceResponse(
+                text="Expected Output",
+                model=request.model,
+                provider=self.name,
+                latency_ms=150.0,
+            )
+
+        async def health_check(self) -> bool:
+            return True
+
+        async def list_models(self) -> list[Any]:
+            return []
+
+        async def get_model_capabilities(self, model_id: str) -> Any:
+            return None
+
+    reg = get_provider_registry()
+    reg.register("flaky_test_provider", FlakyProvider())
+
+    tc1 = FrozenTestCase(id="c1", prompt="Successful prompt", expected_output="Expected Output")
+    tc2 = FrozenTestCase(id="c2", prompt="This will fail due to timeout", expected_output="Expected Output")
+    snapshot = create_dataset_snapshot(Dataset(name="Partial Failure Dataset", version=1))
+    snapshot.cases = [tc1, tc2]
+
+    session_factory = get_session_factory()
+    run_id = f"test-flaky-{uuid.uuid4().hex[:8]}"
+    async with session_factory() as session:
+        repo = EvaluationRepository(session)
+        run = EvaluationRun(
+            id=run_id,
+            name="Flaky Partial Failure Test Run",
+            model_id="flaky-model",
+            provider="flaky_test_provider",
+            status="queued",
+            total_cases=2,
+        )
+        await repo.add(run)
+        await session.commit()
+
+    cfg = EvaluationConfig(metrics=["exact_match"], concurrency=1)
+    await EvaluationService._execute_evaluation_task(
+        run_id, snapshot, "flaky-model", "flaky_test_provider", cfg
+    )
+
+    async with session_factory() as session:
+        repo = EvaluationRepository(session)
+        finished_run = await repo.get_with_results(run_id)
+        assert finished_run is not None
+        assert finished_run.status == "completed_with_errors"
+        assert finished_run.pass_rate == 0.5
+        assert finished_run.passed_cases == 1
+        assert finished_run.failed_cases == 1
+        assert len(finished_run.results) == 2
+        assert any(r.passed is True for r in finished_run.results)
+        assert any(r.error_message and "timed out" in r.error_message.lower() for r in finished_run.results)
+

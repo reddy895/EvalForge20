@@ -142,38 +142,38 @@ class EvaluationService:
             scorecard = aggregate_scorecard(case_results)
 
             async with session_factory() as session:
-                repo = EvaluationRepository(session)
-                run = await repo.get(evaluation_id)
-                if not run:
-                    return
-                if scorecard.total_cases == 0:
-                    run.status = "completed"
-                    run.pass_rate = None
-                    run.avg_latency_ms = None
-                elif scorecard.passed_cases == 0 and scorecard.error_count == scorecard.total_cases:
-                    run.status = "failed"
-                    run.error_message = run.error_message or "All test cases failed due to model inference errors or timeouts."
-                    run.pass_rate = None
-                    run.avg_latency_ms = None
-                elif scorecard.error_count > 0:
-                    run.status = "completed_with_errors"
-                    run.pass_rate = scorecard.pass_rate
-                    run.avg_latency_ms = scorecard.avg_latency_ms
-                else:
-                    run.status = "completed"
-                    run.pass_rate = scorecard.pass_rate
-                    run.avg_latency_ms = scorecard.avg_latency_ms
-                run.completed_cases = scorecard.completed_cases
-                run.passed_cases = scorecard.passed_cases
-                run.failed_cases = scorecard.failed_cases
+                async with session.begin():
+                    repo = EvaluationRepository(session)
+                    run = await repo.get(evaluation_id)
+                    if not run:
+                        return
+                    if scorecard.total_cases == 0:
+                        run.status = "completed"
+                        run.pass_rate = None
+                        run.avg_latency_ms = None
+                    elif scorecard.passed_cases == 0 and scorecard.error_count == scorecard.total_cases:
+                        run.status = "failed"
+                        run.error_message = run.error_message or "All test cases failed due to model inference errors or timeouts."
+                        run.pass_rate = None
+                        run.avg_latency_ms = None
+                    elif scorecard.error_count > 0:
+                        run.status = "completed_with_errors"
+                        run.pass_rate = scorecard.pass_rate
+                        run.avg_latency_ms = scorecard.avg_latency_ms
+                    else:
+                        run.status = "completed"
+                        run.pass_rate = scorecard.pass_rate
+                        run.avg_latency_ms = scorecard.avg_latency_ms
+                    run.completed_cases = scorecard.completed_cases
+                    run.passed_cases = scorecard.passed_cases
+                    run.failed_cases = scorecard.failed_cases
 
-                metrics_payload = scorecard.model_dump()
-                metrics_payload["is_genuine_zero"] = is_genuine_zero_score(scorecard)
-                run.summary_metrics = metrics_payload
-                run.completed_at = datetime.now(UTC)
+                    metrics_payload = scorecard.model_dump()
+                    metrics_payload["is_genuine_zero"] = is_genuine_zero_score(scorecard)
+                    run.summary_metrics = metrics_payload
+                    run.completed_at = datetime.now(UTC)
 
-                await repo.add_case_results(evaluation_id, case_results)
-                await session.commit()
+                    await repo.add_case_results(evaluation_id, case_results)
 
             logger.info(
                 "Evaluation '%s' finished with pass rate %.2f", evaluation_id, scorecard.pass_rate

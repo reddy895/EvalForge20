@@ -144,11 +144,24 @@ class EvaluationService:
             # Check if cancelled during run
             if cancel_event.is_set():
                 async with session_factory() as session:
-                    repo = EvaluationRepository(session)
-                    await repo.update_status(evaluation_id, "cancelled")
-                    if case_results:
-                        await repo.add_case_results(evaluation_id, case_results)
-                    await session.commit()
+                    async with session.begin():
+                        repo = EvaluationRepository(session)
+                        run = await repo.get(evaluation_id)
+                        if run:
+                            run.status = "cancelled"
+                            run.completed_cases = len(case_results)
+                            run.completed_at = datetime.now(UTC)
+                            if case_results:
+                                partial_scorecard = aggregate_scorecard(case_results)
+                                run.pass_rate = partial_scorecard.pass_rate
+                                run.passed_cases = partial_scorecard.passed_cases
+                                run.failed_cases = partial_scorecard.failed_cases
+                                run.avg_latency_ms = partial_scorecard.avg_latency_ms
+                                metrics_payload = partial_scorecard.model_dump()
+                                metrics_payload["is_genuine_zero"] = is_genuine_zero_score(partial_scorecard)
+                                run.summary_metrics = metrics_payload
+                                await repo.add_case_results(evaluation_id, case_results)
+                logger.info("Evaluation '%s' cancelled; saved %d partial case results", evaluation_id, len(case_results))
                 return
 
             # Compute aggregate scorecard

@@ -1,5 +1,6 @@
 """Ollama connectivity probe, 8-state diagnosis, and setup advisor."""
 
+import os
 import shutil
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -39,6 +40,7 @@ async def run_ollama_diagnostics(
     now_iso = datetime.now(UTC).isoformat()
     clean_url = (base_url or "").strip().rstrip("/")
     installed_locally = bool(shutil.which("ollama"))
+    is_local_host = any(h in clean_url.lower() for h in ("localhost", "127.0.0.1", "0.0.0.0", "::1"))
 
     # State 8: Invalid configuration / unsupported endpoint
     if not clean_url.startswith(("http://", "https://")):
@@ -68,7 +70,7 @@ async def run_ollama_diagnostics(
                     last_checked_at=now_iso,
                 )
             except (httpx.ConnectError, ConnectionRefusedError) as exc:
-                if installed_locally:
+                if installed_locally and is_local_host:
                     # State 2: Installed locally but not running
                     return OllamaDiagnosticReport(
                         reachable=False,

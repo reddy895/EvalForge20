@@ -70,9 +70,10 @@ class OllamaProvider(BaseProvider):
             model_to_use = model_to_use[7:].strip()
         else:
             try:
-                from src.evalforge.services.model_service import VERIFIED_CATALOG_MODELS
-                for cm in VERIFIED_CATALOG_MODELS:
-                    if cm.id == model_to_use and cm.model_identifier:
+                from src.evalforge.services.model_service import ModelService, VERIFIED_CATALOG_MODELS
+                models_to_check = await ModelService.get_all_models() if hasattr(ModelService, "get_all_models") else VERIFIED_CATALOG_MODELS
+                for cm in models_to_check:
+                    if (cm.id == model_to_use or cm.name == model_to_use) and cm.model_identifier:
                         model_to_use = cm.model_identifier
                         break
             except Exception:

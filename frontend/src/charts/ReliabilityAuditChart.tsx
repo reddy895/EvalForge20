@@ -55,7 +55,7 @@ export const ReliabilityAuditChart: React.FC<ReliabilityAuditChartProps> = ({
   if (totalCasesAll === 0) {
     return (
       <div className="p-8 bg-[#1F201D] rounded-3xl border border-white/5 flex flex-col items-center justify-center text-center space-y-3 min-h-[260px]">
-        <div className="w-10 h-10 rounded-2xl bg-[#D9823B]/10 text-[#D9823B] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-2xl bg-[#0D9488]/10 text-[#14B8A6] flex items-center justify-center">
           <AlertTriangle size={20} />
         </div>
         <div className="space-y-1">
@@ -83,20 +83,20 @@ export const ReliabilityAuditChart: React.FC<ReliabilityAuditChartProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h4 className="text-sm font-semibold text-[#F5F0E7] flex items-center gap-2">
-            <CheckCircle2 size={16} className="text-[#68B587]" />
+            <CheckCircle2 size={16} className="text-[#14B8A6]" />
             {title}
           </h4>
           <p className="text-xs text-[#A7A29A] mt-0.5">{description}</p>
         </div>
         <div className="flex items-center gap-4 text-xs font-mono">
-          <span className="flex items-center gap-1.5 text-[#68B587]">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#68B587]" /> Passed
+          <span className="flex items-center gap-1.5 text-[#14B8A6]">
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#0D9488]" /> Passed
           </span>
-          <span className="flex items-center gap-1.5 text-[#E06C75]">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#E06C75]" /> Failed
+          <span className="flex items-center gap-1.5 text-[#D66D60]">
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#D66D60]" /> Failed
           </span>
-          <span className="flex items-center gap-1.5 text-[#D9823B]">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#D9823B]" /> Errored
+          <span className="flex items-center gap-1.5 text-[#A6A49D]">
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#A6A49D]" /> Errored
           </span>
         </div>
       </div>
@@ -135,7 +135,7 @@ export const ReliabilityAuditChart: React.FC<ReliabilityAuditChartProps> = ({
                   </span>
                   <div className="flex-1 relative flex items-center h-6 bg-[#1F201D] rounded-lg px-2 border border-white/5 overflow-hidden">
                     <div
-                      className="h-3 bg-[#68B587] rounded transition-all duration-500"
+                      className="h-3 bg-[#0D9488] rounded transition-all duration-500"
                       style={{ width: `${Math.max(group.passed > 0 ? 2 : 0, passedWidth)}%` }}
                       data-testid="outcome-passed-bar"
                     />
@@ -147,12 +147,12 @@ export const ReliabilityAuditChart: React.FC<ReliabilityAuditChartProps> = ({
 
                 {/* 2. Failed Series Bar */}
                 <div className="flex items-center gap-3 text-xs" data-testid="outcome-failed-row">
-                  <span className="w-16 shrink-0 font-mono text-[11px] text-[#E06C75] flex items-center gap-1">
+                  <span className="w-16 shrink-0 font-mono text-[11px] text-[#D66D60] flex items-center gap-1">
                     <XCircle size={12} /> Failed
                   </span>
                   <div className="flex-1 relative flex items-center h-6 bg-[#1F201D] rounded-lg px-2 border border-white/5 overflow-hidden">
                     <div
-                      className="h-3 bg-[#E06C75] rounded transition-all duration-500"
+                      className="h-3 bg-[#D66D60] rounded transition-all duration-500"
                       style={{ width: `${Math.max(group.failed > 0 ? 2 : 0, failedWidth)}%` }}
                       data-testid="outcome-failed-bar"
                     />
@@ -164,12 +164,12 @@ export const ReliabilityAuditChart: React.FC<ReliabilityAuditChartProps> = ({
 
                 {/* 3. Errored / Timeout Series Bar */}
                 <div className="flex items-center gap-3 text-xs" data-testid="outcome-errored-row">
-                  <span className="w-16 shrink-0 font-mono text-[11px] text-[#D9823B] flex items-center gap-1">
+                  <span className="w-16 shrink-0 font-mono text-[11px] text-[#A6A49D] flex items-center gap-1">
                     <Clock size={12} /> Errored
                   </span>
                   <div className="flex-1 relative flex items-center h-6 bg-[#1F201D] rounded-lg px-2 border border-white/5 overflow-hidden">
                     <div
-                      className="h-3 bg-[#D9823B] rounded transition-all duration-500"
+                      className="h-3 bg-[#A6A49D] rounded transition-all duration-500"
                       style={{ width: `${Math.max(group.errored > 0 ? 2 : 0, erroredWidth)}%` }}
                       data-testid="outcome-errored-bar"
                     />

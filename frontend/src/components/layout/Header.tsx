@@ -35,12 +35,12 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onRouteChange }) =
           onClick={() => handleNavClick('landing')}
           className="flex items-center gap-2.5 outline-none group cursor-pointer text-left"
         >
-          <div className="w-8 h-8 rounded-full bg-[#242522] border border-[#41413B] flex items-center justify-center text-[#D9823B] group-hover:border-[#D9823B] transition-colors">
+          <div className="w-8 h-8 rounded-full bg-[#242522] border border-[#41413B] flex items-center justify-center text-[#14B8A6] group-hover:border-[#14B8A6] transition-colors">
             <Cpu size={18} className="transform group-hover:scale-105 transition-transform" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold tracking-tight text-[#F5F0E7]">
-              Eval<span className="text-[#D9823B]">Forge</span>20
+              Eval<span className="text-[#14B8A6]">Forge</span>20
             </span>
             <span className="text-[10px] text-[#A6A49D] font-mono leading-none">v2.0 • Local-First</span>
           </div>
@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onRouteChange }) =
                     : 'text-[#A6A49D] hover:text-[#F5F0E7] hover:bg-white/5 border border-transparent'
                 }`}
               >
-                <span className={isActive ? 'text-[#D9823B]' : 'text-current opacity-70'}>
+                <span className={isActive ? 'text-[#14B8A6]' : 'text-current opacity-70'}>
                   {item.icon}
                 </span>
                 <span>{item.label}</span>
@@ -107,11 +107,12 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onRouteChange }) =
                     : 'text-[#A6A49D] hover:text-[#F5F0E7] hover:bg-[#242522]'
                 }`}
               >
-                <span className={isActive ? 'text-[#D9823B]' : 'text-current'}>{item.icon}</span>
+                <span className={isActive ? 'text-[#14B8A6]' : 'text-current'}>{item.icon}</span>
                 <span>{item.label}</span>
               </button>
             );
           })}
+
           <div className="pt-2 border-t border-[#41413B] mt-1">
             <Button
               size="sm"

@@ -68,7 +68,7 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#191A18] text-[#F5F0E7] selection:bg-[#D9823B] selection:text-[#191A18]">
+    <div className="min-h-screen flex flex-col bg-[#191A18] text-[#F5F0E7] selection:bg-[#0D9488] selection:text-[#191A18]">
       {/* Top Floating Header */}
       <Header currentRoute={currentRoute} onRouteChange={handleRouteChange} />
 

@@ -5,7 +5,10 @@
   --color-graphite: #242522;
   --color-charcoal: #191A18;
   --color-warm-ivory: #F5F0E7;
-  --color-burnt-orange: #D9823B;
+  --color-teal: #0D9488;
+  --color-teal-light: #2DD4BF;
+  --color-teal-dark: #0F766E;
+  --color-burnt-orange: #0D9488;
   --color-muted-gray: #A6A49D;
   --color-soft-border: #41413B;
 
@@ -29,21 +32,21 @@
   --text-primary: #F5F0E7;      /* Warm Ivory primary text on dark surfaces */
   --text-secondary: #A6A49D;    /* Muted Gray secondary text */
   --text-muted: #78766F;        /* Subtle tertiary text */
-  --text-inverse: #191A18;      /* Deep Charcoal for text on orange/ivory */
+  --text-inverse: #191A18;      /* Deep Charcoal for text on accent/ivory */
 
-  /* Primary Accent — Burnt Orange */
-  --accent-primary: #D9823B;
-  --accent-hover: #E5914C;
-  --accent-active: #C4722D;
-  --accent-subtle: rgba(217, 130, 59, 0.12);
-  --accent-border: rgba(217, 130, 59, 0.4);
-  --accent-text: #F0A05E;
+  /* Primary Accent — Teal */
+  --accent-primary: #0D9488;
+  --accent-hover: #14B8A6;
+  --accent-active: #0F766E;
+  --accent-subtle: rgba(13, 148, 136, 0.12);
+  --accent-border: rgba(20, 184, 166, 0.4);
+  --accent-text: #2DD4BF;
 
   /* Soft Borders */
   --border-default: #41413B;
   --border-subtle: #2C2D29;
   --border-strong: #54544D;
-  --border-focus: #D9823B;
+  --border-focus: #14B8A6;
 
   /* Semantic Feedback Tokens */
   --status-success: #7EA96E;

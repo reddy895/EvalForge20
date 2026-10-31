@@ -243,7 +243,7 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[#41413B]">
         <div className="flex flex-col gap-2">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#14B8A6]">
             <Terminal size={14} />
             <span>INTERACTIVE TEST RUNNER</span>
           </div>
@@ -283,9 +283,9 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
             onClick={() => ollamaStatus.refresh()}
             disabled={ollamaStatus.loading}
             title={ollamaStatus.lastChecked ? `Last checked: ${ollamaStatus.lastChecked}. Click to re-check.` : 'Re-check Ollama status'}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono bg-[#242522] border border-[#41413B] text-[#A6A49D] hover:text-[#F5F0E7] hover:border-[#D9823B] transition-colors cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono bg-[#242522] border border-[#41413B] text-[#A6A49D] hover:text-[#F5F0E7] hover:border-[#14B8A6] transition-colors cursor-pointer disabled:opacity-50"
           >
-            <RotateCcw size={12} className={ollamaStatus.loading ? 'animate-spin text-[#D9823B]' : ''} />
+            <RotateCcw size={12} className={ollamaStatus.loading ? 'animate-spin text-[#14B8A6]' : ''} />
             <span>{ollamaStatus.lastChecked ? ollamaStatus.lastChecked : 'Check Status'}</span>
           </button>
         </div>
@@ -309,7 +309,7 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
       {/* Studio Configuration Card */}
       <div className="p-6 rounded-3xl bg-[#242522] border border-[#41413B] shadow-md flex flex-col gap-6">
         <h3 className="text-base font-semibold text-[#F5F0E7] flex items-center gap-2">
-          <Sparkles size={16} className="text-[#D9823B]" /> Configure Evaluation Workload
+          <Sparkles size={16} className="text-[#14B8A6]" /> Configure Evaluation Workload
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -319,7 +319,7 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
             <select
               value={selectedModelId}
               onChange={(e) => setSelectedModelId(e.target.value)}
-              className="h-11 px-4 rounded-xl bg-[#191A18] border border-[#41413B] text-[#F5F0E7] text-sm outline-none focus:border-[#D9823B] cursor-pointer"
+              className="h-11 px-4 rounded-xl bg-[#191A18] border border-[#41413B] text-[#F5F0E7] text-sm outline-none focus:border-[#14B8A6] cursor-pointer"
             >
               {availableModels.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -341,7 +341,7 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
             <select
               value={selectedBenchmarkId}
               onChange={(e) => setSelectedBenchmarkId(e.target.value)}
-              className="h-11 px-4 rounded-xl bg-[#191A18] border border-[#41413B] text-[#F5F0E7] text-sm outline-none focus:border-[#D9823B] cursor-pointer"
+              className="h-11 px-4 rounded-xl bg-[#191A18] border border-[#41413B] text-[#F5F0E7] text-sm outline-none focus:border-[#14B8A6] cursor-pointer"
             >
               {benchmarksList.map((bm) => (
                 <option key={bm.id} value={bm.id}>
@@ -365,7 +365,7 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
                     onClick={() => setSampleLimit(limit)}
                     className={`flex-1 h-11 rounded-xl text-xs font-mono font-medium transition-all cursor-pointer ${
                       sampleLimit === limit
-                        ? 'bg-[#D9823B] text-[#191A18] font-bold shadow-sm'
+                        ? 'bg-[#0D9488] text-[#191A18] font-bold shadow-sm'
                         : 'bg-[#191A18] text-[#A6A49D] hover:text-[#F5F0E7] border border-[#41413B]'
                     }`}
                   >
@@ -392,23 +392,24 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
       {/* Running State Indicator */}
       {isRunning && (
         <div className="p-8 rounded-3xl bg-[#242522] border border-[#41413B] flex flex-col items-center text-center gap-4 animate-in fade-in">
-          <div className="w-12 h-12 rounded-full bg-[#191A18] border border-[#41413B] flex items-center justify-center text-[#D9823B]">
+          <div className="w-12 h-12 rounded-full bg-[#191A18] border border-[#41413B] flex items-center justify-center text-[#14B8A6]">
             <span className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
           </div>
           <h3 className="text-base font-semibold text-[#F5F0E7]">
             Executing Test Suite against {selectedModel.name}...
           </h3>
-          <p className="text-xs font-mono text-[#D9823B]">
+          <p className="text-xs font-mono text-[#14B8A6]">
             {progressStatus || 'Running inference and computing metric assertions...'}
           </p>
           <div className="w-full max-w-md h-2 rounded-full bg-[#191A18] overflow-hidden mt-2">
             <div
-              className="h-full bg-gradient-to-r from-[#D9823B] to-[#F5F0E7] transition-all duration-300 rounded-full"
+              className="h-full bg-gradient-to-r from-[#0D9488] to-[#14B8A6] transition-all duration-300 rounded-full"
               style={{ width: `${currentProgress}%` }}
             />
           </div>
         </div>
       )}
+
 
       {/* Active Run Results Display */}
       {activeRunResult && !isRunning && (
@@ -488,14 +489,14 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
             </div>
             <div>
               <span className="text-[#A6A49D] block text-[11px] mb-1">Generation Speed</span>
-              <span className="text-[#D9823B] font-bold text-base">
+              <span className="text-[#14B8A6] font-bold text-base">
                 {activeRunResult.tokens_per_second !== undefined ? `${activeRunResult.tokens_per_second} tok/s` : '—'}
               </span>
             </div>
             <div>
               <span className="text-[#A6A49D] block text-[11px] mb-1">Status</span>
               <span className={`font-semibold uppercase flex items-center gap-1 ${
-                activeRunResult.status === 'completed' ? 'text-[#68B587]' : 'text-[#E26D5C]'
+                activeRunResult.status === 'completed' ? 'text-[#14B8A6]' : 'text-[#E26D5C]'
               }`}>
                 {activeRunResult.status === 'completed' ? (
                   <><CheckCircle2 size={14} /> Completed</>
@@ -526,15 +527,15 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[#D9823B] font-semibold">
+                      <span className="font-mono text-[#14B8A6] font-semibold">
                         Case {String(i + 1).padStart(2, '0')}
                       </span>
                       <span className="font-mono text-[#A6A49D]">({c.case_id})</span>
                       <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
                         c.assertion_type === 'code_execution'
-                          ? 'bg-[#68B587]/15 text-[#68B587] border-[#68B587]/30'
+                          ? 'bg-[#0D9488]/15 text-[#14B8A6] border-[#0D9488]/30'
                           : c.assertion_type === 'numeric_tolerance'
-                          ? 'bg-[#D9823B]/15 text-[#D9823B] border-[#D9823B]/30'
+                          ? 'bg-[#0D9488]/15 text-[#14B8A6] border-[#0D9488]/30'
                           : c.assertion_type === 'json_schema'
                           ? 'bg-[#4B88A2]/15 text-[#4B88A2] border-[#4B88A2]/30'
                           : 'bg-[#242522] text-[#A6A49D] border-[#41413B]'
@@ -573,10 +574,10 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <span className="text-[11px] font-mono text-[#68B587]">
+                      <span className="text-[11px] font-mono text-[#14B8A6]">
                         Actual Model Response:
                       </span>
-                      <pre className="font-mono text-xs text-[#68B587] bg-[#242522] p-3 rounded-xl border border-[#41413B]/60 whitespace-pre-wrap">
+                      <pre className="font-mono text-xs text-[#14B8A6] bg-[#242522] p-3 rounded-xl border border-[#41413B]/60 whitespace-pre-wrap">
                         {c.actual_output}
                       </pre>
                     </div>
@@ -591,7 +592,7 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
             <span>This run has been saved to your local audit history.</span>
             <button
               onClick={() => onRouteChange('history')}
-              className="text-[#D9823B] hover:underline font-medium cursor-pointer"
+              className="text-[#14B8A6] hover:underline font-medium cursor-pointer"
             >
               View All Past Runs in History &rarr;
             </button>
@@ -601,3 +602,4 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
     </div>
   );
 };
+

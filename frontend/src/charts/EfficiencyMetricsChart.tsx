@@ -26,7 +26,7 @@ export const EfficiencyMetricsChart: React.FC<EfficiencyMetricsChartProps> = ({
   if (!rows || rows.length === 0) {
     return (
       <div className="p-8 bg-[#1F201D] rounded-3xl border border-white/5 flex flex-col items-center justify-center text-center space-y-3 min-h-[260px]">
-        <div className="w-10 h-10 rounded-2xl bg-[#68B587]/10 text-[#68B587] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-2xl bg-[#0D9488]/10 text-[#14B8A6] flex items-center justify-center">
           <Zap size={20} />
         </div>
         <div className="space-y-1">
@@ -61,14 +61,14 @@ export const EfficiencyMetricsChart: React.FC<EfficiencyMetricsChartProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h4 className="text-sm font-semibold text-[#F5F0E7] flex items-center gap-2">
-            <Zap size={16} className="text-[#68B587]" />
+            <Zap size={16} className="text-[#14B8A6]" />
             {title}
           </h4>
           <p className="text-xs text-[#A7A29A] mt-0.5">{description}</p>
         </div>
         <div className="flex items-center gap-4 text-xs font-mono">
-          <span className="flex items-center gap-1.5 text-[#68B587]">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#68B587]" /> Measured Throughput
+          <span className="flex items-center gap-1.5 text-[#14B8A6]">
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#0D9488]" /> Measured Throughput
           </span>
           <span className="text-[11px] text-[#A7A29A]">(Higher is faster)</span>
         </div>
@@ -110,11 +110,11 @@ export const EfficiencyMetricsChart: React.FC<EfficiencyMetricsChartProps> = ({
                   {hasValidThroughput ? (
                     <>
                       <div
-                        className="h-4 bg-gradient-to-r from-[#68B587] to-[#8CD5AA] rounded-lg transition-all duration-500 relative group-hover:brightness-110"
+                        className="h-4 bg-[#0D9488] rounded-lg transition-all duration-500 relative group-hover:brightness-110"
                         style={{ width: `${barWidth}%` }}
                       />
                       <div className="ml-3 flex items-center gap-2 font-mono text-xs z-10 whitespace-nowrap">
-                        <span className="font-bold text-[#68B587]">
+                        <span className="font-bold text-[#14B8A6]">
                           {row.tokensPerSecond!.toFixed(1)} <span className="text-[10px] text-[#A7A29A] font-normal">tok/s</span>
                         </span>
                         <span className="text-[10px] text-[#A7A29A]">
@@ -124,7 +124,7 @@ export const EfficiencyMetricsChart: React.FC<EfficiencyMetricsChartProps> = ({
                     </>
                   ) : (
                     <div className="flex items-center gap-1.5 text-[11px] text-[#A7A29A] font-mono z-10 px-1">
-                      <HelpCircle size={12} className="text-[#D9823B]" />
+                      <HelpCircle size={12} className="text-[#14B8A6]" />
                       <span>N/A — Provider does not expose token generation metadata</span>
                     </div>
                   )}

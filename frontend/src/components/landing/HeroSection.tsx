@@ -12,16 +12,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onRouteChange }) => {
   return (
     <section className="relative pt-16 pb-24 md:pt-24 md:pb-32 px-4 sm:px-6 lg:px-8 2xl:px-12 w-full overflow-hidden bg-tech-grid">
       {/* Subtle ambient backdrop radial gradients */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-[#D9823B]/10 via-[#68B587]/5 to-transparent blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-[#0D9488]/10 via-transparent to-transparent blur-3xl pointer-events-none -z-10" />
 
       <div className="w-full max-w-7xl mx-auto flex flex-col items-center text-center gap-10">
         {/* Release Pill Badge */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#242522]/90 border border-[#41413B] text-xs text-[#F5F0E7] shadow-sm backdrop-blur-md hover:border-[#D9823B]/60 transition-colors">
-          <span className="flex h-2 w-2 rounded-full bg-[#68B587] animate-pulse" />
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#242522]/90 border border-[#41413B] text-xs text-[#F5F0E7] shadow-sm backdrop-blur-md hover:border-[#0D9488]/60 transition-colors">
+          <span className="flex h-2 w-2 rounded-full bg-[#14B8A6] animate-pulse" />
           <span className="font-mono text-[11px] text-[#A6A49D]">EvalForge20 Engine v2.1</span>
           <span className="text-[#41413B]">|</span>
           <span className="text-[#F5F0E7] font-medium flex items-center gap-1.5">
-            Evidence-Backed Model Benchmarking <Sparkles size={12} className="text-[#D9823B]" />
+            Evidence-Backed Model Benchmarking <Sparkles size={12} className="text-[#14B8A6]" />
           </span>
         </div>
 
@@ -29,7 +29,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onRouteChange }) => {
         <div className="space-y-4 max-w-4xl">
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#F5F0E7] leading-[1.06]">
             Evaluate LLMs & AI Agents with{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D9823B] via-[#E5914C] to-[#68B587]">
+            <span className="text-[#14B8A6]">
               Reproducible Evidence
             </span>
           </h1>

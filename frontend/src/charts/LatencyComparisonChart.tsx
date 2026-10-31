@@ -37,7 +37,7 @@ export const LatencyComparisonChart: React.FC<LatencyComparisonChartProps> = ({
   if (validRecords.length === 0) {
     return (
       <div className="p-8 bg-[#1F201D] rounded-3xl border border-white/5 flex flex-col items-center justify-center text-center space-y-3 min-h-[260px]">
-        <div className="w-10 h-10 rounded-2xl bg-[#D9823B]/10 text-[#D9823B] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-2xl bg-[#0D9488]/10 text-[#14B8A6] flex items-center justify-center">
           <Clock size={20} />
         </div>
         <div className="space-y-1">
@@ -66,14 +66,14 @@ export const LatencyComparisonChart: React.FC<LatencyComparisonChartProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h4 className="text-sm font-semibold text-[#F5F0E7] flex items-center gap-2">
-            <Clock size={16} className="text-[#D9823B]" />
+            <Clock size={16} className="text-[#14B8A6]" />
             {title}
           </h4>
           <p className="text-xs text-[#A7A29A] mt-0.5">{description}</p>
         </div>
         <div className="flex items-center gap-4 text-xs font-mono">
           <span className="flex items-center gap-1.5 text-[#F5F0E7]">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#D9823B]" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#0D9488]" />
             Median (ms)
           </span>
           <span className="text-[11px] text-[#A7A29A]">(Lower is better)</span>
@@ -108,7 +108,7 @@ export const LatencyComparisonChart: React.FC<LatencyComparisonChartProps> = ({
 
                   {/* Horizontal Bar */}
                   <div
-                    className="h-3.5 bg-gradient-to-r from-[#D9823B] to-[#E5914C] rounded-lg transition-all duration-500 relative group-hover:brightness-110"
+                    className="h-3.5 bg-[#0D9488] rounded-lg transition-all duration-500 relative group-hover:brightness-110"
                     style={{ width: `${barWidth}%` }}
                   />
 

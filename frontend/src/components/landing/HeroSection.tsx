@@ -57,7 +57,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onRouteChange }) => {
             size="lg"
             variant="secondary"
             onClick={() => onRouteChange('models')}
-            iconLeft={<Terminal size={16} className="text-[#D9823B]" />}
+            iconLeft={<Terminal size={16} className="text-[#14B8A6]" />}
           >
             Explore Model Catalog
           </Button>
@@ -79,7 +79,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onRouteChange }) => {
             <span>Zero Cloud Leaks</span>
           </div>
           <div className="p-3 rounded-2xl bg-[#1F201D]/80 border border-white/5 flex items-center justify-center gap-2 text-center">
-            <Target size={16} className="text-[#D9823B] shrink-0" />
+            <Target size={16} className="text-[#14B8A6] shrink-0" />
             <span>Unit Assertions</span>
           </div>
           <div className="p-3 rounded-2xl bg-[#1F201D]/80 border border-white/5 flex items-center justify-center gap-2 text-center">
@@ -87,7 +87,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onRouteChange }) => {
             <span>Local Ollama + APIs</span>
           </div>
           <div className="p-3 rounded-2xl bg-[#1F201D]/80 border border-white/5 flex items-center justify-center gap-2 text-center">
-            <BarChart3 size={16} className="text-[#D9823B] shrink-0" />
+            <BarChart3 size={16} className="text-[#14B8A6] shrink-0" />
             <span>Evidence-Based 2D Metrics</span>
           </div>
         </div>

@@ -23,7 +23,7 @@ export const ComparisonPreviewSection: React.FC<ComparisonPreviewSectionProps> =
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div className="flex flex-col gap-3">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#14B8A6]">
             <GitCompare size={14} />
             <span>SIDE-BY-SIDE BENCHMARKING</span>
           </div>
@@ -102,7 +102,7 @@ export const ComparisonPreviewSection: React.FC<ComparisonPreviewSectionProps> =
           {/* Row 1: Parameters */}
           <div className="grid grid-cols-3 p-6 items-center hover:bg-white/[0.02] transition-colors">
             <div className="text-xs text-[#A6A49D] flex items-center gap-2">
-              <Cpu size={15} className="text-[#D9823B]" /> Parameter Size
+              <Cpu size={15} className="text-[#14B8A6]" /> Parameter Size
             </div>
             <div className="font-mono text-[#F5F0E7] font-semibold">{modelA.parameter_count}</div>
             <div className="font-mono text-[#F5F0E7] font-semibold pl-4 border-l border-[#41413B]">
@@ -113,7 +113,7 @@ export const ComparisonPreviewSection: React.FC<ComparisonPreviewSectionProps> =
           {/* Row 2: Context Window */}
           <div className="grid grid-cols-3 p-6 items-center hover:bg-white/[0.02] transition-colors">
             <div className="text-xs text-[#A6A49D] flex items-center gap-2">
-              <Zap size={15} className="text-[#D9823B]" /> Context Window
+              <Zap size={15} className="text-[#14B8A6]" /> Context Window
             </div>
             <div className="font-mono text-[#F5F0E7]">
               {(modelA.context_window / 1024).toFixed(0)}k tokens
@@ -156,7 +156,7 @@ export const ComparisonPreviewSection: React.FC<ComparisonPreviewSectionProps> =
               {/* Row 3: Memory Requirements */}
               <div className="grid grid-cols-3 p-6 items-center hover:bg-white/[0.02] transition-colors">
                 <div className="text-xs text-[#A6A49D] flex items-center gap-2">
-                  <HardDrive size={15} className="text-[#D9823B]" /> Min Required RAM
+                  <HardDrive size={15} className="text-[#14B8A6]" /> Min Required RAM
                 </div>
                 <div className="font-mono text-[#F5F0E7]">
                   {modelA.hardware.min_ram_gb} GB unified
@@ -169,7 +169,7 @@ export const ComparisonPreviewSection: React.FC<ComparisonPreviewSectionProps> =
               {/* Row 4: Pricing */}
               <div className="grid grid-cols-3 p-6 items-center hover:bg-white/[0.02] transition-colors">
                 <div className="text-xs text-[#A6A49D] flex items-center gap-2">
-                  <span className="text-[#D9823B] font-mono">$</span> Pricing / 1M Tokens
+                  <span className="text-[#14B8A6] font-mono">$</span> Pricing / 1M Tokens
                 </div>
                 <div className="font-mono text-[#68B587] font-bold">$0.00 (Self-Hosted)</div>
                 <div className="font-mono text-[#68B587] font-bold pl-4 border-l border-[#41413B]">
@@ -196,7 +196,7 @@ export const ComparisonPreviewSection: React.FC<ComparisonPreviewSectionProps> =
           <span>Need to compare 3 or more models simultaneously?</span>
           <button
             onClick={() => onRouteChange('compare')}
-            className="text-[#D9823B] hover:underline font-medium cursor-pointer"
+            className="text-[#14B8A6] hover:underline font-medium cursor-pointer"
           >
             Launch Multi-Model Studio &rarr;
           </button>

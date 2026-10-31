@@ -102,7 +102,7 @@ export const HeroComposition: React.FC<{ onLaunchStudio: () => void }> = ({ onLa
   return (
     <div className="relative w-full max-w-6xl mx-auto">
       {/* Soft warm ambient background glow */}
-      <div className="absolute -inset-1.5 rounded-[32px] bg-gradient-to-r from-[#D9823B]/20 via-[#D9823B]/10 to-[#D9823B]/20 blur-2xl opacity-75 pointer-events-none" />
+      <div className="absolute -inset-1.5 rounded-[32px] bg-gradient-to-r from-[#14B8A6]/20 via-[#14B8A6]/10 to-[#14B8A6]/20 blur-2xl opacity-75 pointer-events-none" />
 
       {/* Main Console Container */}
       <div className="relative rounded-[28px] bg-[#242522] border border-[#41413B] shadow-[0_24px_64px_rgba(0,0,0,0.65)] overflow-hidden">
@@ -111,7 +111,7 @@ export const HeroComposition: React.FC<{ onLaunchStudio: () => void }> = ({ onLa
           {/* Preset Model Switcher Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
             <span className="text-[11px] font-mono text-[#78766F] uppercase mr-1 flex items-center gap-1">
-              <Terminal size={12} className="text-[#D9823B]" /> Model:
+              <Terminal size={12} className="text-[#14B8A6]" /> Model:
             </span>
             {MODEL_PRESETS.map((preset) => {
               const isActive = preset.id === selectedPresetId;
@@ -121,7 +121,7 @@ export const HeroComposition: React.FC<{ onLaunchStudio: () => void }> = ({ onLa
                   onClick={() => setSelectedPresetId(preset.id)}
                   className={`px-3 py-1.5 rounded-full text-xs font-mono font-medium transition-all cursor-pointer whitespace-nowrap ${
                     isActive
-                      ? 'bg-[#242522] text-[#F5F0E7] border border-[#D9823B] shadow-sm'
+                      ? 'bg-[#242522] text-[#F5F0E7] border border-[#14B8A6] shadow-sm'
                       : 'bg-[#191A18] text-[#A6A49D] hover:text-[#F5F0E7] border border-[#41413B]/70'
                   }`}
                 >
@@ -148,7 +148,7 @@ export const HeroComposition: React.FC<{ onLaunchStudio: () => void }> = ({ onLa
           {/* Subheader & Mode Toggle */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-[#41413B]/70">
             <div className="flex flex-col">
-              <span className="text-xs font-mono text-[#D9823B] flex items-center gap-1.5">
+              <span className="text-xs font-mono text-[#14B8A6] flex items-center gap-1.5">
                 <Sparkles size={13} /> ACTIVE BENCHMARK WORKLOAD
               </span>
               <h3 className="text-lg font-bold text-[#F5F0E7] mt-0.5">{activeModel.task}</h3>
@@ -182,10 +182,10 @@ export const HeroComposition: React.FC<{ onLaunchStudio: () => void }> = ({ onLa
             /* 4-Card Hardware Telemetry HUD */
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Card 1: Throughput */}
-              <div className="p-5 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col justify-between hover:border-[#D9823B]/60 transition-colors">
+              <div className="p-5 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col justify-between hover:border-[#14B8A6]/60 transition-colors">
                 <div className="flex items-center justify-between text-xs text-[#A6A49D]">
                   <span className="flex items-center gap-1.5">
-                    <Zap size={15} className="text-[#D9823B]" /> Throughput
+                    <Zap size={15} className="text-[#14B8A6]" /> Throughput
                   </span>
                   <span className="text-[10px] text-[#68B587] font-mono">Verified</span>
                 </div>
@@ -199,10 +199,10 @@ export const HeroComposition: React.FC<{ onLaunchStudio: () => void }> = ({ onLa
               </div>
 
               {/* Card 2: TTFT */}
-              <div className="p-5 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col justify-between hover:border-[#D9823B]/60 transition-colors">
+              <div className="p-5 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col justify-between hover:border-[#14B8A6]/60 transition-colors">
                 <div className="flex items-center justify-between text-xs text-[#A6A49D]">
                   <span className="flex items-center gap-1.5">
-                    <Activity size={15} className="text-[#D9823B]" /> TTFT (p95)
+                    <Activity size={15} className="text-[#14B8A6]" /> TTFT (p95)
                   </span>
                   <span className="text-[10px] text-[#A6A49D] font-mono">Native</span>
                 </div>
@@ -216,10 +216,10 @@ export const HeroComposition: React.FC<{ onLaunchStudio: () => void }> = ({ onLa
               </div>
 
               {/* Card 3: VRAM */}
-              <div className="p-5 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col justify-between hover:border-[#D9823B]/60 transition-colors">
+              <div className="p-5 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col justify-between hover:border-[#14B8A6]/60 transition-colors">
                 <div className="flex items-center justify-between text-xs text-[#A6A49D]">
                   <span className="flex items-center gap-1.5">
-                    <HardDrive size={15} className="text-[#D9823B]" /> VRAM Weight
+                    <HardDrive size={15} className="text-[#14B8A6]" /> VRAM Weight
                   </span>
                   <span className="text-[10px] text-[#68B587] font-mono">Safe</span>
                 </div>
@@ -233,7 +233,7 @@ export const HeroComposition: React.FC<{ onLaunchStudio: () => void }> = ({ onLa
               </div>
 
               {/* Card 4: Accuracy */}
-              <div className="p-5 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col justify-between hover:border-[#D9823B]/60 transition-colors">
+              <div className="p-5 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col justify-between hover:border-[#14B8A6]/60 transition-colors">
                 <div className="flex items-center justify-between text-xs text-[#A6A49D]">
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 size={15} className="text-[#68B587]" /> Pass Rate
@@ -254,7 +254,7 @@ export const HeroComposition: React.FC<{ onLaunchStudio: () => void }> = ({ onLa
             <div className="p-5 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col gap-3 font-mono text-xs">
               <div className="flex items-center justify-between text-[#A6A49D] pb-2 border-b border-[#41413B]">
                 <div className="flex items-center gap-2">
-                  <span className="text-[#D9823B] font-bold">CASE #01</span>
+                  <span className="text-[#14B8A6] font-bold">CASE #01</span>
                   <span>{activeModel.identifier}</span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -279,13 +279,13 @@ export const HeroComposition: React.FC<{ onLaunchStudio: () => void }> = ({ onLa
           <div className="flex flex-col gap-2 pt-2 border-t border-[#41413B]/70">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="text-[#A6A49D] flex items-center gap-1.5">
-                <Activity size={13} className="text-[#D9823B]" /> Continuous Evaluation Stream
+                <Activity size={13} className="text-[#14B8A6]" /> Continuous Evaluation Stream
               </span>
-              <span className="text-[#D9823B] font-bold">{progress}% Completed</span>
+              <span className="text-[#14B8A6] font-bold">{progress}% Completed</span>
             </div>
             <div className="w-full h-2 rounded-full bg-[#191A18] overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#D9823B] via-[#E5914C] to-[#F5F0E7] transition-all duration-300 rounded-full"
+                className="h-full bg-gradient-to-r from-[#0D9488] via-[#14B8A6] to-[#F5F0E7] transition-all duration-300 rounded-full"
                 style={{ width: `${progress}%` }}
               />
             </div>

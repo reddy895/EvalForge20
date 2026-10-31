@@ -37,7 +37,7 @@ import jwt
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         {/* Left Column: Copy & Benefits */}
         <div className="lg:col-span-6 flex flex-col gap-6">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#14B8A6]">
             <Terminal size={14} />
             <span>NATIVE OLLAMA INTEGRATION</span>
           </div>
@@ -71,7 +71,7 @@ import jwt
 
             <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#242522] border border-[#41413B]">
               <div className="w-10 h-10 rounded-xl bg-[#191A18] border border-[#41413B] flex items-center justify-center shrink-0">
-                <Cpu size={18} className="text-[#D9823B]" />
+                <Cpu size={18} className="text-[#14B8A6]" />
               </div>
               <div className="flex flex-col gap-0.5">
                 <h4 className="text-sm font-semibold text-[#F5F0E7]">
@@ -138,7 +138,7 @@ import jwt
                       )}
                     </button>
                   </div>
-                  <div className="flex items-center gap-2 text-[#D9823B] bg-[#242522] px-3.5 py-2.5 rounded-xl border border-[#41413B]">
+                  <div className="flex items-center gap-2 text-[#14B8A6] bg-[#242522] px-3.5 py-2.5 rounded-xl border border-[#41413B]">
                     <span className="text-[#A6A49D]">$</span>
                     <span className="text-[#F5F0E7] font-semibold">{item.cmd}</span>
                   </div>

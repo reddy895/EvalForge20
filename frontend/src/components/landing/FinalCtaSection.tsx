@@ -13,10 +13,10 @@ export const FinalCtaSection: React.FC<FinalCtaSectionProps> = ({ onRouteChange 
       <div className="w-full max-w-7xl mx-auto">
         <div className="relative rounded-3xl bg-gradient-to-b from-[#242522] to-[#191A18] border border-[#41413B] p-10 md:p-16 shadow-[0_24px_64px_rgba(0,0,0,0.6)] overflow-hidden text-center flex flex-col items-center gap-6">
           {/* Soft ember glow behind */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-[#D9823B]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-[#0D9488]/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Small top badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#191A18] border border-[#41413B] text-xs font-mono text-[#D9823B]">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#191A18] border border-[#41413B] text-xs font-mono text-[#14B8A6]">
             <Cpu size={14} />
             <span>ZERO TELEMETRY • LOCAL-FIRST BENCHMARKING</span>
           </div>
@@ -58,7 +58,7 @@ export const FinalCtaSection: React.FC<FinalCtaSectionProps> = ({ onRouteChange 
               <ShieldCheck size={15} className="text-[#68B587]" /> No API Keys Required for Local
             </span>
             <span className="flex items-center gap-1.5">
-              <Terminal size={15} className="text-[#D9823B]" /> Free & Open Source
+              <Terminal size={15} className="text-[#14B8A6]" /> Free & Open Source
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#68B587]" /> Instant Interactive Demo

@@ -12,14 +12,14 @@ export const WhyEvalForgeSection: React.FC = () => {
       metric: '100% Private',
     },
     {
-      icon: <Target size={24} className="text-[#D9823B]" />,
+      icon: <Target size={24} className="text-[#14B8A6]" />,
       title: 'Empirical Multi-Turn Assertion',
       description:
         'Move beyond basic perplexity. Test strict JSON schema conformity, code unit tests, and multi-turn function calling with deterministic pass/fail results.',
       metric: 'Deterministic',
     },
     {
-      icon: <BarChart3 size={24} className="text-[#D9823B]" />,
+      icon: <BarChart3 size={24} className="text-[#14B8A6]" />,
       title: 'Honest Evidence & Real Scores',
       description:
         'Every benchmark is grounded in verifiable test datasets (HumanEval, GSM8K, Schema extraction) with clear distinction between simulated demos and measured runs.',
@@ -38,7 +38,7 @@ export const WhyEvalForgeSection: React.FC = () => {
     <section className="py-24 px-4 sm:px-6 lg:px-8 2xl:px-12 w-full bg-[#191A18]/40 border-y border-[#41413B]/40">
       <div className="w-full max-w-7xl mx-auto">
         <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-16 gap-3">
-        <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
+        <div className="inline-flex items-center gap-2 text-xs font-mono text-[#14B8A6]">
           <Sparkles size={14} />
           <span>ARCHITECTURAL PRINCIPLES</span>
         </div>
@@ -58,7 +58,7 @@ export const WhyEvalForgeSection: React.FC = () => {
               <div className="w-12 h-12 rounded-2xl bg-[#191A18] border border-[#41413B] flex items-center justify-center">
                 {feat.icon}
               </div>
-              <span className="text-xs font-mono px-3 py-1 rounded-full bg-[#191A18] border border-[#41413B] text-[#D9823B]">
+              <span className="text-xs font-mono px-3 py-1 rounded-full bg-[#191A18] border border-[#41413B] text-[#14B8A6]">
                 {feat.metric}
               </span>
             </CardHeader>

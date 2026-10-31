@@ -7,25 +7,25 @@ export const HowItWorksSection: React.FC = () => {
       number: '01',
       title: 'Select Model & Benchmark Workload',
       desc: 'Pick your active local Ollama weight or remote endpoint. Choose test suites tailored to coding, structured JSON, tool execution, or math.',
-      icon: <Layers size={20} className="text-[#D9823B]" />,
+      icon: <Layers size={20} className="text-[#14B8A6]" />,
     },
     {
       number: '02',
       title: 'Profile Hardware & Context Limits',
       desc: 'Verify whether the model fits comfortably into unified memory or GPU VRAM at chosen context lengths with quantized weights.',
-      icon: <Cpu size={20} className="text-[#D9823B]" />,
+      icon: <Cpu size={20} className="text-[#14B8A6]" />,
     },
     {
       number: '03',
       title: 'Execute Deterministic Test Cases',
       desc: 'Evaluate prompts against strict programmatic unit tests, exact matches, and latency timers with full token streaming observability.',
-      icon: <PlayCircle size={20} className="text-[#D9823B]" />,
+      icon: <PlayCircle size={20} className="text-[#14B8A6]" />,
     },
     {
       number: '04',
       title: 'Analyze Trade-offs & Export Audits',
       desc: 'Review side-by-side pass rates, latency distributions, and failure case diffs. Export structured JSON audit logs for CI/CD pipelines.',
-      icon: <FileText size={20} className="text-[#D9823B]" />,
+      icon: <FileText size={20} className="text-[#14B8A6]" />,
     },
   ];
 
@@ -33,7 +33,7 @@ export const HowItWorksSection: React.FC = () => {
     <section className="py-24 px-4 sm:px-6 lg:px-8 2xl:px-12 w-full">
       <div className="w-full max-w-7xl mx-auto">
         <div className="flex flex-col items-center text-center max-w-2xl mx-auto mb-16 gap-3">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#14B8A6]">
             <CheckCircle2 size={14} />
             <span>EVALUATION WORKFLOW</span>
           </div>
@@ -50,11 +50,11 @@ export const HowItWorksSection: React.FC = () => {
           {steps.map((step, idx) => (
             <div
               key={idx}
-              className="p-6 rounded-3xl bg-[#242522] border border-[#41413B] flex flex-col justify-between relative group hover:border-[#D9823B]/60 transition-all hover:-translate-y-1"
+              className="p-6 rounded-3xl bg-[#242522] border border-[#41413B] flex flex-col justify-between relative group hover:border-[#14B8A6]/60 transition-all hover:-translate-y-1"
             >
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <span className="text-2xl font-mono font-bold text-[#D9823B]">
+                  <span className="text-2xl font-mono font-bold text-[#14B8A6]">
                     {step.number}
                   </span>
                   <div className="w-10 h-10 rounded-full bg-[#191A18] border border-[#41413B] flex items-center justify-center">
@@ -66,7 +66,7 @@ export const HowItWorksSection: React.FC = () => {
                 </h3>
                 <p className="text-xs text-[#A6A49D] leading-relaxed">{step.desc}</p>
               </div>
-              <div className="mt-6 pt-4 border-t border-[#41413B]/60 flex items-center text-[11px] font-mono text-[#78766F] group-hover:text-[#D9823B] transition-colors">
+              <div className="mt-6 pt-4 border-t border-[#41413B]/60 flex items-center text-[11px] font-mono text-[#78766F] group-hover:text-[#14B8A6] transition-colors">
                 <span>Step {step.number} of 04</span>
               </div>
             </div>

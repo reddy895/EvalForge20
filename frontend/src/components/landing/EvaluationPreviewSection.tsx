@@ -44,7 +44,7 @@ export const EvaluationPreviewSection: React.FC<EvaluationPreviewSectionProps> =
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div className="flex flex-col gap-3">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#14B8A6]">
             <Terminal size={14} />
             <span>TEST SUITE EXECUTION</span>
           </div>
@@ -87,11 +87,11 @@ export const EvaluationPreviewSection: React.FC<EvaluationPreviewSectionProps> =
                 }}
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
                   selectedBenchmark === bm.id
-                    ? 'bg-[#242522] text-[#F5F0E7] border border-[#D9823B] shadow-sm'
+                    ? 'bg-[#242522] text-[#F5F0E7] border border-[#14B8A6] shadow-sm'
                     : 'bg-[#191A18] text-[#A6A49D] hover:text-[#F5F0E7] border border-[#41413B]'
                 }`}
               >
-                <span className={selectedBenchmark === bm.id ? 'text-[#D9823B]' : 'text-[#78766F]'}>
+                <span className={selectedBenchmark === bm.id ? 'text-[#14B8A6]' : 'text-[#78766F]'}>
                   {bm.icon}
                 </span>
                 <span>{bm.name}</span>
@@ -153,7 +153,7 @@ export const EvaluationPreviewSection: React.FC<EvaluationPreviewSectionProps> =
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-[#D9823B] font-semibold">
+                    <span className="font-mono text-[#14B8A6] font-semibold">
                       #{String(idx + 1).padStart(2, '0')}
                     </span>
                     <span className="font-mono text-[#F5F0E7] font-medium">{caseItem.case_id}</span>
@@ -190,7 +190,7 @@ export const EvaluationPreviewSection: React.FC<EvaluationPreviewSectionProps> =
         {/* Bottom Banner inside runner */}
         <div className="p-4 bg-[#191A18]/80 border-t border-[#41413B] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#A6A49D]">
           <span className="flex items-center gap-2">
-            <Zap size={14} className="text-[#D9823B]" />
+            <Zap size={14} className="text-[#14B8A6]" />
             Connect your local Ollama instance to test with your custom weights and dataset files.
           </span>
           <Button

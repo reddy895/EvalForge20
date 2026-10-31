@@ -53,7 +53,7 @@ export const ModelDiscoveryPreview: React.FC<ModelDiscoveryPreviewProps> = ({
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div className="flex flex-col gap-3">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#14B8A6]">
             <SlidersHorizontal size={14} />
             <span>MODEL DISCOVERY</span>
           </div>
@@ -96,7 +96,7 @@ export const ModelDiscoveryPreview: React.FC<ModelDiscoveryPreviewProps> = ({
                 onClick={() => setSelectedTask(tf.id)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-[#D9823B] text-[#191A18] font-semibold shadow-sm'
+                    ? 'bg-[#0D9488] text-[#191A18] font-semibold shadow-sm'
                     : 'bg-[#191A18] text-[#A6A49D] hover:text-[#F5F0E7] border border-[#41413B]'
                 }`}
               >
@@ -126,7 +126,7 @@ export const ModelDiscoveryPreview: React.FC<ModelDiscoveryPreviewProps> = ({
                     <span className="text-[11px] font-mono text-[#A6A49D] tracking-wide">
                       {model.provider}
                     </span>
-                    <CardTitle className="text-lg group-hover:text-[#D9823B] transition-colors mt-0.5">
+                    <CardTitle className="text-lg group-hover:text-[#14B8A6] transition-colors mt-0.5">
                       {model.name}
                     </CardTitle>
                   </div>
@@ -143,11 +143,11 @@ export const ModelDiscoveryPreview: React.FC<ModelDiscoveryPreviewProps> = ({
                 {/* Specs Pill Matrix */}
                 <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-[#41413B]/60 text-xs font-mono">
                   <div className="flex items-center gap-1.5 text-[#F5F0E7]">
-                    <Cpu size={13} className="text-[#D9823B]" />
+                    <Cpu size={13} className="text-[#14B8A6]" />
                     <span>{model.parameter_count} params</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[#F5F0E7]">
-                    <Zap size={13} className="text-[#D9823B]" />
+                    <Zap size={13} className="text-[#14B8A6]" />
                     <span>{(model.context_window / 1024).toFixed(0)}k context</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[#A6A49D]">

@@ -467,7 +467,7 @@ class AnalyticsService:
         ]
 
     @classmethod
-    async def get_efficiency(cls, db: AsyncSession) -> list[dict[str, Any]]:
+    async def get_efficiency(cls, db: AsyncSession, include_mock: bool = False) -> list[dict[str, Any]]:
         """Compute latency distribution and throughput efficiency per model."""
         q = await db.execute(
             select(EvaluationRun)
@@ -477,6 +477,9 @@ class AnalyticsService:
         runs = q.scalars().all()
         by_model: dict[str, list[EvaluationRun]] = {}
         for r in runs:
+            is_mock = r.provider == "mock" or r.model_id.startswith("mock-") or r.model_id == "mock-model"
+            if is_mock and not include_mock:
+                continue
             by_model.setdefault(r.model_id, []).append(r)
 
         all_models = await ModelService.get_all_models()
@@ -492,14 +495,21 @@ class AnalyticsService:
                 for r in m_runs
                 if (r.summary_metrics or {}).get("avg_tokens_per_second")
             ]
-            latencies = [r.avg_latency_ms for r in m_runs if r.avg_latency_ms]
+            latencies = [r.avg_latency_ms for r in m_runs if r.avg_latency_ms is not None and r.avg_latency_ms > 0]
             avg_tps = round(sum(tps_values) / len(tps_values), 1) if tps_values else None
-            avg_dur = round(sum(latencies) / len(latencies) / 1000.0, 2) if latencies else 0.0
+            avg_lat = round(sum(latencies) / len(latencies), 1) if latencies else None
+            avg_dur = round(avg_lat / 1000.0, 2) if avg_lat else 0.0
+            
+            # Efficiency score: ratio of throughput (tok/s) to latency penalty, or tok/s per sec
+            efficiency_score = round(avg_tps / (avg_dur + 0.1), 2) if (avg_tps and avg_dur >= 0) else None
+
             rows.append({
                 "model_id": m_id,
                 "model_name": name_map.get(m_id, m_id),
                 "tokens_per_second": avg_tps,
+                "avg_latency_ms": avg_lat,
                 "avg_duration_sec": avg_dur,
+                "efficiency_score": efficiency_score,
                 "sample_count": sum(r.total_cases for r in m_runs),
             })
         return rows

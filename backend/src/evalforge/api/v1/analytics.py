@@ -54,10 +54,11 @@ async def get_leaderboard(
     summary="Get model efficiency and generation throughput metrics",
 )
 async def get_efficiency_metrics(
+    include_mock: bool = False,
     db: AsyncSession = Depends(get_db),
 ) -> list[dict[str, Any]]:
     """Return per-model token throughput and latency distribution metrics."""
-    return await AnalyticsService.get_efficiency(db)
+    return await AnalyticsService.get_efficiency(db, include_mock=include_mock)
 
 
 @analytics_router.get(

@@ -142,7 +142,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[#41413B]">
         <div className="flex flex-col gap-2">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#14B8A6]">
             <Cpu size={14} />
             <span>MODEL INTELLIGENCE CATALOG</span>
           </div>
@@ -260,7 +260,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
                 type="checkbox"
                 checked={localOnly}
                 onChange={(e) => setLocalOnly(e.target.checked)}
-                className="w-4 h-4 rounded text-[#D9823B] bg-[#191A18] border-[#41413B] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                className="w-4 h-4 rounded text-[#14B8A6] bg-[#191A18] border-[#41413B] focus:ring-0 focus:ring-offset-0 cursor-pointer"
               />
               <span>Local Ollama models only</span>
             </label>
@@ -274,7 +274,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
           {(searchQuery || selectedProvider !== 'all' || selectedTask !== 'all' || localOnly) && (
             <button
               onClick={handleResetFilters}
-              className="flex items-center gap-1.5 text-[#D9823B] hover:underline cursor-pointer"
+              className="flex items-center gap-1.5 text-[#14B8A6] hover:underline cursor-pointer"
             >
               <RotateCcw size={12} /> Reset Filters
             </button>
@@ -285,7 +285,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
       {/* Empty State */}
       {filteredModels.length === 0 ? (
         <div className="py-20 px-6 rounded-3xl bg-[#242522] border border-[#41413B] text-center flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#191A18] border border-[#41413B] flex items-center justify-center text-[#D9823B]">
+          <div className="w-12 h-12 rounded-full bg-[#191A18] border border-[#41413B] flex items-center justify-center text-[#14B8A6]">
             <SlidersHorizontal size={20} />
           </div>
           <h3 className="text-lg font-semibold text-[#F5F0E7]">No matching models found</h3>
@@ -310,7 +310,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
                   <CardHeader>
                     <div className="flex flex-col">
                       <span className="text-[11px] font-mono text-[#A6A49D]">{model.provider}</span>
-                      <CardTitle className="text-lg group-hover:text-[#D9823B] transition-colors mt-0.5">
+                      <CardTitle className="text-lg group-hover:text-[#14B8A6] transition-colors mt-0.5">
                         {model.name}
                       </CardTitle>
                     </div>
@@ -325,11 +325,11 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
                   <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-[#41413B]/60 text-xs font-mono">
                     <div className="flex items-center gap-1.5 text-[#F5F0E7]">
-                      <Cpu size={13} className="text-[#D9823B]" />
+                      <Cpu size={13} className="text-[#14B8A6]" />
                       <span>{model.parameter_count} params</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-[#F5F0E7]">
-                      <Zap size={13} className="text-[#D9823B]" />
+                      <Zap size={13} className="text-[#14B8A6]" />
                       <span>{(model.context_window / 1024).toFixed(0)}k context</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-[#A6A49D]">
@@ -345,12 +345,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
                   {/* Capability & Feature Badges */}
                   <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-[#41413B]/40">
                     {model.supports_structured_output && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-sans bg-[#68B587]/10 text-[#68B587] border border-[#68B587]/30">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-sans bg-[#0D9488]/10 text-[#14B8A6] border border-[#0D9488]/30">
                         JSON Schema
                       </span>
                     )}
                     {model.supports_tools && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-sans bg-[#D9823B]/10 text-[#D9823B] border border-[#D9823B]/30">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-sans bg-[#0D9488]/10 text-[#14B8A6] border border-[#0D9488]/30">
                         Tool Calling
                       </span>
                     )}
@@ -364,7 +364,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
                   {topScore && (
                     <div className="mt-3 p-2.5 rounded-xl bg-[#191A18] border border-[#41413B] flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs text-[#A6A49D]">
-                        <CheckCircle2 size={13} className="text-[#68B587]" />
+                        <CheckCircle2 size={13} className="text-[#14B8A6]" />
                         <span>{topScore.benchmark_name}</span>
                       </div>
                       <span className="text-xs font-mono font-bold text-[#F5F0E7]">
@@ -396,7 +396,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
                     onClick={() => onSelectModelForEvaluation(model.id)}
                     title="Evaluate model"
                   >
-                    <Play size={14} className="fill-current text-[#D9823B]" />
+                    <Play size={14} className="fill-current text-[#14B8A6]" />
                   </Button>
                 </div>
               </Card>
@@ -440,12 +440,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
                             </Badge>
                           )}
                           {model.supports_structured_output && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-sans bg-[#68B587]/10 text-[#68B587] border border-[#68B587]/30">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-sans bg-[#0D9488]/10 text-[#14B8A6] border border-[#0D9488]/30">
                               JSON
                             </span>
                           )}
                           {model.supports_tools && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-sans bg-[#D9823B]/10 text-[#D9823B] border border-[#D9823B]/30">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-sans bg-[#0D9488]/10 text-[#14B8A6] border border-[#0D9488]/30">
                               Tools
                             </span>
                           )}
@@ -459,7 +459,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
                       <td className="p-4 font-mono text-[#A6A49D]">{model.hardware.min_ram_gb} GB</td>
                       <td className="p-4 font-mono">
                         {topScore ? (
-                          <span className="text-[#68B587] font-semibold">
+                          <span className="text-[#14B8A6] font-semibold">
                             {topScore.score.toFixed(1)}% ({topScore.benchmark_name})
                           </span>
                         ) : (
@@ -478,6 +478,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
                             variant={isCompared ? 'primary' : 'outline'}
                             onClick={() => onToggleCompare(model.id)}
                           >
+
                             {isCompared ? 'Remove' : 'Compare'}
                           </Button>
                           <Button

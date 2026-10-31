@@ -119,3 +119,42 @@ class TestEvaluationValidation:
 
         assert returned_run.id == "existing-run-id-123"
         mock_eval_repo.add.assert_not_called()  # Reused existing run, didn't create duplicate!
+
+    @pytest.mark.asyncio
+    async def test_uninstalled_ollama_model_rejected_with_remediation(self) -> None:
+        """Reject uninstalled Ollama models with a descriptive remediation hint."""
+        from unittest.mock import AsyncMock, MagicMock
+        from src.evalforge.core.errors import DataValidationError
+        from src.evalforge.services.evaluation_service import EvaluationService
+
+        mock_eval_repo = MagicMock()
+        mock_ds_repo = MagicMock()
+        mock_dataset = MagicMock()
+        mock_dataset.test_cases = [MagicMock()]
+        mock_dataset.name = "Test DS"
+        mock_ds_repo.get_with_cases = AsyncMock(return_value=mock_dataset)
+
+        mock_provider = MagicMock()
+        mock_provider.check_model_readiness = AsyncMock(
+            return_value={
+                "ready": False,
+                "remediation_hint": "Model 'nonexistent:latest' is not installed locally. Run `ollama pull nonexistent:latest` to install.",
+            }
+        )
+        mock_registry = MagicMock()
+        mock_registry.get.return_value = mock_provider
+
+        service = EvaluationService(
+            eval_repo=mock_eval_repo,
+            dataset_repo=mock_ds_repo,
+            registry=mock_registry,
+        )
+
+        req = EvaluationCreateRequest(
+            model_id="nonexistent:latest",
+            dataset_id="ds-1",
+            provider="ollama",
+        )
+        with pytest.raises(DataValidationError, match="ollama pull nonexistent:latest"):
+            await service.create_and_start_run(req)
+

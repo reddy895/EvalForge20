@@ -45,6 +45,10 @@ class EvaluationRun(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
 
     @property
+    def case_results(self) -> list["CaseResult"]:
+        return self.results
+
+    @property
     def config(self) -> dict[str, Any]:
         if not self.config_json:
             return {}

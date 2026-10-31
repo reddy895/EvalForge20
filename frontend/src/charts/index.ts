@@ -8,4 +8,5 @@ export * from './LeaderboardTable';
 export * from './NormalizedRadarChart';
 export * from './CommitActivityHeatmap';
 export * from './EvaluationResultCharts';
+export * from './ModelEfficiencyChart';
 

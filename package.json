@@ -10,8 +10,8 @@
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:all": "node scripts/start_all.mjs",
     "build": "npm run build --prefix frontend",
-    "test": "pytest && npm test --prefix frontend",
-    "test:backend": "pytest",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "npm test --prefix backend",
     "test:frontend": "npm test --prefix frontend"
   },
   "keywords": [

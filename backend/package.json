@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node ../scripts/start_backend.mjs",
     "start": "node ../scripts/start_backend.mjs",
-    "test": "pytest"
+    "test": "uv run pytest"
   },
   "keywords": [
     "evalforge",

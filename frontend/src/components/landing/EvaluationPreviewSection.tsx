@@ -123,8 +123,8 @@ export const EvaluationPreviewSection: React.FC<EvaluationPreviewSectionProps> =
           </div>
           <div>
             <span className="text-[#A6A49D] block text-[11px] mb-1">Pass Rate</span>
-            <span className="text-[#68B587] font-bold text-sm">
-              {(runResult.pass_rate * 100).toFixed(0)}% ({runResult.passed_cases}/{runResult.total_cases})
+            <span className="text-[#14B8A6] font-bold text-sm">
+              {typeof runResult.pass_rate === 'number' ? `${(runResult.pass_rate * 100).toFixed(0)}%` : '—'} ({runResult.passed_cases}/{runResult.total_cases})
             </span>
           </div>
           <div>

@@ -272,7 +272,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                         </span>
                       ) : (
                         <span className="text-[#14B8A6] font-bold">
-                          {(run.pass_rate * 100).toFixed(0)}%
+                          {typeof run.pass_rate === 'number' ? `${(run.pass_rate * 100).toFixed(0)}%` : '—'}
                         </span>
                       )}{' '}
                       <span className="text-[11px] text-[#A6A49D]">
@@ -328,7 +328,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
               <div>
                 <span className="text-[#A6A49D] block text-[11px]">Pass Rate:</span>
                 <span className="text-[#14B8A6] font-bold">
-                  {(inspectRun.pass_rate * 100).toFixed(0)}% ({inspectRun.passed_cases}/
+                  {typeof inspectRun.pass_rate === 'number' ? `${(inspectRun.pass_rate * 100).toFixed(0)}%` : '—'} ({inspectRun.passed_cases}/
                   {inspectRun.total_cases})
                 </span>
               </div>

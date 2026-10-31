@@ -157,7 +157,7 @@ export function simulateEvaluationRun(
   const passed_cases = case_results.filter((c) => c.passed).length;
   const pass_rate = total_cases > 0 ? passed_cases / total_cases : 1;
   const avg_latency_ms =
-    case_results.reduce((sum, c) => sum + c.latency_ms, 0) / (total_cases || 1);
+    case_results.reduce((sum, c) => sum + (c.latency_ms ?? 0), 0) / (total_cases || 1);
 
   const benchmarkNames: Record<string, string> = {
     coding_basics: 'Python Algorithmic Synthesis',

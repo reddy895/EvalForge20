@@ -50,6 +50,7 @@ export const AnalyticsView: React.FC = () => {
   const efficiencyData = efficiency.map((e: any) => ({
     modelName: e.model_name || e.model_id,
     tokensPerSecond: e.tokens_per_second ? Number(e.tokens_per_second.toFixed(1)) : null,
+    avgLatencyMs: e.avg_latency_ms ?? null,
     avgDurationSec: Number(((e.total_duration_ms || 1000) / 1000).toFixed(2)),
     efficiencyScore:
       e.efficiency_score !== undefined && e.efficiency_score !== null

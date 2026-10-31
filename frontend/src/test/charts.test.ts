@@ -60,11 +60,11 @@ describe('Chart and Evaluation Graphical Telemetry Validation', () => {
     // Accuracy validation
     expect(sampleRun.pass_rate).toBe(1.0);
     expect(sampleRun.passed_cases).toBe(3);
-    const passRatePercent = Math.round(sampleRun.pass_rate * 100);
+    const passRatePercent = Math.round((sampleRun.pass_rate ?? 0) * 100);
     expect(passRatePercent).toBe(100);
 
     // Latency distribution validation
-    const latencies = sampleRun.case_results.map((c) => c.latency_ms);
+    const latencies = sampleRun.case_results.map((c) => c.latency_ms ?? 0);
     const minLatency = Math.min(...latencies);
     const maxLatency = Math.max(...latencies);
     const meanLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;

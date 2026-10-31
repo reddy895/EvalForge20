@@ -391,7 +391,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                 <div key={m.id} className="p-4 font-mono border-r border-[#41413B] last:border-r-0 flex items-center justify-between">
                   {run ? (
                     <span className="font-bold text-sm text-[#14B8A6]">
-                      {(run.pass_rate * 100).toFixed(1)}%
+                      {typeof run.pass_rate === 'number' ? `${(run.pass_rate * 100).toFixed(1)}%` : '—'}
                     </span>
                   ) : (
                     <span className="text-[#78766F] italic">No local run yet</span>

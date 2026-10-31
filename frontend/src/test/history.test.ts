@@ -69,8 +69,8 @@ describe('Evaluation History and Export Utilities', () => {
   });
 
   it('formats pass rate percentage and token throughput reliably', () => {
-    const formatPassRate = (rate: number | undefined) =>
-      rate !== undefined ? `${(rate * 100).toFixed(1)}%` : 'N/A';
+    const formatPassRate = (rate: number | null | undefined) =>
+      rate !== undefined && rate !== null ? `${(rate * 100).toFixed(1)}%` : 'N/A';
 
     expect(formatPassRate(sampleRuns[0].pass_rate)).toBe('85.0%');
     expect(formatPassRate(sampleRuns[1].pass_rate)).toBe('90.0%');

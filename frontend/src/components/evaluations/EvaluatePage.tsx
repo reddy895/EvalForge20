@@ -165,6 +165,7 @@ export const EvaluatePage: React.FC<EvaluatePageProps> = ({
         model_id: runDetails.model_id,
         model_name: selectedModel.name,
         benchmark_id: selectedBenchmarkId,
+        benchmark_name: benchmarksList.find((b) => b.id === selectedBenchmarkId)?.name || selectedBenchmarkId,
         status: runDetails.status || (runDetails.error_message ? 'failed' : 'completed'),
         is_demo: false,
         pass_rate: runDetails.pass_rate !== null && runDetails.pass_rate !== undefined ? Number(runDetails.pass_rate.toFixed(2)) : (runDetails.status === 'failed' ? null : 0),

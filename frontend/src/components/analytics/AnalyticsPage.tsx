@@ -19,8 +19,6 @@ import {
   Users,
   Award,
   Play,
-  Gauge,
-  Zap,
 } from 'lucide-react';
 import {
   AccuracyQualityChart,
@@ -106,6 +104,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
   const efficiencyData = efficiency.map((e: any) => ({
     modelName: e.model_name || e.model_id,
     tokensPerSecond: e.tokens_per_second ? Number(e.tokens_per_second.toFixed(1)) : null,
+    avgLatencyMs: e.avg_latency_ms ?? null,
     avgDurationSec: Number(((e.total_duration_ms || 1000) / 1000).toFixed(2)),
     efficiencyScore:
       e.efficiency_score !== undefined && e.efficiency_score !== null
@@ -506,7 +505,8 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
                 <div>
                   <span className="text-[#F5F0E7] font-bold block font-sans">Qwen 2.5 7B / Llama 3.1 8B</span>
                   <span className="text-[11px] text-[#A6A49D]">Local Ollama (Q4_K_M)</span>
-                           <div className="text-right">
+                </div>
+                <div className="text-right">
                   <span className="text-[#14B8A6] font-bold block">$0.00 / 1M tokens</span>
                   <span className="text-[11px] text-[#A6A49D]">8 GB RAM required</span>
                 </div>

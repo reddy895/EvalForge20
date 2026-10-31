@@ -88,7 +88,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[#41413B]">
         <div className="flex flex-col gap-2">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#14B8A6]">
             <GitCompare size={14} />
             <span>SIDE-BY-SIDE EVALUATION STUDIO</span>
           </div>
@@ -147,7 +147,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
       {/* Comparison Grid Matrix */}
       {modelsToCompare.length === 0 ? (
         <div className="py-20 px-6 rounded-3xl bg-[#242522] border border-[#41413B] text-center flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#191A18] border border-[#41413B] flex items-center justify-center text-[#D9823B]">
+          <div className="w-12 h-12 rounded-full bg-[#191A18] border border-[#41413B] flex items-center justify-center text-[#14B8A6]">
             <GitCompare size={20} />
           </div>
           <h3 className="text-lg font-semibold text-[#F5F0E7]">No models in comparison set</h3>
@@ -213,7 +213,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
           </div>
 
           {/* Section 1: Hardware & Compute Specifications */}
-          <div className="p-4 bg-[#191A18]/40 border-b border-[#41413B] text-xs font-mono font-bold text-[#D9823B] uppercase tracking-wider">
+          <div className="p-4 bg-[#191A18]/40 border-b border-[#41413B] text-xs font-mono font-bold text-[#14B8A6] uppercase tracking-wider">
             Compute & Hardware Constraints
           </div>
 
@@ -225,7 +225,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
           >
             {/* Architecture */}
             <div className="p-4 text-[#A6A49D] font-mono border-r border-[#41413B] flex items-center gap-1.5">
-              <Cpu size={14} className="text-[#D9823B]" /> Architecture
+              <Cpu size={14} className="text-[#14B8A6]" /> Architecture
             </div>
             {modelsToCompare.map((m) => (
               <div key={m.id} className="p-4 text-[#F5F0E7] font-mono border-r border-[#41413B] last:border-r-0">
@@ -235,7 +235,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
 
             {/* Context Window */}
             <div className="p-4 text-[#A6A49D] font-mono border-r border-[#41413B] flex items-center gap-1.5">
-              <Zap size={14} className="text-[#D9823B]" /> Context Window
+              <Zap size={14} className="text-[#14B8A6]" /> Context Window
             </div>
             {modelsToCompare.map((m) => (
               <div key={m.id} className="p-4 font-mono font-bold text-[#F5F0E7] border-r border-[#41413B] last:border-r-0">
@@ -245,7 +245,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
 
             {/* RAM Requirements */}
             <div className="p-4 text-[#A6A49D] font-mono border-r border-[#41413B] flex items-center gap-1.5">
-              <HardDrive size={14} className="text-[#D9823B]" /> Min Required RAM
+              <HardDrive size={14} className="text-[#14B8A6]" /> Min Required RAM
             </div>
             {modelsToCompare.map((m) => (
               <div key={m.id} className="p-4 font-mono text-[#F5F0E7] border-r border-[#41413B] last:border-r-0">
@@ -253,10 +253,11 @@ export const ComparePage: React.FC<ComparePageProps> = ({
               </div>
             ))}
 
+
             {/* Pricing */}
             <div className="p-4 text-[#A6A49D] font-mono border-r border-[#41413B]">Pricing / Unit</div>
             {modelsToCompare.map((m) => (
-              <div key={m.id} className="p-4 font-mono text-[#68B587] font-semibold border-r border-[#41413B] last:border-r-0">
+              <div key={m.id} className="p-4 font-mono text-[#14B8A6] font-semibold border-r border-[#41413B] last:border-r-0">
                 {m.pricing.is_free_local ? 'Free Local (Ollama)' : `$${m.pricing.input_cost_per_m?.toFixed(2)}/1M`}
               </div>
             ))}
@@ -271,10 +272,10 @@ export const ComparePage: React.FC<ComparePageProps> = ({
           </div>
 
           {/* Section 2: Verified Empirical Benchmarks */}
-          <div className="p-4 bg-[#191A18]/40 border-y border-[#41413B] text-xs font-mono font-bold text-[#D9823B] uppercase tracking-wider flex items-center justify-between">
+          <div className="p-4 bg-[#191A18]/40 border-y border-[#41413B] text-xs font-mono font-bold text-[#14B8A6] uppercase tracking-wider flex items-center justify-between">
             <span>Verified Benchmark Scores</span>
             <span className="text-[11px] text-[#A6A49D] font-normal normal-case">
-              Scores highlighted in green represent leading measurements
+              Scores highlighted in teal represent leading measurements
             </span>
           </div>
 
@@ -295,7 +296,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
               return (
                 <React.Fragment key={bmName}>
                   <div className="p-4 text-[#A6A49D] font-mono border-r border-[#41413B] flex items-center gap-1.5 font-medium">
-                    <Award size={14} className="text-[#D9823B]" /> {bmName}
+                    <Award size={14} className="text-[#14B8A6]" /> {bmName}
                   </div>
                   {modelsToCompare.map((m) => {
                     const bm = m.benchmarks.find((b) => b.benchmark_name === bmName);
@@ -310,7 +311,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                           <>
                             <span
                               className={`text-sm font-bold ${
-                                isWinner ? 'text-[#68B587]' : 'text-[#F5F0E7]'
+                                isWinner ? 'text-[#14B8A6]' : 'text-[#F5F0E7]'
                               }`}
                             >
                               {bm.score.toFixed(1)}%
@@ -334,7 +335,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
             {modelsToCompare.map((m) => (
               <div key={m.id} className="p-4 border-r border-[#41413B] last:border-r-0 flex items-center gap-1.5">
                 {m.supports_tools ? (
-                  <span className="text-[#68B587] flex items-center gap-1 font-medium">
+                  <span className="text-[#14B8A6] flex items-center gap-1 font-medium">
                     <CheckCircle2 size={14} /> Full Native
                   </span>
                 ) : (
@@ -352,7 +353,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
             {modelsToCompare.map((m) => (
               <div key={m.id} className="p-4 border-r border-[#41413B] last:border-r-0 flex items-center gap-1.5">
                 {m.supports_structured_output ? (
-                  <span className="text-[#68B587] flex items-center gap-1 font-medium">
+                  <span className="text-[#14B8A6] flex items-center gap-1 font-medium">
                     <CheckCircle2 size={14} /> Constrained Grammar
                   </span>
                 ) : (
@@ -365,7 +366,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
           </div>
 
           {/* Section: Live Empirical Evaluation Telemetry */}
-          <div className="p-4 bg-[#191A18]/40 border-y border-[#41413B] text-xs font-mono font-bold text-[#68B587] uppercase tracking-wider flex items-center justify-between">
+          <div className="p-4 bg-[#191A18]/40 border-y border-[#41413B] text-xs font-mono font-bold text-[#14B8A6] uppercase tracking-wider flex items-center justify-between">
             <span className="flex items-center gap-1.5">
               <Activity size={14} /> Measured Runtime Telemetry (Local Evaluation Runs)
             </span>
@@ -382,14 +383,14 @@ export const ComparePage: React.FC<ComparePageProps> = ({
           >
             {/* Live Pass Rate */}
             <div className="p-4 text-[#A6A49D] font-mono border-r border-[#41413B] flex items-center gap-1.5 font-medium">
-              <CheckCircle2 size={14} className="text-[#68B587]" /> Evaluated Pass Rate
+              <CheckCircle2 size={14} className="text-[#14B8A6]" /> Evaluated Pass Rate
             </div>
             {modelsToCompare.map((m) => {
               const run = recentRuns[m.id];
               return (
                 <div key={m.id} className="p-4 font-mono border-r border-[#41413B] last:border-r-0 flex items-center justify-between">
                   {run ? (
-                    <span className="font-bold text-sm text-[#68B587]">
+                    <span className="font-bold text-sm text-[#14B8A6]">
                       {(run.pass_rate * 100).toFixed(1)}%
                     </span>
                   ) : (
@@ -401,7 +402,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
 
             {/* Measured Latency */}
             <div className="p-4 text-[#A6A49D] font-mono border-r border-[#41413B] flex items-center gap-1.5 font-medium">
-              <Clock size={14} className="text-[#D9823B]" /> Measured Latency (P50)
+              <Clock size={14} className="text-[#14B8A6]" /> Measured Latency (P50)
             </div>
             {modelsToCompare.map((m) => {
               const run = recentRuns[m.id];
@@ -421,7 +422,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
 
             {/* Measured Tokens/sec */}
             <div className="p-4 text-[#A6A49D] font-mono border-r border-[#41413B] flex items-center gap-1.5 font-medium">
-              <Zap size={14} className="text-[#D9823B]" /> Output Throughput
+              <Zap size={14} className="text-[#14B8A6]" /> Output Throughput
             </div>
             {modelsToCompare.map((m) => {
               const run = recentRuns[m.id];
@@ -429,7 +430,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
               return (
                 <div key={m.id} className="p-4 font-mono border-r border-[#41413B] last:border-r-0 flex items-center justify-between">
                   {tps ? (
-                    <span className="font-bold text-sm text-[#D9823B]">
+                    <span className="font-bold text-sm text-[#14B8A6]">
                       {tps.toFixed(1)} tok/s
                     </span>
                   ) : (
@@ -441,9 +442,10 @@ export const ComparePage: React.FC<ComparePageProps> = ({
           </div>
 
           {/* Section 3: Ideal Tasks */}
-          <div className="p-4 bg-[#191A18]/40 border-y border-[#41413B] text-xs font-mono font-bold text-[#D9823B] uppercase tracking-wider">
+          <div className="p-4 bg-[#191A18]/40 border-y border-[#41413B] text-xs font-mono font-bold text-[#14B8A6] uppercase tracking-wider">
             Recommended Workload Profiles
           </div>
+
 
           <div
             className="grid text-xs"

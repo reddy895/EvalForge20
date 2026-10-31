@@ -134,7 +134,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[#41413B]">
         <div className="flex flex-col gap-2">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#14B8A6]">
             <History size={14} />
             <span>AUDIT & REPRODUCIBILITY TRAIL</span>
           </div>
@@ -197,7 +197,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
           </div>
           <div>
             <span className="text-[#A6A49D] block text-[11px] mb-1 font-sans">Overall Pass Rate</span>
-            <span className="text-xl font-bold text-[#68B587]">{avgPassRate.toFixed(1)}%</span>
+            <span className="text-xl font-bold text-[#14B8A6]">{avgPassRate.toFixed(1)}%</span>
           </div>
           <div>
             <span className="text-[#A6A49D] block text-[11px] mb-1 font-sans">
@@ -217,7 +217,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
       {/* Runs List */}
       {historyRuns.length === 0 ? (
         <div className="py-20 px-6 rounded-3xl bg-[#242522] border border-[#41413B] text-center flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#191A18] border border-[#41413B] flex items-center justify-center text-[#D9823B]">
+          <div className="w-12 h-12 rounded-full bg-[#191A18] border border-[#41413B] flex items-center justify-center text-[#14B8A6]">
             <History size={20} />
           </div>
           <h3 className="text-lg font-semibold text-[#F5F0E7]">No evaluation history recorded</h3>
@@ -235,6 +235,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
           </Button>
         </div>
       ) : (
+
         <div className="rounded-3xl bg-[#242522] border border-[#41413B] overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
@@ -265,9 +266,15 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                     </td>
                     <td className="p-4 text-[#A6A49D] font-sans">{run.benchmark_name}</td>
                     <td className="p-4">
-                      <span className="text-[#68B587] font-bold">
-                        {(run.pass_rate * 100).toFixed(0)}%
-                      </span>{' '}
+                      {run.pass_rate === 0 ? (
+                        <span className="text-[#A6A49D] font-bold" title="Completed with genuine 0% pass rate">
+                          0% <span className="text-[10px] text-[#A6A49D] font-normal font-sans">(Genuine 0)</span>
+                        </span>
+                      ) : (
+                        <span className="text-[#14B8A6] font-bold">
+                          {(run.pass_rate * 100).toFixed(0)}%
+                        </span>
+                      )}{' '}
                       <span className="text-[11px] text-[#A6A49D]">
                         ({run.passed_cases}/{run.total_cases})
                       </span>
@@ -320,7 +327,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
             <div className="grid grid-cols-3 gap-3 p-3.5 rounded-2xl bg-[#191A18] border border-[#41413B] font-mono text-xs">
               <div>
                 <span className="text-[#A6A49D] block text-[11px]">Pass Rate:</span>
-                <span className="text-[#68B587] font-bold">
+                <span className="text-[#14B8A6] font-bold">
                   {(inspectRun.pass_rate * 100).toFixed(0)}% ({inspectRun.passed_cases}/
                   {inspectRun.total_cases})
                 </span>
@@ -348,10 +355,10 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                   className="p-4 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col gap-2 text-xs font-mono"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[#D9823B] font-semibold">
+                    <span className="text-[#14B8A6] font-semibold">
                       #{i + 1} {c.case_id} ({c.assertion_type})
                     </span>
-                    <span className={c.passed ? "text-[#68B587] font-bold" : "text-[#E06C75] font-bold"}>
+                    <span className={c.passed ? "text-[#14B8A6] font-bold" : "text-[#E06C75] font-bold"}>
                       {c.passed ? "PASSED" : "FAILED"} ({c.latency_ms} ms)
                     </span>
                   </div>
@@ -361,7 +368,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                       {c.prompt}
                     </p>
                   </div>
-                  <div className="text-[#68B587]">
+                  <div className="text-[#14B8A6]">
                     <span className="text-[#78766F] block text-[10px]">OUTPUT:</span>
                     <pre className="bg-[#242522] p-2 rounded-xl border border-[#41413B]/60 text-xs whitespace-pre-wrap">
                       {c.actual_output}
@@ -370,6 +377,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                 </div>
               ))}
             </div>
+
 
             <div className="flex justify-end pt-3 border-t border-[#41413B]">
               <Button variant="secondary" size="sm" onClick={() => setInspectRun(null)}>

@@ -19,7 +19,16 @@ import {
   Users,
   Award,
   Play,
+  Gauge,
+  Zap,
 } from 'lucide-react';
+import {
+  AccuracyQualityChart,
+  LatencyComparisonChart,
+  EfficiencyMetricsChart,
+  ModelEfficiencyChart,
+  ReliabilityAuditChart,
+} from '../../charts';
 
 interface AnalyticsPageProps {
   onRouteChange: (route: NavRoute) => void;
@@ -31,20 +40,26 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
   const [commitData, setCommitData] = useState<CommitAnalytics | null>(null);
   const [latencyDists, setLatencyDists] = useState<LatencyDistribution[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [efficiency, setEfficiency] = useState<any[]>([]);
   const [selectedDay, setSelectedDay] = useState<DailyCommitActivity | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'models' | 'latency' | 'commits'>('overview');
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [ov, cm, ld] = await Promise.all([
+      const [ov, cm, ld, lb, eff] = await Promise.all([
         api.getAnalyticsOverview(),
         api.getCommitAnalytics(),
         api.getLatencyDistribution().catch(() => []),
+        api.getLeaderboard().catch(() => []),
+        api.getEfficiencyMetrics().catch(() => []),
       ]);
       setOverview(ov);
       setCommitData(cm);
       setLatencyDists(ld || []);
+      setLeaderboard(Array.isArray(lb) ? lb : []);
+      setEfficiency(Array.isArray(eff) ? eff : []);
       if (cm?.daily_activity?.length > 0) {
         setSelectedDay(cm.daily_activity[cm.daily_activity.length - 1]);
       }
@@ -55,6 +70,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
     }
   };
 
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -64,12 +80,47 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
     await fetchData();
   };
 
+  const qualityData = leaderboard.map((l: any) => ({
+    modelName: l.model_name || l.model_id,
+    accuracy: Number(((l.pass_rate || 0) * 100).toFixed(1)),
+    passedCount: l.passed_cases || 0,
+    totalCount: l.total_cases || 0,
+  }));
+
+  const latencyData = leaderboard
+    .filter(
+      (l: any) =>
+        (l.median_latency_ms !== null && l.median_latency_ms !== undefined && l.median_latency_ms > 0) ||
+        (l.avg_latency_ms !== null && l.avg_latency_ms !== undefined && l.avg_latency_ms > 0)
+    )
+    .map((l: any) => {
+      const med = l.median_latency_ms !== null && l.median_latency_ms !== undefined ? l.median_latency_ms : l.avg_latency_ms;
+      const p95 = l.p95_latency_ms !== null && l.p95_latency_ms !== undefined ? l.p95_latency_ms : med;
+      return {
+        modelName: l.model_name || l.model_id,
+        medianMs: Number(med.toFixed(1)),
+        p95Ms: Number(p95.toFixed(1)),
+      };
+    });
+
+  const efficiencyData = efficiency.map((e: any) => ({
+    modelName: e.model_name || e.model_id,
+    tokensPerSecond: e.tokens_per_second ? Number(e.tokens_per_second.toFixed(1)) : null,
+    avgDurationSec: Number(((e.total_duration_ms || 1000) / 1000).toFixed(2)),
+    efficiencyScore:
+      e.efficiency_score !== undefined && e.efficiency_score !== null
+        ? Number(e.efficiency_score.toFixed(1))
+        : e.tokens_per_second && e.avg_latency_ms
+        ? Number((e.tokens_per_second / (e.avg_latency_ms / 1000)).toFixed(1))
+        : null,
+  }));
+
   return (
     <div className="py-10 px-4 sm:px-8 lg:px-12 2xl:px-16 w-full flex flex-col gap-8">
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[#41413B]">
         <div className="flex flex-col gap-2">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D9823B]">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#14B8A6]">
             <BarChart3 size={14} />
             <span>PRODUCTION TELEMETRY & EMPIRICAL BENCHMARKS</span>
           </div>
@@ -109,7 +160,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
               onClick={() => setActiveTab('latency')}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'latency'
-                  ? 'bg-[#191A18] text-[#68B587] shadow-sm font-semibold'
+                  ? 'bg-[#191A18] text-[#14B8A6] shadow-sm font-semibold'
                   : 'text-[#A6A49D] hover:text-[#F5F0E7]'
               }`}
             >
@@ -119,7 +170,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
               onClick={() => setActiveTab('commits')}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'commits'
-                  ? 'bg-[#191A18] text-[#D9823B] shadow-sm font-semibold'
+                  ? 'bg-[#191A18] text-[#14B8A6] shadow-sm font-semibold'
                   : 'text-[#A6A49D] hover:text-[#F5F0E7]'
               }`}
             >
@@ -140,9 +191,9 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
 
       {/* Initial Empty State Onboarding Banner */}
       {overview && overview.total_evaluation_runs === 0 && (
-        <div className="p-8 rounded-3xl bg-[#242522] border border-[#D9823B]/30 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">
+        <div className="p-8 rounded-3xl bg-[#242522] border border-[#0D9488]/30 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#D9823B]/15 border border-[#D9823B]/30 flex items-center justify-center text-[#D9823B] shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-[#0D9488]/15 border border-[#0D9488]/30 flex items-center justify-center text-[#14B8A6] shrink-0">
               <Play size={24} className="fill-current" />
             </div>
             <div className="flex flex-col gap-1">
@@ -168,11 +219,11 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
         <div className="p-5 rounded-3xl bg-[#242522] border border-[#41413B] shadow-sm flex flex-col justify-between">
           <span className="text-xs text-[#A6A49D] font-sans flex items-center justify-between">
             Providers
-            <Cpu size={14} className="text-[#D9823B]" />
+            <Cpu size={14} className="text-[#14B8A6]" />
           </span>
           <div className="mt-3">
             <span className="text-2xl font-bold text-[#F5F0E7]">{overview?.total_providers ?? 15}</span>
-            <span className="text-[11px] text-[#68B587] block font-sans mt-0.5">
+            <span className="text-[11px] text-[#14B8A6] block font-sans mt-0.5">
               {overview?.healthy_providers ?? 1} healthy / local
             </span>
           </div>
@@ -181,7 +232,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
         <div className="p-5 rounded-3xl bg-[#242522] border border-[#41413B] shadow-sm flex flex-col justify-between">
           <span className="text-xs text-[#A6A49D] font-sans flex items-center justify-between">
             Catalog Models
-            <Layers size={14} className="text-[#D9823B]" />
+            <Layers size={14} className="text-[#14B8A6]" />
           </span>
           <div className="mt-3">
             <span className="text-2xl font-bold text-[#F5F0E7]">{overview?.total_models ?? 14}</span>
@@ -194,7 +245,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
         <div className="p-5 rounded-3xl bg-[#242522] border border-[#41413B] shadow-sm flex flex-col justify-between">
           <span className="text-xs text-[#A6A49D] font-sans flex items-center justify-between">
             Evaluations
-            <TrendingUp size={14} className="text-[#68B587]" />
+            <TrendingUp size={14} className="text-[#14B8A6]" />
           </span>
           <div className="mt-3">
             <span className="text-2xl font-bold text-[#F5F0E7]">
@@ -209,7 +260,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
         <div className="p-5 rounded-3xl bg-[#242522] border border-[#41413B] shadow-sm flex flex-col justify-between">
           <span className="text-xs text-[#A6A49D] font-sans flex items-center justify-between">
             Mean Latency
-            <Clock size={14} className="text-[#D9823B]" />
+            <Clock size={14} className="text-[#14B8A6]" />
           </span>
           <div className="mt-3">
             <span className="text-2xl font-bold text-[#F5F0E7]">
@@ -222,10 +273,10 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
         <div className="p-5 rounded-3xl bg-[#242522] border border-[#41413B] shadow-sm flex flex-col justify-between">
           <span className="text-xs text-[#A6A49D] font-sans flex items-center justify-between">
             Pass Rate
-            <CheckCircle2 size={14} className="text-[#68B587]" />
+            <CheckCircle2 size={14} className="text-[#14B8A6]" />
           </span>
           <div className="mt-3">
-            <span className="text-2xl font-bold text-[#68B587]">
+            <span className="text-2xl font-bold text-[#14B8A6]">
               {overview && overview.total_evaluation_runs > 0 ? `${overview.overall_pass_rate_percent}%` : '—'}
             </span>
             <span className="text-[11px] text-[#A6A49D] block font-sans mt-0.5">
@@ -234,9 +285,9 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
           </div>
         </div>
 
-        <div className="p-5 rounded-3xl bg-[#242522] border border-[#D9823B]/40 shadow-sm flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-[#D9823B]/10 rounded-full blur-xl pointer-events-none" />
-          <span className="text-xs text-[#D9823B] font-sans font-semibold flex items-center justify-between">
+        <div className="p-5 rounded-3xl bg-[#242522] border border-[#0D9488]/40 shadow-sm flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-[#0D9488]/10 rounded-full blur-xl pointer-events-none" />
+          <span className="text-xs text-[#14B8A6] font-sans font-semibold flex items-center justify-between">
             Verified Commits
             <GitCommit size={14} />
           </span>
@@ -244,7 +295,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
             <span className="text-2xl font-bold text-[#F5F0E7]">
               {commitData?.total_verified_commits ?? '—'}
             </span>
-            <span className="text-[11px] text-[#68B587] block font-sans mt-0.5 font-medium">
+            <span className="text-[11px] text-[#14B8A6] block font-sans mt-0.5 font-medium">
               Target: {commitData?.target_commits ?? 56} {commitData?.target_achieved ? '(Achieved)' : '(In Progress)'}
             </span>
           </div>
@@ -256,7 +307,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
         <div className="p-6 sm:p-8 rounded-3xl bg-[#242522] border border-[#41413B] flex flex-col gap-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#41413B]/80">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#D9823B]/15 border border-[#D9823B]/30 flex items-center justify-center text-[#D9823B]">
+              <div className="w-10 h-10 rounded-2xl bg-[#0D9488]/15 border border-[#0D9488]/30 flex items-center justify-center text-[#14B8A6]">
                 <ShieldCheck size={20} />
               </div>
               <div className="flex flex-col">
@@ -278,24 +329,24 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
             <div className="flex items-center gap-3 bg-[#191A18] px-4 py-2 rounded-2xl border border-[#41413B]">
               <div className="flex flex-col text-right font-mono">
                 <span className="text-[10px] text-[#A6A49D]">TARGET REQUIREMENT</span>
-                <span className="text-sm font-bold text-[#D9823B]">
+                <span className="text-sm font-bold text-[#14B8A6]">
                   {commitData?.total_verified_commits ?? 392} / 56 Commits
                 </span>
               </div>
-              <div className="w-2.5 h-2.5 rounded-full bg-[#68B587] animate-pulse" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#14B8A6] animate-pulse" />
             </div>
           </div>
 
           {/* Substantive Explanation Alert */}
           <div className="p-4 rounded-2xl bg-[#191A18]/80 border border-[#41413B]/60 text-xs text-[#A6A49D] leading-relaxed flex items-start gap-3">
-            <Award size={18} className="text-[#D9823B] shrink-0 mt-0.5" />
+            <Award size={18} className="text-[#14B8A6] shrink-0 mt-0.5" />
             <div>
               <span className="font-semibold text-[#F5F0E7] block mb-0.5">
                 Target Verification Audit Report
               </span>
               The evaluation requirement mandates at least <strong className="text-[#F5F0E7]">56 valid commits</strong>.
-              Audit of the Git history substantiates <strong className="text-[#68B587]">392 qualifying commits</strong> authored
-              by project contributors (<code className="text-[#D9823B]">reddy895</code>) across active development sprints
+              Audit of the Git history substantiates <strong className="text-[#14B8A6]">392 qualifying commits</strong> authored
+              by project contributors (<code className="text-[#14B8A6]">reddy895</code>) across active development sprints
               between <strong className="text-[#F5F0E7]">{commitData?.time_range_start ?? '2026-10-15'}</strong> and{' '}
               <strong className="text-[#F5F0E7]">{commitData?.time_range_end ?? '2026-10-21'}</strong>.
               The required milestone is 100% achieved and verified without synthetic or invented timestamps.
@@ -316,7 +367,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
                     onClick={() => setSelectedDay(day)}
                     className={`p-4 rounded-2xl border transition-all text-left cursor-pointer flex flex-col justify-between min-h-[100px] ${
                       isSelected
-                        ? 'bg-[#191A18] border-[#D9823B] shadow-md ring-1 ring-[#D9823B]/30'
+                        ? 'bg-[#191A18] border-[#0D9488] shadow-md ring-1 ring-[#0D9488]/30'
                         : 'bg-[#191A18] border-[#41413B] hover:border-[#78766F]'
                     }`}
                   >
@@ -325,12 +376,12 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
                       <div
                         className={`w-3 h-3 rounded-md ${
                           day.level === 4
-                            ? 'bg-[#68B587]'
+                            ? 'bg-[#14B8A6]'
                             : day.level === 3
-                            ? 'bg-[#4e8d67]'
+                            ? 'bg-[#0D9488]'
                             : day.level === 2
-                            ? 'bg-[#3b6d4f]'
-                            : 'bg-[#294c37]'
+                            ? 'bg-[#0F766E]'
+                            : 'bg-[#115E59]'
                         }`}
                       />
                     </div>
@@ -348,7 +399,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
           {selectedDay && (
             <div className="p-4 rounded-2xl bg-[#191A18] border border-[#41413B] flex flex-col gap-3 font-mono text-xs">
               <div className="flex items-center justify-between border-b border-[#41413B]/60 pb-2">
-                <span className="text-[#D9823B] font-bold">
+                <span className="text-[#14B8A6] font-bold">
                   {selectedDay.date} — {selectedDay.count} Verified Commits
                 </span>
                 <span className="text-[11px] text-[#A6A49D]">Showing recent commit hashes</span>
@@ -361,7 +412,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
                       className="flex items-start justify-between gap-4 py-1.5 px-2.5 rounded-xl bg-[#242522] border border-[#41413B]/40"
                     >
                       <div className="flex items-center gap-2 overflow-hidden">
-                        <code className="text-[#D9823B] font-bold shrink-0">{c.hash}</code>
+                        <code className="text-[#14B8A6] font-bold shrink-0">{c.hash}</code>
                         <span className="text-[#F5F0E7] truncate font-sans text-xs">{c.message}</span>
                       </div>
                       <span className="text-[10px] text-[#A6A49D] shrink-0 font-sans">{c.author.split('<')[0]}</span>
@@ -377,7 +428,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
           {/* Author distribution summary */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#41413B]/60 text-xs">
             <div className="flex items-center gap-3">
-              <Users size={16} className="text-[#D9823B]" />
+              <Users size={16} className="text-[#14B8A6]" />
               <div className="flex flex-col">
                 <span className="text-[#F5F0E7] font-semibold">Author Distribution</span>
                 <span className="text-[#A6A49D] font-mono text-[11px]">
@@ -386,7 +437,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Calendar size={16} className="text-[#68B587]" />
+              <Calendar size={16} className="text-[#14B8A6]" />
               <div className="flex flex-col">
                 <span className="text-[#F5F0E7] font-semibold">Audit Window</span>
                 <span className="text-[#A6A49D] font-mono text-[11px]">
@@ -398,72 +449,40 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
         </div>
       )}
 
-      {/* SECTION 2: MODEL BENCHMARK & CAPABILITY SCORECARDS */}
+
+      {/* SECTION 2: 2D EMPIRICAL EVALUATION CHARTS */}
       {(activeTab === 'overview' || activeTab === 'models') && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Radar Capability Matrix */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-[#242522] border border-[#41413B] flex flex-col gap-5 shadow-sm">
-            <div className="flex items-center justify-between pb-3 border-b border-[#41413B]">
-              <div className="flex flex-col">
-                <h3 className="text-base font-bold text-[#F5F0E7]">
-                  Normalized Capability Profile
-                </h3>
-                <span className="text-xs text-[#A6A49D]">
-                  5-Axis normalized capability index (0-100 scale, calibrated against HumanEval, GSM8K, and MMLU)
-                </span>
-              </div>
-              <Badge variant="installed" size="sm">
-                Calibrated
-              </Badge>
-            </div>
-
-            {/* Capability Bars Comparison */}
-            <div className="flex flex-col gap-4 font-mono text-xs">
-              <div>
-                <div className="flex justify-between text-[11px] mb-1 font-sans">
-                  <span className="text-[#F5F0E7] font-semibold">Python Algorithmic Synthesis (HumanEval)</span>
-                  <span className="text-[#D9823B] font-mono">Qwen 2.5 7B (84.8) vs Llama 3.1 8B (72.6)</span>
-                </div>
-                <div className="w-full bg-[#191A18] h-3 rounded-full overflow-hidden flex gap-1 p-0.5">
-                  <div className="bg-[#D9823B] h-full rounded-full" style={{ width: '84.8%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1 font-sans">
-                  <span className="text-[#F5F0E7] font-semibold">Mathematical Deduction (GSM8K)</span>
-                  <span className="text-[#68B587] font-mono">Qwen 2.5 7B (83.5) vs Llama 3.1 8B (79.6)</span>
-                </div>
-                <div className="w-full bg-[#191A18] h-3 rounded-full overflow-hidden flex gap-1 p-0.5">
-                  <div className="bg-[#68B587] h-full rounded-full" style={{ width: '83.5%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1 font-sans">
-                  <span className="text-[#F5F0E7] font-semibold">General Knowledge Comprehension (MMLU)</span>
-                  <span className="text-[#F5F0E7] font-mono">Qwen 2.5 7B (74.2) vs Llama 3.1 8B (68.4)</span>
-                </div>
-                <div className="w-full bg-[#191A18] h-3 rounded-full overflow-hidden flex gap-1 p-0.5">
-                  <div className="bg-[#A6A49D] h-full rounded-full" style={{ width: '74.2%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] mb-1 font-sans">
-                  <span className="text-[#F5F0E7] font-semibold">Structured JSON Schema Adherence</span>
-                  <span className="text-[#68B587] font-mono">100% Deterministic Schema Valid</span>
-                </div>
-                <div className="w-full bg-[#191A18] h-3 rounded-full overflow-hidden flex gap-1 p-0.5">
-                  <div className="bg-[#68B587] h-full rounded-full" style={{ width: '100%' }} />
-                </div>
-              </div>
-            </div>
-
-            <div className="text-[11px] text-[#A6A49D] border-t border-[#41413B]/60 pt-3">
-              * Normalization methodology: pass@1 scores on official 2024 published technical evaluations.
-            </div>
+        <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-1 pb-2 border-b border-[#41413B]">
+            <h2 className="text-xl font-bold text-[#F5F0E7]">
+              Empirical Model Evaluation Benchmarks
+            </h2>
+            <p className="text-xs text-[#A6A49D]">
+              Direct 2D comparison visualizations generated from verified model evaluation runs against Ollama local inference.
+            </p>
           </div>
+
+          {/* 1. Model Accuracy & 2. Average Latency 2D Bar Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AccuracyQualityChart data={qualityData} />
+            <LatencyComparisonChart records={latencyData} />
+          </div>
+
+          {/* 3. Throughput & 4. Efficiency 2D Bar Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <EfficiencyMetricsChart rows={efficiencyData} />
+            <ModelEfficiencyChart rows={efficiencyData} />
+          </div>
+
+          {/* 5. Evaluation Success/Failure Summary */}
+          {overview && (
+            <ReliabilityAuditChart
+              completedRuns={overview.completed_runs}
+              failedRuns={overview.failed_runs}
+              timeoutRuns={0}
+              reliabilityRate={overview.overall_reliability_percent}
+            />
+          )}
 
           {/* Hardware & Cost Efficiency Matrix */}
           <div className="p-6 sm:p-8 rounded-3xl bg-[#242522] border border-[#41413B] flex flex-col gap-5 shadow-sm">
@@ -481,14 +500,14 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
               </Badge>
             </div>
 
+
             <div className="flex flex-col gap-3 font-mono text-xs">
               <div className="p-3.5 rounded-2xl bg-[#191A18] border border-[#41413B] flex items-center justify-between">
                 <div>
                   <span className="text-[#F5F0E7] font-bold block font-sans">Qwen 2.5 7B / Llama 3.1 8B</span>
                   <span className="text-[11px] text-[#A6A49D]">Local Ollama (Q4_K_M)</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[#68B587] font-bold block">$0.00 / 1M tokens</span>
+                           <div className="text-right">
+                  <span className="text-[#14B8A6] font-bold block">$0.00 / 1M tokens</span>
                   <span className="text-[11px] text-[#A6A49D]">8 GB RAM required</span>
                 </div>
               </div>
@@ -499,7 +518,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
                   <span className="text-[11px] text-[#A6A49D]">Cloud Serverless API</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[#D9823B] font-bold block">$0.14 in / $0.28 out</span>
+                  <span className="text-[#14B8A6] font-bold block">$0.14 in / $0.28 out</span>
                   <span className="text-[11px] text-[#A6A49D]">Per 1M tokens</span>
                 </div>
               </div>
@@ -538,7 +557,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#41413B] gap-3">
               <div>
                 <h3 className="text-lg font-bold text-[#F5F0E7] flex items-center gap-2">
-                  <Clock size={18} className="text-[#D9823B]" />
+                  <Clock size={18} className="text-[#14B8A6]" />
                   Empirical Latency Distributions & Percentile Spread
                 </h3>
                 <p className="text-xs text-[#A6A49D] mt-1 max-w-3xl">
@@ -597,9 +616,9 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
                           <span className="text-[#A6A49D] block text-[10px]">P25</span>
                           <span className="text-[#A6A49D] font-bold">{d.p25_ms} ms</span>
                         </div>
-                        <div className="p-2 rounded-xl bg-[#242522] border border-[#D9823B]/60 text-center ring-1 ring-[#D9823B]/40">
-                          <span className="text-[#D9823B] block text-[10px] font-semibold">MEDIAN (P50)</span>
-                          <span className="text-[#D9823B] font-bold">{d.p50_ms} ms</span>
+                        <div className="p-2 rounded-xl bg-[#242522] border border-[#0D9488]/60 text-center ring-1 ring-[#0D9488]/40">
+                          <span className="text-[#14B8A6] block text-[10px] font-semibold">MEDIAN (P50)</span>
+                          <span className="text-[#14B8A6] font-bold">{d.p50_ms} ms</span>
                         </div>
                         <div className="p-2 rounded-xl bg-[#242522] border border-[#41413B]/60 text-center">
                           <span className="text-[#A6A49D] block text-[10px]">P75</span>
@@ -607,15 +626,15 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
                         </div>
                         <div className="p-2 rounded-xl bg-[#242522] border border-[#41413B]/60 text-center">
                           <span className="text-[#A6A49D] block text-[10px]">P95</span>
-                          <span className="text-[#D9823B] font-bold">{d.p95_ms} ms</span>
+                          <span className="text-[#14B8A6] font-bold">{d.p95_ms} ms</span>
                         </div>
                         <div className="p-2 rounded-xl bg-[#242522] border border-[#41413B]/60 text-center">
                           <span className="text-[#A6A49D] block text-[10px]">MAX</span>
                           <span className="text-[#F5F0E7] font-bold">{d.max_ms} ms</span>
                         </div>
-                        <div className="p-2 rounded-xl bg-[#242522] border border-[#68B587]/60 text-center">
-                          <span className="text-[#68B587] block text-[10px]">MEAN</span>
-                          <span className="text-[#68B587] font-bold">{d.mean_ms} ms</span>
+                        <div className="p-2 rounded-xl bg-[#242522] border border-[#0D9488]/60 text-center">
+                          <span className="text-[#14B8A6] block text-[10px]">MEAN</span>
+                          <span className="text-[#14B8A6] font-bold">{d.mean_ms} ms</span>
                         </div>
                       </div>
 
@@ -632,7 +651,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
                           />
                           {/* IQR Box (P25 to P75) */}
                           <div
-                            className="absolute h-3.5 bg-gradient-to-r from-[#D9823B]/60 to-[#68B587]/60 rounded-md border border-[#F5F0E7]/20"
+                            className="absolute h-3.5 bg-[#0D9488]/60 rounded-md border border-[#14B8A6]/40"
                             style={{
                               left: `${p25Pct}%`,
                               width: `${Math.max(4, p75Pct - p25Pct)}%`,
@@ -646,7 +665,7 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
                           />
                           {/* P95 Marker pip */}
                           <div
-                            className="absolute w-0.5 h-3 bg-[#D9823B] top-1.5 rounded-full z-10 opacity-75"
+                            className="absolute w-0.5 h-3 bg-[#14B8A6] top-1.5 rounded-full z-10 opacity-75"
                             style={{ left: `${p95Pct}%` }}
                             title={`P95: ${d.p95_ms} ms`}
                           />
@@ -664,7 +683,6 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
           </div>
         </div>
       )}
-
 
       {/* SECTION 3: RECENT EVALUATION RUNS SCORECARDS */}
       {overview?.recent_runs && overview.recent_runs.length > 0 && (
@@ -698,12 +716,12 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
                 {overview.recent_runs.map((r) => (
                   <tr key={r.id} className="hover:bg-white/[0.02]">
                     <td className="p-3 font-bold text-[#F5F0E7]">{r.name}</td>
-                    <td className="p-3 text-[#D9823B]">{r.model_id}</td>
+                    <td className="p-3 text-[#14B8A6]">{r.model_id}</td>
                     <td className="p-3 text-[#A6A49D]">{r.provider}</td>
                     <td className="p-3">
-                      <span className="text-[#68B587] font-semibold">{r.status}</span>
+                      <span className="text-[#14B8A6] font-semibold">{r.status}</span>
                     </td>
-                    <td className="p-3 text-[#68B587]">
+                    <td className="p-3 text-[#14B8A6]">
                       {typeof r.pass_rate === 'number' ? `${(r.pass_rate * 100).toFixed(0)}%` : '—'}
                     </td>
                     <td className="p-3 text-[#F5F0E7]">
@@ -719,3 +737,4 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onRouteChange }) =
     </div>
   );
 };
+

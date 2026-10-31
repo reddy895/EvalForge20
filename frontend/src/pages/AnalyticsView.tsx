@@ -5,6 +5,7 @@ import { ReliabilityAuditChart } from '../charts/ReliabilityAuditChart';
 import { AccuracyQualityChart } from '../charts/AccuracyQualityChart';
 import { LatencyComparisonChart } from '../charts/LatencyComparisonChart';
 import { EfficiencyMetricsChart } from '../charts/EfficiencyMetricsChart';
+import { ModelEfficiencyChart } from '../charts/ModelEfficiencyChart';
 import { HistoricalTrendsChart } from '../charts/HistoricalTrendsChart';
 
 export const AnalyticsView: React.FC = () => {
@@ -50,6 +51,12 @@ export const AnalyticsView: React.FC = () => {
     modelName: e.model_name || e.model_id,
     tokensPerSecond: e.tokens_per_second ? Number(e.tokens_per_second.toFixed(1)) : null,
     avgDurationSec: Number(((e.total_duration_ms || 1000) / 1000).toFixed(2)),
+    efficiencyScore:
+      e.efficiency_score !== undefined && e.efficiency_score !== null
+        ? Number(e.efficiency_score.toFixed(1))
+        : e.tokens_per_second && e.avg_latency_ms
+        ? Number((e.tokens_per_second / (e.avg_latency_ms / 1000)).toFixed(1))
+        : null,
   }));
 
   const trendPoints = trends.map((t: any) => ({
@@ -72,36 +79,40 @@ export const AnalyticsView: React.FC = () => {
         </div>
         <div className="p-4 bg-[#1F201D] rounded-2xl border border-white/5 shadow-sm">
           <p className="text-xs text-[#A7A29A]">Overall Pass Rate</p>
-          <p className="text-xl font-bold font-mono text-[#68B587] mt-1">{overview.overall_pass_rate_percent}%</p>
+          <p className="text-xl font-bold font-mono text-[#14B8A6] mt-1">{overview.overall_pass_rate_percent}%</p>
         </div>
         <div className="p-4 bg-[#1F201D] rounded-2xl border border-white/5 shadow-sm">
           <p className="text-xs text-[#A7A29A]">Mean Response Latency</p>
-          <p className="text-xl font-bold font-mono text-[#D9823B] mt-1">{overview.average_latency_ms} ms</p>
+          <p className="text-xl font-bold font-mono text-[#0D9488] mt-1">{overview.average_latency_ms} ms</p>
         </div>
       </div>
 
-      {/* Grid of Empirical Accuracy & Latency Charts */}
+      {/* Grid of Empirical Accuracy & Latency 2D Bar Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <AccuracyQualityChart data={qualityData} />
         <LatencyComparisonChart records={latencyData} />
       </div>
 
-      {/* Grid of Efficiency & Historical Trends Charts */}
+      {/* Grid of Throughput & Efficiency 2D Bar Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <EfficiencyMetricsChart rows={efficiencyData} />
-        <HistoricalTrendsChart points={trendPoints} />
+        <ModelEfficiencyChart rows={efficiencyData} />
       </div>
 
-      {/* Reliability Execution Breakdown */}
-      <ReliabilityAuditChart
-        completedRuns={overview.completed_runs}
-        failedRuns={overview.failed_runs}
-        timeoutRuns={0}
-        reliabilityRate={overview.overall_reliability_percent}
-      />
+      {/* Reliability Execution Breakdown & Historical Trends */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ReliabilityAuditChart
+          completedRuns={overview.completed_runs}
+          failedRuns={overview.failed_runs}
+          timeoutRuns={0}
+          reliabilityRate={overview.overall_reliability_percent}
+        />
+        <HistoricalTrendsChart points={trendPoints} />
+      </div>
 
       {/* Git Commit Verification Heatmap */}
       {commits && <CommitActivityHeatmap data={commits} />}
     </div>
   );
 };
+

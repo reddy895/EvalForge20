@@ -84,7 +84,7 @@ class Settings(BaseSettings):
     MAX_CASES_PER_DATASET: int = 2000
 
     # CORS
-    CORS_ORIGINS: list[str] = [
+    CORS_ORIGINS: list[str] | str = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
@@ -97,11 +97,31 @@ class Settings(BaseSettings):
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: object) -> list[str]:
+        default_origins = [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+        ]
+        if v is None:
+            return default_origins
         if isinstance(v, str):
-            return [i.strip() for i in v.split(",") if i.strip()]
+            v_str = v.strip()
+            if not v_str:
+                return default_origins
+            if v_str.startswith("[") or v_str.endswith("]"):
+                import json
+                try:
+                    parsed = json.loads(v_str)
+                except Exception as exc:
+                    raise ValueError(f"Malformed JSON string in CORS_ORIGINS: {exc}") from exc
+                if not isinstance(parsed, list):
+                    raise ValueError("CORS_ORIGINS JSON must be a list of origin URLs")
+                return [str(item).strip() for item in parsed if str(item).strip()]
+            origins = [x.strip() for x in v_str.split(",") if x.strip()]
+            return origins if origins else default_origins
         if isinstance(v, list):
-            return v
-        return ["http://localhost:5173", "http://127.0.0.1:5173"]
+            return [str(x).strip() for x in v if str(x).strip()]
+        raise ValueError(f"Unexpected type for CORS_ORIGINS: {type(v)}")
 
 
 @lru_cache

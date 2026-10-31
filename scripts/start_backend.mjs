@@ -37,13 +37,16 @@ function loadEnv() {
       try {
         const content = fs.readFileSync(envPath, 'utf8');
         for (const line of content.split('\n')) {
-          const trimmed = line.trim();
+          let trimmed = line.trim();
           if (!trimmed || trimmed.startsWith('#')) continue;
+          if (trimmed.startsWith('export ')) {
+            trimmed = trimmed.slice(7).trim();
+          }
           const eqIdx = trimmed.indexOf('=');
           if (eqIdx > 0) {
             const key = trimmed.slice(0, eqIdx).trim();
             const val = trimmed.slice(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
-            if (!process.env[key]) {
+            if (key && process.env[key] === undefined && val !== '') {
               process.env[key] = val;
             }
           }

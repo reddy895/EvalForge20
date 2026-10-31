@@ -31,8 +31,8 @@ Enterprise-grade, local-first evaluation, benchmarking, and analytics platform f
 - **100% Local-First Inference**: Runs completely out-of-the-box with Ollama without requiring any cloud API credentials or subscription tokens.
 - **Genuine Execution Telemetry**: Nanosecond-accurate execution timers extracted directly from Ollama engine (`total_duration`, `eval_duration`, `load_duration`, `prompt_eval_duration`).
 - **Real Metrics & No Synthetic Overwrites**: Removed all mock simulation fallbacks; model comparison charts display genuine, measured variance.
+- **5 Core 2D Comparison Visualizations**: Minimalist, professional dashboard with Teal accent (`#0D9488`, `#14B8A6`) providing 2D bar charts for Model Accuracy, Average Latency, Throughput, Model Efficiency, and Reliability Summary.
 - **Modular Evaluator Engine**: Exact Match, Normalized Exact Match, Token F1, Keyword matching, JSON Schema constraint validation, and LLM-as-a-Judge.
-- **Interactive Visualizations**: Side-by-side comparison bar charts, latency distribution percentiles (P50, P90, P95, P99), output tokens/sec throughput scatter, and historical evaluation trends.
 - **Reproducible Exports**: Full run metadata and granular case results exportable in standard JSON and CSV formats.
 
 ---
@@ -48,13 +48,14 @@ Enterprise-grade, local-first evaluation, benchmarking, and analytics platform f
 
 ### 1. Starting the Backend
 
-From the **repository root directory**:
+From the **repository root directory** or from the **`backend/` directory**:
 ```bash
 npm run dev
 ```
-This executes `node scripts/start_backend.mjs`, which:
+This executes `node scripts/start_backend.mjs` (or `backend/start_backend.mjs`), which:
 - Detects `uv` or active Python virtual environments.
 - Verifies port availability (defaults to `8000`, configurable via `PORT`).
+- Validates CORS origins and environment configuration safely without crashing.
 - Gracefully handles startup and shutdown signals (`SIGINT`, `SIGTERM`).
 - Launches the FastAPI backend with hot reloading at `http://localhost:8000`.
 

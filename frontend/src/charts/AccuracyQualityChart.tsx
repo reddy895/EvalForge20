@@ -45,7 +45,7 @@ export const AccuracyQualityChart: React.FC<AccuracyQualityChartProps> = ({
   if (validRecords.length === 0) {
     return (
       <div className="p-8 bg-[#1F201D] rounded-3xl border border-white/5 flex flex-col items-center justify-center text-center space-y-3 min-h-[260px]">
-        <div className="w-10 h-10 rounded-2xl bg-[#68B587]/10 text-[#68B587] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-2xl bg-[#0D9488]/10 text-[#14B8A6] flex items-center justify-center">
           <ShieldCheck size={20} />
         </div>
         <div className="space-y-1">
@@ -67,14 +67,14 @@ export const AccuracyQualityChart: React.FC<AccuracyQualityChartProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h4 className="text-sm font-semibold text-[#F5F0E7] flex items-center gap-2">
-            <ShieldCheck size={16} className="text-[#68B587]" />
+            <ShieldCheck size={16} className="text-[#14B8A6]" />
             {title}
           </h4>
           <p className="text-xs text-[#A7A29A] mt-0.5">{description}</p>
         </div>
         <div className="flex items-center gap-4 text-xs font-mono">
           <span className="flex items-center gap-1.5 text-[#F5F0E7]">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#68B587]" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-[#0D9488]" />
             Pass Rate (0–100%)
           </span>
           <span className="text-[11px] text-[#A7A29A]">(Higher is better)</span>
@@ -84,18 +84,18 @@ export const AccuracyQualityChart: React.FC<AccuracyQualityChartProps> = ({
       {/* Horizontal 2D Bar Chart Canvas */}
       <div className="space-y-3.5">
         {validRecords.map((item) => {
-          const isHigh = item.accuracy >= 85;
-          const isMid = item.accuracy >= 65;
+          const isHigh = item.accuracy >= 80;
+          const isMid = item.accuracy >= 50;
           const barColor = isHigh
-            ? 'from-[#68B587] to-[#80CFA0]'
+            ? 'bg-[#0D9488]'
             : isMid
-            ? 'from-[#D9823B] to-[#E5914C]'
-            : 'from-[#E06C75] to-[#E88890]';
+            ? 'bg-[#14B8A6]'
+            : 'bg-[#D66D60]';
           const textColor = isHigh
-            ? 'text-[#68B587]'
+            ? 'text-[#2DD4BF]'
             : isMid
-            ? 'text-[#D9823B]'
-            : 'text-[#E06C75]';
+            ? 'text-[#14B8A6]'
+            : 'text-[#D66D60]';
 
           return (
             <div key={item.modelName} className="group relative">

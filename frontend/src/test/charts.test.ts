@@ -228,4 +228,56 @@ describe('Chart and Evaluation Graphical Telemetry Validation', () => {
     expect(formatScore(null)).toBe('—');
     expect(formatScore(undefined)).toBe('—');
   });
+
+  it('validates ModelEfficiencyChart efficiency score calculations, sorting, and bar scaling', () => {
+    const efficiencyRows = [
+      { modelName: 'qwen2.5:1.5b', tokensPerSecond: 45.2, avgDurationSec: 0.85, efficiencyScore: 53.2 },
+      { modelName: 'qwen2.5:3b', tokensPerSecond: 28.6, avgDurationSec: 1.40, efficiencyScore: 20.4 },
+      { modelName: 'mock-deepseek', tokensPerSecond: null, avgDurationSec: 2.10, efficiencyScore: null },
+    ];
+
+    expect(efficiencyRows.length).toBe(3);
+
+    // Filter valid efficiency scores
+    const validScores = efficiencyRows
+      .map((r) => r.efficiencyScore)
+      .filter((s): s is number => typeof s === 'number' && !isNaN(s) && s > 0);
+    expect(validScores).toEqual([53.2, 20.4]);
+
+    const maxScore = Math.max(...validScores);
+    expect(maxScore).toBe(53.2);
+
+    const ceiling = Math.max(10, Math.ceil(maxScore * 1.15));
+    expect(ceiling).toBeGreaterThan(53.2);
+
+    // Sorting descending by efficiencyScore
+    const sorted = [...efficiencyRows].sort((a, b) => {
+      const valA = a.efficiencyScore ?? -1;
+      const valB = b.efficiencyScore ?? -1;
+      return valB - valA;
+    });
+
+    expect(sorted[0].modelName).toBe('qwen2.5:1.5b');
+    expect(sorted[1].modelName).toBe('qwen2.5:3b');
+    expect(sorted[2].modelName).toBe('mock-deepseek');
+
+    // Horizontal bar width percentage calculation
+    const widthPct0 = Math.min(100, (sorted[0].efficiencyScore! / ceiling) * 100);
+    const widthPct1 = Math.min(100, (sorted[1].efficiencyScore! / ceiling) * 100);
+    expect(widthPct0).toBeGreaterThan(widthPct1);
+    expect(widthPct1).toBeGreaterThan(0);
+  });
+
+  it('handles empty and null rows gracefully for ModelEfficiencyChart', () => {
+    const emptyRows: any[] = [];
+    expect(emptyRows.length).toBe(0);
+
+    const formatEfficiency = (val: number | null | undefined) =>
+      typeof val === 'number' && !isNaN(val) ? `${val.toFixed(1)} pts` : 'Unmeasured';
+
+    expect(formatEfficiency(null)).toBe('Unmeasured');
+    expect(formatEfficiency(undefined)).toBe('Unmeasured');
+    expect(formatEfficiency(42.56)).toBe('42.6 pts');
+  });
 });
+

@@ -61,9 +61,25 @@ class EvaluationService:
         provider_name = request.provider or "ollama"
         if request.model_id.startswith("mock-"):
             provider_name = "mock"
-        self.registry.get(provider_name)
+        provider = self.registry.get(provider_name)
+
+        # Enforce model readiness and local installation check for Ollama
+        if provider_name == "ollama" and hasattr(provider, "check_model_readiness"):
+            try:
+                readiness = await provider.check_model_readiness(request.model_id)
+                if not readiness.get("ready"):
+                    remediation = (
+                        readiness.get("remediation_hint")
+                        or f"Model '{request.model_id}' is not installed locally. Run `ollama pull {request.model_id}` to install."
+                    )
+                    raise DataValidationError(remediation)
+            except DataValidationError:
+                raise
+            except Exception as exc:
+                logger.warning("Model readiness pre-flight check bypassed due to: %s", exc)
 
         # Prevent rapid duplicate submissions for identical model and dataset
+
         duplicate = await self.eval_repo.find_recent_duplicate(
             request.model_id, dataset.id, within_seconds=5
         )

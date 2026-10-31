@@ -41,7 +41,7 @@ class OllamaClient:
             client = self._get_client()
             response = await client.get("/api/tags", timeout=5.0)
             return response.status_code == 200
-        except (httpx.ConnectError, httpx.ConnectTimeout):
+        except (httpx.ConnectError, httpx.ConnectTimeout, httpx.TimeoutException, ConnectionRefusedError):
             return False
         except Exception as exc:
             logger.warning("Ollama health check encounter unexpected error: %s", exc)

@@ -15,9 +15,12 @@ class Settings(BaseSettings):
     )
 
     APP_NAME: str = "EvalForge20"
-    APP_VERSION: str = "2.0.0"
+    APP_VERSION: str = "2.1.0"
     DEBUG: bool = False
     ENVIRONMENT: str = "development"
+
+    # Storage paths
+    STORAGE_DIR: str = "./data"
 
     # Server binding (defaults to localhost for security)
     HOST: str = "127.0.0.1"

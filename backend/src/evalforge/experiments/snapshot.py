@@ -64,3 +64,24 @@ def create_dataset_snapshot(dataset: Dataset) -> DatasetSnapshot:
         total_cases=len(frozen_cases),
         cases=frozen_cases,
     )
+
+
+class ExperimentSnapshot(BaseModel):
+    """Complete freeze-frame of experiment configuration, models, evaluators, and hardware."""
+
+    experiment_id: str
+    workflow_id: str | None = None
+    model_identifier: str
+    model_version: str | None = None
+    hardware_specs: dict[str, Any]
+    evaluator_names: list[str]
+    generation_parameters: dict[str, Any]
+    snapshot_timestamp: str
+
+
+__all__ = [
+    "FrozenTestCase",
+    "DatasetSnapshot",
+    "create_dataset_snapshot",
+    "ExperimentSnapshot",
+]

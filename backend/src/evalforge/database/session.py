@@ -1,11 +1,17 @@
-"""Async database session context manager and dependencies."""
+"""Async database session context manager, engine factory, and FastAPI dependency."""
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.evalforge.storage.database import get_session_factory
+from src.evalforge.storage.database import (
+    close_db,
+    get_db,
+    get_engine,
+    get_session_factory,
+    init_db,
+)
 
 
 @asynccontextmanager
@@ -19,3 +25,13 @@ async def get_db_context() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
+
+
+__all__ = [
+    "get_db",
+    "get_db_context",
+    "init_db",
+    "close_db",
+    "get_engine",
+    "get_session_factory",
+]

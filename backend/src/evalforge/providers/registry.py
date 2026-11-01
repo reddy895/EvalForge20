@@ -98,6 +98,18 @@ class ProviderRegistry:
             provider=name,
         )
 
+    def resolve_model_provider(self, model_identifier: str) -> BaseProvider:
+        """Resolve the appropriate provider instance for a given model identifier."""
+        clean_id = model_identifier.strip().lower()
+        if clean_id.startswith("ollama:") or any(
+            x in clean_id for x in ["qwen", "llama", "mistral", "deepseek", "phi", "gemma", "3.5:"]
+        ):
+            return self.get("ollama")
+        if clean_id.startswith("mock:") or clean_id == "mock":
+            return self.get("mock")
+        # Default to local Ollama
+        return self.get("ollama")
+
     def list_names(self) -> list[str]:
         """List all registered provider names."""
         return sorted(set(self._providers.keys()) | set(self._factories.keys()))

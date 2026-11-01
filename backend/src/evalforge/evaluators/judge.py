@@ -146,4 +146,31 @@ Evaluate now. Respond ONLY with valid JSON."""
         return None, "Unable to extract numeric score from judge output"
 
 
-__all__ = ["LocalJudgeEvaluator"]
+def compute_judge_confidence_interval(scores: list[float], confidence: float = 0.95) -> dict[str, float]:
+    """Calculate mean score and 95% normal confidence interval."""
+    import math
+    if not scores:
+        return {"mean": 0.0, "ci_lower": 0.0, "ci_upper": 0.0, "std_err": 0.0}
+    mean = sum(scores) / len(scores)
+    if len(scores) == 1:
+        return {"mean": round(mean, 4), "ci_lower": round(mean, 4), "ci_upper": round(mean, 4), "std_err": 0.0}
+
+    variance = sum((s - mean) ** 2 for s in scores) / (len(scores) - 1)
+    std_dev = math.sqrt(variance)
+    std_err = std_dev / math.sqrt(len(scores))
+    # 1.96 multiplier for 95% confidence
+    z = 1.96
+    margin = z * std_err
+
+    return {
+        "mean": round(mean, 4),
+        "ci_lower": round(max(0.0, mean - margin), 4),
+        "ci_upper": round(min(1.0, mean + margin), 4),
+        "std_err": round(std_err, 4),
+    }
+
+
+__all__ = [
+    "LocalJudgeEvaluator",
+    "compute_judge_confidence_interval",
+]

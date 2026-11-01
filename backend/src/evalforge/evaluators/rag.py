@@ -177,3 +177,53 @@ async def evaluate_rag_case(case: RAGQueryCase) -> RAGScorecard:
             "answer_relevance_passed": ar_res.passed,
         },
     )
+
+
+class ContextPrecisionEvaluator(BaseEvaluator):
+    """Evaluates whether all ground-truth reference items are captured in the retrieved context."""
+
+    evaluator_id: str = "rag_context_precision"
+    name: str = "rag_context_precision"
+    version: str = "1.0.0"
+    is_deterministic: bool = True
+    required_inputs: list[str] = ["prediction"]
+
+    async def evaluate(
+        self,
+        prediction: str,
+        reference: str | None = None,
+        context: str | None = None,
+        **kwargs: Any,
+    ) -> MetricResult:
+        ctx_str = context or prediction
+        ref_str = reference or ""
+
+        c_tokens = clean_tokens(ctx_str)
+        r_tokens = clean_tokens(ref_str)
+
+        if not r_tokens:
+            score = 1.0
+        else:
+            overlap = r_tokens & c_tokens
+            score = round(len(overlap) / len(r_tokens), 4)
+
+        return MetricResult(
+            name=self.name,
+            score=score,
+            passed=score >= 0.5,
+            method="context_precision_reference_overlap",
+            details={
+                "reference_tokens_count": len(r_tokens),
+                "matched_tokens_count": len(r_tokens & c_tokens),
+            },
+        )
+
+
+__all__ = [
+    "ContextRelevanceEvaluator",
+    "FaithfulnessEvaluator",
+    "AnswerRelevanceEvaluator",
+    "ContextPrecisionEvaluator",
+    "evaluate_rag_case",
+    "clean_tokens",
+]

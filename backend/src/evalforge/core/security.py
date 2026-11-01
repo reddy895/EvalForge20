@@ -44,6 +44,38 @@ def enforce_content_length(content_length: int | None, max_allowed_bytes: int) -
         )
 
 
+import ipaddress
+from urllib.parse import urlparse
+
+
+def validate_safe_url(url: str, allowed_hosts: list[str] | None = None) -> str:
+    """Validate URL against SSRF and cloud metadata access attacks."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise SecurityViolationError(f"Disallowed URL scheme: {parsed.scheme}")
+
+    hostname = parsed.hostname
+    if not hostname:
+        raise SecurityViolationError("URL has empty or invalid hostname")
+
+    # Guard against cloud metadata addresses
+    if hostname in ("169.254.169.254", "metadata.google.internal"):
+        raise SecurityViolationError("Targeting cloud metadata services is strictly prohibited.")
+
+    try:
+        ip = ipaddress.ip_address(hostname)
+        if ip.is_link_local:
+            raise SecurityViolationError("Link-local IP address destinations are prohibited.")
+    except ValueError:
+        # Hostname is a domain name, not an IP address
+        pass
+
+    if allowed_hosts and hostname not in allowed_hosts:
+        raise SecurityViolationError(f"Hostname '{hostname}' is not in the allowed destination list.")
+
+    return url
+
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Enforces standard HTTP security defense headers on all responses."""
 

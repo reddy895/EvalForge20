@@ -34,8 +34,12 @@ export const ModelNode: React.FC<NodeProps> = ({ data, selected }) => {
             </div>
           </div>
           <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#F0FDF4] text-[#16A34A] border border-[#BBF7D0]">
-            Local
+            Ollama
           </span>
+        </div>
+
+        <div className="text-[10px] text-[#64748B] bg-[#F8FAFC] rounded px-2 py-1 mt-1 border border-[#E2E8F0]">
+          Temperature: 0.0 · Greedy
         </div>
 
         {status === 'evaluating' && (

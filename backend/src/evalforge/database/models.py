@@ -10,9 +10,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.evalforge.storage.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 # Import existing models for unified registry
-from src.evalforge.storage.models.benchmark import BenchmarkRecord
-from src.evalforge.storage.models.dataset import DatasetCaseRecord, DatasetRecord
-from src.evalforge.storage.models.evaluation import CaseResultRecord, EvaluationRunRecord
+from src.evalforge.storage.models.benchmark import BenchmarkComparison as BenchmarkRecord
+from src.evalforge.storage.models.dataset import Dataset as DatasetRecord, TestCase as DatasetCaseRecord
+from src.evalforge.storage.models.evaluation import CaseResult as CaseResultRecord, EvaluationRun as EvaluationRunRecord
 from src.evalforge.storage.models.provider import ProviderRecord, RegisteredModelRecord
 
 

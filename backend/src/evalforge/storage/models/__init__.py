@@ -1,5 +1,8 @@
-"""Export all SQLAlchemy ORM models for database registry and migrations."""
-
+from src.evalforge.database.models import (
+    ExecutionRecord,
+    ExperimentRecord,
+    WorkflowRecord,
+)
 from src.evalforge.storage.models.agent import AgentEvaluation, AgentTrace
 from src.evalforge.storage.models.benchmark import BenchmarkComparison
 from src.evalforge.storage.models.dataset import Dataset, TestCase
@@ -16,4 +19,7 @@ __all__ = [
     "AgentTrace",
     "ProviderRecord",
     "RegisteredModelRecord",
+    "WorkflowRecord",
+    "ExecutionRecord",
+    "ExperimentRecord",
 ]

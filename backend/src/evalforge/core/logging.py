@@ -135,3 +135,9 @@ def setup_logging(level: str = "INFO", log_format: str = "json") -> None:
 def get_logger(name: str) -> logging.Logger:
     """Convenience getter for a named logger."""
     return logging.getLogger(name)
+
+
+def log_telemetry_event(event_type: str, payload: dict[str, Any]) -> None:
+    """Log an execution telemetry event with structured payload."""
+    logger = get_logger("evalforge.telemetry")
+    logger.info(f"telemetry_event:{event_type}", extra={"telemetry_event": event_type, "payload": payload})

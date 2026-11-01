@@ -38,6 +38,9 @@ class EvaluationScorecard(BaseModel):
     timeout_count: int = 0
     error_categories: dict[str, int] = Field(default_factory=dict)
     metric_averages: dict[str, float] = Field(default_factory=dict)
+    metric_variances: dict[str, float] = Field(default_factory=dict)
+    score_variance: float | None = None
+    score_std_dev: float | None = None
 
 
 def is_genuine_zero_score(scorecard: EvaluationScorecard) -> bool:
@@ -156,8 +159,7 @@ def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
     avg_load = round(sum(load_list) / len(load_list), 2) if load_list else None
 
     # Per-metric averages
-    metric_sums: dict[str, float] = {}
-    metric_counts: dict[str, int] = {}
+    metric_values: dict[str, list[float]] = {}
     for r in results:
         metrics = r.metrics
         for m_name, m_data in metrics.items():
@@ -170,10 +172,28 @@ def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
                 score = float(m_data)
 
             if score is not None:
-                metric_sums[m_name] = metric_sums.get(m_name, 0.0) + score
-                metric_counts[m_name] = metric_counts.get(m_name, 0) + 1
+                metric_values.setdefault(m_name, []).append(score)
 
-    metric_averages = {m: round(metric_sums[m] / metric_counts[m], 4) for m in metric_sums}
+    metric_averages = {
+        m: round(sum(vals) / len(vals), 4) for m, vals in metric_values.items() if vals
+    }
+    metric_variances = {}
+    for m, vals in metric_values.items():
+        if len(vals) > 1:
+            mean = sum(vals) / len(vals)
+            var = sum((x - mean) ** 2 for x in vals) / (len(vals) - 1)
+            metric_variances[m] = round(var, 4)
+        else:
+            metric_variances[m] = 0.0
+
+    # Overall pass rate variance across binary passes
+    binary_scores = [1.0 if r.passed else 0.0 for r in results]
+    score_var = None
+    score_std = None
+    if len(binary_scores) > 1:
+        mean_p = sum(binary_scores) / len(binary_scores)
+        score_var = round(sum((s - mean_p) ** 2 for s in binary_scores) / (len(binary_scores) - 1), 4)
+        score_std = round(math.sqrt(score_var), 4)
 
     return EvaluationScorecard(
         total_cases=total,
@@ -196,4 +216,7 @@ def aggregate_scorecard(results: list[CaseResult]) -> EvaluationScorecard:
         timeout_count=timeout_count,
         error_categories=error_categories,
         metric_averages=metric_averages,
+        metric_variances=metric_variances,
+        score_variance=score_var,
+        score_std_dev=score_std,
     )

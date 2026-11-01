@@ -6,7 +6,7 @@ from src.evalforge.evaluators.base import BaseEvaluator, MetricResult
 from src.evalforge.evaluators.deterministic.code_execution import (
     CodeExecutionEvaluator,
     extract_python_code,
-    validate_code_ast,
+    validate_code_security as validate_code_ast,
 )
 
 

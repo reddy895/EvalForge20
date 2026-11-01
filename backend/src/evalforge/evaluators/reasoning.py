@@ -8,23 +8,32 @@ from src.evalforge.evaluators.base import BaseEvaluator, MetricResult
 
 
 def extract_numeric_value(text: str) -> float | None:
-    """Extract final numeric answer or boxed value from text."""
-    # Check for boxed LaTeX: \boxed{123}
+    """Extract final numeric answer, fraction, or boxed value from text."""
+    # Check for boxed LaTeX: \boxed{123} or \boxed{3/4}
     boxed = re.search(r"\\boxed\{([^\}]+)\}", text)
     if boxed:
         target = boxed.group(1).strip()
     else:
-        # Check for explicitly labeled answer: Answer: 42 or Result: 42
-        ans = re.search(r"(?:answer|result|final answer)[:=\s]+([+-]?\d+(?:\.\d+)?)", text, re.IGNORECASE)
+        # Check for explicitly labeled answer: Answer: 3/4 or Result: 42
+        ans = re.search(
+            r"(?:answer|result|final answer)[:=\s]+([+-]?\d+(?:\.\d+)?(?:\s*/\s*[+-]?\d+(?:\.\d+)?)?)",
+            text,
+            re.IGNORECASE,
+        )
         if ans:
             target = ans.group(1).strip()
         else:
-            # Fallback to last number in string
-            nums = re.findall(r"[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?", text)
-            if nums:
-                target = nums[-1]
+            # Check for standalone fraction: e.g. 3/4
+            frac = re.search(r"\b([+-]?\d+(?:\.\d+)?\s*/\s*[+-]?\d+(?:\.\d+)?)\b", text)
+            if frac:
+                target = frac.group(1).strip()
             else:
-                return None
+                # Fallback to last number in string
+                nums = re.findall(r"[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?", text)
+                if nums:
+                    target = nums[-1]
+                else:
+                    return None
 
     # Handle simple fractions like 3/4
     if "/" in target:

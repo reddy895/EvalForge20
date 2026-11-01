@@ -2,15 +2,10 @@ import React, { useState } from 'react';
 import {
   Search,
   Cpu,
-  Database,
   Zap,
   BookmarkCheck,
   ChevronDown,
   ChevronRight,
-  Shield,
-  Activity,
-  Code,
-  Calculator,
 } from 'lucide-react';
 
 interface NodeLibrarySidebarProps {

@@ -6,8 +6,6 @@ import {
   CheckCircle2,
   XCircle,
   Download,
-  BarChart2,
-  ListFilter,
 } from 'lucide-react';
 import { Button } from '../ui/Primitives';
 
@@ -115,6 +113,29 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
                 Logs ({logs.length})
               </button>
             </div>
+
+            {activeTab === 'cases' && (
+              <div className="flex rounded-md border border-[#E2E8F0] bg-white p-0.5 text-[11px]">
+                <button
+                  onClick={() => setFilter('all')}
+                  className={`px-2 py-0.5 rounded ${filter === 'all' ? 'bg-[#F1F5F9] font-bold text-[#111827]' : 'text-[#64748B]'}`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setFilter('passed')}
+                  className={`px-2 py-0.5 rounded ${filter === 'passed' ? 'bg-[#F0FDF4] font-bold text-[#16A34A]' : 'text-[#64748B]'}`}
+                >
+                  Passed
+                </button>
+                <button
+                  onClick={() => setFilter('failed')}
+                  className={`px-2 py-0.5 rounded ${filter === 'failed' ? 'bg-[#FEF2F2] font-bold text-[#DC2626]' : 'text-[#64748B]'}`}
+                >
+                  Failed
+                </button>
+              </div>
+            )}
 
             {onExportCsv && (
               <Button variant="outline" size="sm" onClick={onExportCsv} icon={<Download className="w-3 h-3" />}>

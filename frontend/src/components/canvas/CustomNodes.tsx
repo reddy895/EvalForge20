@@ -1,6 +1,6 @@
 import React from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { Cpu, Database, CheckCircle2, BookmarkCheck, AlertCircle, Clock, Zap } from 'lucide-react';
+import { Cpu, Database, CheckCircle2, BookmarkCheck, Clock, Zap } from 'lucide-react';
 
 /* MODEL NODE */
 export const ModelNode: React.FC<NodeProps> = ({ data, selected }) => {

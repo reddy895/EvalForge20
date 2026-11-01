@@ -4,10 +4,7 @@ import {
   Download,
   Trash2,
   BarChart3,
-  CheckCircle2,
   Calendar,
-  Layers,
-  Cpu,
 } from 'lucide-react';
 import { Button, Card, Badge, EmptyState } from '../components/ui/Primitives';
 import { ComparisonCharts } from '../components/charts/ComparisonCharts';

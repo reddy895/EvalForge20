@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Trophy, RefreshCw, Cpu, Award } from 'lucide-react';
-import { Badge, EmptyState } from '../components/ui/Primitives';
+import { Trophy, RefreshCw, Cpu } from 'lucide-react';
+import { EmptyState } from '../components/ui/Primitives';
 
 const CATEGORIES = [
   'Reasoning',

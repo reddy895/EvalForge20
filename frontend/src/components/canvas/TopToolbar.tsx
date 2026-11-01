@@ -4,10 +4,6 @@ import {
   Save,
   CheckCircle,
   AlertCircle,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  RotateCcw,
 } from 'lucide-react';
 import { Button } from '../ui/Primitives';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Node } from '@xyflow/react';
-import { X, Trash2, Sliders, CheckSquare, Settings } from 'lucide-react';
+import { X, Trash2, Sliders, Settings } from 'lucide-react';
 import { Button } from '../ui/Primitives';
 
 interface NodeConfigPanelProps {

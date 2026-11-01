@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
 
 /* BUTTON PRIMITIVE */
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -71,15 +71,16 @@ export const Card: React.FC<{
 /* BADGE PRIMITIVE */
 export const Badge: React.FC<{
   children: React.ReactNode;
-  variant?: 'neutral' | 'success' | 'warning' | 'error' | 'accent';
+  variant?: 'neutral' | 'success' | 'warning' | 'error' | 'accent' | 'primary';
   className?: string;
 }> = ({ children, variant = 'neutral', className = '' }) => {
-  const styles = {
+  const styles: Record<string, string> = {
     neutral: 'bg-[#F1F5F9] text-[#64748B] border-[#E2E8F0]',
     success: 'bg-[#F0FDF4] text-[#16A34A] border-[#BBF7D0]',
     warning: 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]',
     error: 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]',
     accent: 'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
+    primary: 'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
   };
 
   return (

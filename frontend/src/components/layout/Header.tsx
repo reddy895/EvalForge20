@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Cpu, RefreshCw, Server, Zap, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Cpu, RefreshCw, Server, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;

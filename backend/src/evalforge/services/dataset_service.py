@@ -187,3 +187,12 @@ class DatasetService:
             failed_rows=len(errors),
             errors=errors,
         )
+
+
+def get_dataset_service(session: AsyncSession | None = None) -> DatasetService:
+    """Helper factory providing DatasetService with session context."""
+    if session is None:
+        from src.evalforge.storage.session import async_session_factory
+        session = async_session_factory()
+    return DatasetService(session)
+

@@ -636,6 +636,16 @@ class ModelService:
         paged = results[offset : offset + limit]
         return paged, total
 
+    @classmethod
+    async def get_model_by_id(cls, model_id: str) -> ModelInfo | None:
+        """Find a model by id or model_identifier."""
+        models = await cls.get_all_models()
+        for m in models:
+            if m.id == model_id or m.model_identifier == model_id:
+                return m
+        return None
+
+
 
 _model_service: ModelService | None = None
 

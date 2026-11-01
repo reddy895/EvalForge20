@@ -1,5 +1,6 @@
 """Modular API route for model dynamic discovery and technical catalog."""
 
+from typing import Any
 from fastapi import APIRouter
 
 from src.evalforge.services.model_service import get_model_service
@@ -32,9 +33,14 @@ async def get_model(model_id: str):
 
 @router.post("/refresh")
 async def refresh_models():
+    from datetime import datetime, timezone
     service = get_model_service()
     models = await service.get_all_models(force_refresh=True)
-    return {"success": True, "total_models": len(models)}
+    return {
+        "success": True,
+        "total_models": len(models),
+        "refreshed_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 @router.post("/test-connection")
@@ -48,4 +54,6 @@ async def test_model_connection(payload: dict[str, Any] | None = None) -> dict[s
     provider = registry.resolve_model_provider(model_id)
 
     res = await provider.test_connection(model_id, prompt=prompt)
+    if isinstance(res, dict) and "success" not in res:
+        res["success"] = res.get("status") == "connected"
     return res

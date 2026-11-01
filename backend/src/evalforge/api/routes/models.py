@@ -35,3 +35,17 @@ async def refresh_models():
     service = get_model_service()
     models = await service.get_all_models(force_refresh=True)
     return {"success": True, "total_models": len(models)}
+
+
+@router.post("/test-connection")
+async def test_model_connection(payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    from src.evalforge.providers.registry import get_provider_registry
+    req_dict = payload or {}
+    model_id = req_dict.get("model_identifier") or req_dict.get("model") or "qwen2.5:3b"
+    prompt = req_dict.get("prompt") or "Hello, respond with 'OK'."
+
+    registry = get_provider_registry()
+    provider = registry.resolve_model_provider(model_id)
+
+    res = await provider.test_connection(model_id, prompt=prompt)
+    return res

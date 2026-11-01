@@ -50,6 +50,7 @@ class InferenceResponse(BaseModel):
     latency_ms: float | None = None
     usage: TokenUsage | None = None
     tool_calls: list[ToolCall] | None = None
+    error: str | None = None
     raw_metadata: dict[str, Any] = Field(default_factory=dict)
 
 

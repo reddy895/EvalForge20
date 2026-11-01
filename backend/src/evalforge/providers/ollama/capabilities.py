@@ -23,11 +23,16 @@ def parse_model_info(raw_tag: dict[str, Any]) -> ModelInfo:
     caps = raw_tag.get("capabilities", [])
     is_remote = bool(raw_tag.get("remote_model") or raw_tag.get("remote_host") or ":cloud" in name)
 
+    size_bytes = raw_tag.get("size")
+    param_size = details.get("parameter_size") or ""
+    quant = details.get("quantization_level") or ("Cloud" if is_remote else "Unknown")
+    family = details.get("family") or ""
+    ctx_len = details.get("context_length") or 4096
+    disk_gb = round(size_bytes / 1e9, 2) if size_bytes else 4.0
+
     supports_thinking = "thinking" in caps
     supports_vision = "vision" in caps
     supports_tools = "tools" in caps or family in TOOL_CAPABLE_FAMILIES or "qwen" in family or "llama" in family
-
-    size_bytes = raw_tag.get("size")
 
     # Compute sensible RAM requirements based on parameter count
     min_ram = 4.0

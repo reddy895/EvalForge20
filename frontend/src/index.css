@@ -1,24 +1,5 @@
 @import "tailwindcss";
-
-@theme {
-  --color-graphite: #242522;
-  --color-charcoal: #191A18;
-  --color-warm-ivory: #F5F0E7;
-  --color-burnt-orange: #D9823B;
-  --color-muted-gray: #A6A49D;
-  --color-soft-border: #41413B;
-
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 24px;
-  --radius-full: 9999px;
-}
-
 @import './styles/tokens.css';
-@import './styles/typography.css';
 
 *,
 *::before,
@@ -27,17 +8,10 @@
 }
 
 html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 88px;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-sans);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
 body {
@@ -45,6 +19,8 @@ body {
   margin: 0;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Accessible focus ring */
@@ -55,34 +31,19 @@ body {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--border-default);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
-
-/* Subtle Technical Background Grid & Ambient Ember */
-.bg-tech-grid {
-  background-image: 
-    radial-gradient(circle at 50% -10%, rgba(217, 130, 59, 0.14) 0%, transparent 65%),
-    radial-gradient(rgba(217, 130, 59, 0.07) 1px, transparent 1px);
-  background-size: 100% 100%, 32px 32px;
-}
-
-.text-gradient {
-  background: linear-gradient(135deg, #F5F0E7 30%, #D9823B 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-

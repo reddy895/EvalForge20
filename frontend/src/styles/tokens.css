@@ -1,92 +1,62 @@
-/* EvalForge20 Design Tokens — Graphite × Deep Charcoal × Warm Ivory × Burnt Orange */
+/* EvalForge20 — Professional Light Theme Design System Tokens */
 
 :root {
-  /* Canonical Palette */
-  --color-graphite: #242522;
-  --color-charcoal: #191A18;
-  --color-warm-ivory: #F5F0E7;
-  --color-teal: #0D9488;
-  --color-teal-light: #2DD4BF;
-  --color-teal-dark: #0F766E;
-  --color-burnt-orange: #0D9488;
-  --color-muted-gray: #A6A49D;
-  --color-soft-border: #41413B;
+  /* Canonical Design Palette */
+  --bg-primary: #F8FAFC;         /* Main application background */
+  --bg-canvas: #F1F5F9;          /* Visual React Flow Canvas background */
+  --bg-card: #FFFFFF;            /* Cards, containers, modals */
+  --bg-sidebar: #FFFFFF;         /* Left / Right panels */
+  --bg-hover: #F1F5F9;           /* Item hover state */
+  --bg-active: #E2E8F0;          /* Item active/selected state */
+  --bg-muted: #F8FAFC;           /* Secondary inset / code blocks */
 
-  /* Surfaces & Backgrounds */
-  --bg-primary: #191A18;        /* Deep Charcoal main background */
-  --bg-secondary: #242522;      /* Graphite elevated cards and containers */
-  --bg-tertiary: #2C2D2A;       /* Subtle tertiary graphite */
-  --bg-hover: #333430;          /* Hover surface */
-  --bg-active: #3C3D38;         /* Active state surface */
-  --bg-inset: #131412;          /* Inset for inputs and terminal snippets */
+  /* Typography */
+  --text-primary: #111827;       /* Primary titles, body text */
+  --text-secondary: #64748B;     /* Secondary subtitles, labels */
+  --text-muted: #94A3B8;         /* Disabled, timestamps, placeholders */
+  --text-inverse: #FFFFFF;       /* White text on accent buttons */
 
-  /* Alternating Light Ivory Section Tokens */
-  --ivory-bg: #F5F0E7;          /* Warm Ivory section background */
-  --ivory-surface: #FCFAF6;     /* Light ivory elevated card surface */
-  --ivory-text-primary: #191A18;/* Charcoal typography on light ivory */
-  --ivory-text-secondary: #63615A;/* Muted typography on light ivory */
-  --ivory-border: #DDD7CA;      /* Subtle border on light ivory */
-  --ivory-hover: #EBE5DB;       /* Hover state on light ivory */
+  /* Borders & Dividers */
+  --border-default: #E2E8F0;     /* Standard borders */
+  --border-subtle: #F1F5F9;      /* Subtle dividers */
+  --border-focus: #2563EB;       /* Active focus outlines */
 
-  /* Typography Colors */
-  --text-primary: #F5F0E7;      /* Warm Ivory primary text on dark surfaces */
-  --text-secondary: #A6A49D;    /* Muted Gray secondary text */
-  --text-muted: #78766F;        /* Subtle tertiary text */
-  --text-inverse: #191A18;      /* Deep Charcoal for text on accent/ivory */
+  /* Primary Accent & Brand */
+  --accent-primary: #2563EB;     /* Blue primary accent */
+  --accent-hover: #1D4ED8;       /* Primary button hover */
+  --accent-subtle: #EFF6FF;      /* Light blue badge/selection background */
+  --accent-border: #BFDBFE;      /* Light blue boundary */
 
-  /* Primary Accent — Teal */
-  --accent-primary: #0D9488;
-  --accent-hover: #14B8A6;
-  --accent-active: #0F766E;
-  --accent-subtle: rgba(13, 148, 136, 0.12);
-  --accent-border: rgba(20, 184, 166, 0.4);
-  --accent-text: #2DD4BF;
+  /* Semantic Feedback */
+  --status-success: #16A34A;     /* Green */
+  --status-success-bg: #F0FDF4;
+  --status-success-border: #BBF7D0;
 
-  /* Soft Borders */
-  --border-default: #41413B;
-  --border-subtle: #2C2D29;
-  --border-strong: #54544D;
-  --border-focus: #14B8A6;
+  --status-warning: #D97706;     /* Amber */
+  --status-warning-bg: #FFFBEB;
+  --status-warning-border: #FDE68A;
 
-  /* Semantic Feedback Tokens */
-  --status-success: #7EA96E;
-  --status-success-bg: rgba(126, 169, 110, 0.12);
-  --status-success-border: rgba(126, 169, 110, 0.35);
-
-  --status-error: #D66D60;
-  --status-error-bg: rgba(214, 109, 96, 0.12);
-  --status-error-border: rgba(214, 109, 96, 0.35);
-
-  --status-warning: #D99D4B;
-  --status-warning-bg: rgba(217, 157, 75, 0.12);
-  --status-warning-border: rgba(217, 157, 75, 0.35);
-
-  --status-info: #A6A49D;
-  --status-info-bg: rgba(166, 164, 157, 0.12);
-  --status-info-border: rgba(166, 164, 157, 0.3);
-
-  /* Geometry & Soft Rounded Radii */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 24px;
-  --radius-full: 9999px;
+  --status-error: #DC2626;       /* Red */
+  --status-error-bg: #FEF2F2;
+  --status-error-border: #FECACA;
 
   /* Typography Font Stacks */
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, Consolas, monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+
+  /* Clean Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Professional Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 220ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Restrained Soft Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.4);
-  --shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }

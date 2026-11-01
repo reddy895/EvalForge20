@@ -107,6 +107,10 @@ def create_app() -> FastAPI:
     # Register centralized exception handlers
     register_exception_handlers(application)
 
+    # Register top-level modular routes under /api
+    from src.evalforge.api.routes import api_router
+    application.include_router(api_router, prefix="/api")
+
     # Register top-level endpoints (both /api and /api/v1 supported)
     application.include_router(health_router)
     application.include_router(health_router, prefix="/api")

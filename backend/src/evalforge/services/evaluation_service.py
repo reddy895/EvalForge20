@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -58,6 +59,28 @@ class EvaluationService:
         if not request.model_id or not request.model_id.strip():
             raise DataValidationError("Target model identifier must be specified.")
 
+        # Prevent rapid duplicate submissions for identical model and dataset
+        duplicate = None
+        if hasattr(self.eval_repo, "find_recent_duplicate"):
+            dup_call = self.eval_repo.find_recent_duplicate(
+                request.model_id, dataset.id, within_seconds=5
+            )
+            import inspect
+
+            if inspect.isawaitable(dup_call):
+                duplicate = await dup_call
+            elif isinstance(dup_call, EvaluationRun):
+                duplicate = dup_call
+
+        if duplicate:
+            logger.info(
+                "Duplicate evaluation request throttled for model '%s' and dataset '%s' (reusing %s)",
+                request.model_id,
+                dataset.id,
+                duplicate.id,
+            )
+            return duplicate
+
         # Validate provider
         provider_name = request.provider or "ollama"
         if request.model_id.startswith("mock-"):
@@ -78,20 +101,6 @@ class EvaluationService:
                 raise
             except Exception as exc:
                 logger.warning("Model readiness pre-flight check bypassed due to: %s", exc)
-
-        # Prevent rapid duplicate submissions for identical model and dataset
-
-        duplicate = await self.eval_repo.find_recent_duplicate(
-            request.model_id, dataset.id, within_seconds=5
-        )
-        if duplicate:
-            logger.info(
-                "Duplicate evaluation request throttled for model '%s' and dataset '%s' (reusing %s)",
-                request.model_id,
-                dataset.id,
-                duplicate.id,
-            )
-            return duplicate
 
         config = request.config or EvaluationConfig()
         # For local Ollama inference, constrain concurrency to prevent resource thrashing

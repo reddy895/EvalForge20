@@ -85,3 +85,69 @@ class SemanticSimilarityEvaluator(BaseEvaluator):
                 "threshold": threshold,
             },
         )
+
+
+class KeywordPresenceEvaluator(BaseEvaluator):
+    """Verifies that all required keywords or key concepts appear in the model prediction."""
+
+    evaluator_id: str = "keyword_presence"
+    name: str = "keyword_presence"
+    version: str = "1.0.0"
+    is_deterministic: bool = True
+    required_inputs: list[str] = ["prediction"]
+
+    def __init__(self, required_keywords: list[str] | None = None, **kwargs: Any) -> None:
+        super().__init__(
+            name="keyword_presence",
+            evaluator_id="keyword_presence",
+            description="Verifies the presence of key terms and concepts in output text.",
+            **kwargs,
+        )
+        self.required_keywords = required_keywords or []
+
+    async def evaluate(
+        self,
+        prediction: str,
+        reference: str | None = None,
+        context: str | None = None,
+        keywords: list[str] | None = None,
+        **kwargs: Any,
+    ) -> MetricResult:
+        target_kws = keywords or self.required_keywords
+        if not target_kws and reference:
+            # Extract key nouns/terms from reference if no explicit list
+            target_kws = [k for k in reference.lower().split() if len(k) > 4]
+
+        if not target_kws:
+            return MetricResult(
+                name=self.name,
+                score=1.0,
+                passed=True,
+                method="keyword_presence",
+                details={"message": "No keywords specified for matching"},
+            )
+
+        pred_lower = str(prediction).lower()
+        found = [kw for kw in target_kws if kw.lower() in pred_lower]
+        missing = [kw for kw in target_kws if kw.lower() not in pred_lower]
+
+        score = len(found) / len(target_kws) if target_kws else 1.0
+        passed = len(missing) == 0
+
+        return MetricResult(
+            name=self.name,
+            score=round(score, 4),
+            passed=passed,
+            method="keyword_containment",
+            details={
+                "total_keywords": len(target_kws),
+                "found_keywords": found,
+                "missing_keywords": missing,
+            },
+        )
+
+
+__all__ = [
+    "SemanticSimilarityEvaluator",
+    "KeywordPresenceEvaluator",
+]

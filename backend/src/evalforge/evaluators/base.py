@@ -26,19 +26,41 @@ EvaluationResult = MetricResult
 class BaseEvaluator(ABC):
     """Abstract contract that all deterministic and model-assisted metrics adhere to."""
 
+    evaluator_id: str = "base"
     name: str = "base"
     version: str = "1.0.0"
     is_deterministic: bool = True
+    required_inputs: list[str] = ["prediction", "reference"]
 
     def __init__(
         self,
         name: str | None = None,
+        evaluator_id: str | None = None,
         description: str | None = None,
+        version: str = "1.0.0",
+        is_deterministic: bool = True,
+        required_inputs: list[str] | None = None,
         **kwargs: Any,
     ) -> None:
         if name:
             self.name = name
+        if evaluator_id:
+            self.evaluator_id = evaluator_id
+        else:
+            self.evaluator_id = getattr(self, "evaluator_id", self.name)
         self.description = description or ""
+        self.version = version
+        self.is_deterministic = is_deterministic
+        if required_inputs is not None:
+            self.required_inputs = required_inputs
+
+    def validate(self, **kwargs: Any) -> list[str]:
+        """Validate whether all required inputs are present for evaluation."""
+        errors: list[str] = []
+        for req in self.required_inputs:
+            if req not in kwargs or kwargs[req] is None:
+                errors.append(f"Evaluator '{self.name}' requires input '{req}'.")
+        return errors
 
     @abstractmethod
     async def evaluate(
@@ -51,6 +73,31 @@ class BaseEvaluator(ABC):
         """Score candidate prediction against reference target or task rules."""
         pass
 
+    def aggregate(self, results: list[MetricResult]) -> dict[str, Any]:
+        """Aggregate a list of individual MetricResult objects into summary statistics."""
+        if not results:
+            return {
+                "count": 0,
+                "passed_count": 0,
+                "pass_rate": 0.0,
+                "mean_score": 0.0,
+            }
+        scores = [r.score for r in results]
+        passed = sum(1 for r in results if r.passed)
+        mean_score = sum(scores) / len(scores) if scores else 0.0
+        pass_rate = passed / len(results) if results else 0.0
+        return {
+            "count": len(results),
+            "passed_count": passed,
+            "failed_count": len(results) - passed,
+            "pass_rate": round(pass_rate, 4),
+            "mean_score": round(mean_score, 4),
+        }
+
+    def serialize_result(self, result: MetricResult) -> dict[str, Any]:
+        """Serialize a MetricResult into a standard dictionary format."""
+        return result.model_dump()
+
 
 class MetricRegistry:
     """Registry coordinating available evaluation metrics."""
@@ -59,6 +106,8 @@ class MetricRegistry:
         self._evaluators: dict[str, BaseEvaluator] = {}
 
     def register(self, evaluator: BaseEvaluator) -> None:
+        key = evaluator.evaluator_id.lower() if hasattr(evaluator, "evaluator_id") else evaluator.name.lower()
+        self._evaluators[key] = evaluator
         self._evaluators[evaluator.name.lower()] = evaluator
 
     def get(self, name: str) -> BaseEvaluator | None:
@@ -66,6 +115,25 @@ class MetricRegistry:
 
     def list_metrics(self) -> list[str]:
         return sorted(self._evaluators.keys())
+
+    def list_evaluators(self) -> list[dict[str, Any]]:
+        """List metadata for all registered evaluator plugins."""
+        seen = set()
+        items = []
+        for ev in self._evaluators.values():
+            eid = getattr(ev, "evaluator_id", ev.name)
+            if eid in seen:
+                continue
+            seen.add(eid)
+            items.append({
+                "evaluator_id": eid,
+                "name": ev.name,
+                "version": ev.version,
+                "description": getattr(ev, "description", ""),
+                "is_deterministic": ev.is_deterministic,
+                "required_inputs": ev.required_inputs,
+            })
+        return items
 
 
 _metric_registry: MetricRegistry | None = None

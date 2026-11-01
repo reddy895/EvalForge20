@@ -91,6 +91,21 @@ class BaseProvider(ABC):
         """Execute a text or structured inference request."""
         pass
 
+    async def test_connection(self, model_id: str, prompt: str = "Hello, respond with 'OK'.") -> dict[str, Any]:
+        """Test inference connectivity for a specific model."""
+        import time
+        start = time.perf_counter()
+        req = InferenceRequest(model=model_id, prompt=prompt, temperature=0.0, max_tokens=10)
+        resp = await self.generate(req)
+        latency_ms = (time.perf_counter() - start) * 1000.0
+        return {
+            "model_identifier": model_id,
+            "status": "connected" if not resp.error else "error",
+            "latency_ms": round(latency_ms, 2),
+            "response_sample": resp.text[:100] if resp.text else None,
+            "error_message": resp.error,
+        }
+
     async def close(self) -> None:  # noqa: B027
         """Release underlying HTTP client or connection resources."""
         pass

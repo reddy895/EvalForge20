@@ -47,3 +47,23 @@ async def get_ollama_health_diagnostics(
         "error_message": report.error_message,
         "last_checked_at": report.last_checked_at,
     }
+
+
+@router.get("/ollama/models")
+async def list_ollama_models() -> dict[str, Any]:
+    """Retrieve actual installed models from the real local Ollama API."""
+    registry = get_provider_registry()
+    provider = registry.get("ollama")
+    try:
+        models = await provider.list_models()
+        return {
+            "total": len(models),
+            "models": [m.model_dump() if hasattr(m, "model_dump") else m for m in models],
+        }
+    except Exception as exc:
+        return {
+            "total": 0,
+            "models": [],
+            "error": str(exc),
+        }
+

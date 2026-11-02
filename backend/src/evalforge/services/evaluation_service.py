@@ -115,7 +115,15 @@ class EvaluationService:
             snapshot.cases = snapshot.cases[:request.max_cases]
             snapshot.total_cases = len(snapshot.cases)
 
-        # Create evaluation record
+        # Create evaluation record with persistent metadata and lifecycle tracking
+        run_config = config.model_dump()
+        run_config["lifecycle_stage"] = "queued"
+        run_config["created_at_iso"] = datetime.now(UTC).isoformat()
+        if request.models:
+            run_config["comparison_models"] = request.models
+        if request.evaluators:
+            run_config["evaluators"] = request.evaluators
+
         run = EvaluationRun(
             name=run_name,
             model_id=request.model_id,
@@ -125,7 +133,7 @@ class EvaluationService:
             status="queued",
             total_cases=len(snapshot.cases),
         )
-        run.config = config.model_dump()
+        run.config = run_config
         await self.eval_repo.add(run)
 
         # Launch execution as background task

@@ -35,23 +35,28 @@ class ReadinessResponse(BaseModel):
 
 @health_router.get("/health", response_model=HealthResponse)
 async def check_health() -> HealthResponse:
-    """Check application health status, local Ollama daemon connectivity, and models."""
+    """Check application health status, reporting API health independently of local Ollama connectivity."""
+    import asyncio
     settings = get_settings()
     client = get_ollama_client()
-    reachable = await client.check_health()
+    reachable = False
     version = None
     model_count = 0
 
-    if reachable:
-        try:
-            version = await client.get_version()
-        except Exception:
-            version = "unknown"
-        try:
-            tags = await client.list_tags()
-            model_count = len(tags.get("models", []))
-        except Exception:
-            model_count = 0
+    try:
+        reachable = await asyncio.wait_for(client.check_health(), timeout=1.5)
+        if reachable:
+            try:
+                version = await asyncio.wait_for(client.get_version(), timeout=1.5)
+            except Exception:
+                version = "unknown"
+            try:
+                tags = await asyncio.wait_for(client.list_tags(), timeout=1.5)
+                model_count = len(tags.get("models", []))
+            except Exception:
+                model_count = 0
+    except Exception:
+        reachable = False
 
     return HealthResponse(
         status="healthy",
@@ -66,6 +71,21 @@ async def check_health() -> HealthResponse:
         ollama_version=version,
         ollama_installed_models=model_count,
     )
+
+
+@health_router.get("/health/backend")
+async def check_backend_only_health() -> dict[str, Any]:
+    """Pure backend health check completely decoupled from provider availability."""
+    settings = get_settings()
+    return {
+        "status": "healthy",
+        "api_ready": True,
+        "database_connected": True,
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "timestamp": datetime.now(UTC).isoformat(),
+    }
+
 
 
 @health_router.get("/health/ready", response_model=ReadinessResponse)

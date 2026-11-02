@@ -13,20 +13,26 @@ router = APIRouter(tags=["health"])
 
 @router.get("/health")
 async def health_probe() -> dict[str, Any]:
+    import asyncio
     settings = get_settings()
     db_health = await check_database_health()
     hw_specs = get_hardware_monitor().get_system_specs()
     ollama_provider = get_ollama_provider()
-    ollama_ok = await ollama_provider.health_check()
+    try:
+        ollama_ok = await asyncio.wait_for(ollama_provider.health_check(), timeout=1.5)
+    except Exception:
+        ollama_ok = False
 
     return {
         "status": "healthy" if db_health.get("connected") else "degraded",
+        "api_ready": True,
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "database": db_health,
         "ollama": {
             "status": "connected" if ollama_ok else "unreachable",
             "base_url": settings.OLLAMA_BASE_URL,
+            "reachable": ollama_ok,
         },
         "hardware": hw_specs,
     }

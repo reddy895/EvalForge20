@@ -2,7 +2,8 @@
 
 from datetime import datetime
 from typing import Any, Literal
-from pydantic import BaseModel, ConfigDict, Field
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ModelInfo(BaseModel):
@@ -43,22 +44,41 @@ class ModelConnectionTestResponse(BaseModel):
 class WorkflowNode(BaseModel):
     """Node in the visual n8n-style playground."""
 
+    model_config = ConfigDict(extra="ignore")
+
     id: str
     type: Literal["model", "dataset", "evaluator", "benchmark"]
-    name: str
-    category: str
+    name: str = ""
+    category: str = ""
     data: dict[str, Any] = Field(default_factory=dict)
     position: dict[str, float] = Field(default_factory=lambda: {"x": 0.0, "y": 0.0})
 
 
 class WorkflowEdge(BaseModel):
-    """Edge connection between nodes in the visual canvas."""
+    """Edge connection between nodes in the visual canvas.
+
+    Accepts both canonical (source/target) and legacy (source_id/target_id) field names
+    so that the frontend serialiser and backend validator remain compatible.
+    """
+
+    model_config = ConfigDict(extra="ignore")
 
     id: str
-    source: str
-    target: str
+    source: str = ""
+    target: str = ""
     sourceHandle: str | None = None
     targetHandle: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalise_source_target(cls, values: Any) -> Any:
+        """Accept source_id/target_id as aliases for source/target."""
+        if isinstance(values, dict):
+            if "source" not in values or not values.get("source"):
+                values["source"] = values.get("source_id", "")
+            if "target" not in values or not values.get("target"):
+                values["target"] = values.get("target_id", "")
+        return values
 
 
 class WorkflowGraph(BaseModel):
@@ -108,12 +128,33 @@ class WorkflowValidationResult(BaseModel):
 
 
 class ExecutionTriggerRequest(BaseModel):
+    """Payload for POST /api/executions.
+
+    Accepts both the canonical ``graph`` field and the frontend-serialised
+    ``workflow_graph`` alias so that the playground can POST without changes.
+    The ``name`` field is accepted as an alias for ``execution_name``.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
     workflow_id: str | None = None
     graph: WorkflowGraph | None = None
+    # Frontend sends workflow_graph and name — accept both
+    workflow_graph: WorkflowGraph | None = None
     execution_name: str | None = None
+    name: str | None = None
     judge_model_identifier: str | None = None
     concurrency_limit: int = 4
     timeout_seconds: float = 60.0
+
+    @model_validator(mode="after")
+    def _normalise_graph_and_name(self) -> "ExecutionTriggerRequest":
+        """Resolve workflow_graph → graph and name → execution_name."""
+        if self.graph is None and self.workflow_graph is not None:
+            self.graph = self.workflow_graph
+        if self.execution_name is None and self.name is not None:
+            self.execution_name = self.name
+        return self
 
 
 class ExecutionEvent(BaseModel):

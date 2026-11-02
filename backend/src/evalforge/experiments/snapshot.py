@@ -36,23 +36,30 @@ def create_dataset_snapshot(dataset: Dataset) -> DatasetSnapshot:
     hasher = hashlib.sha256()
     hasher.update(f"{ds_id}:{dataset.name}:{dataset.version}".encode())
 
-    for case in dataset.test_cases:
+    for idx, case in enumerate(dataset.test_cases):
+        case_id = str(getattr(case, "id", None) or f"case-{idx}")
+        raw_prompt = getattr(case, "prompt", None)
+        prompt_str = str(raw_prompt) if raw_prompt is not None else ""
+        raw_expected = getattr(case, "expected_output", None)
+        expected_str = str(raw_expected) if raw_expected is not None else None
+        context_str = str(case.context) if getattr(case, "context", None) is not None else None
+
         frozen = FrozenTestCase(
-            id=case.id,
-            prompt=case.prompt,
-            expected_output=case.expected_output,
-            context=case.context,
-            tags=case.tags,
-            metadata=case.metadata_dict,
-            evaluator_config=case.evaluator_config,
+            id=case_id,
+            prompt=prompt_str,
+            expected_output=expected_str,
+            context=context_str,
+            tags=getattr(case, "tags", []) or [],
+            metadata=getattr(case, "metadata_dict", {}) or {},
+            evaluator_config=getattr(case, "evaluator_config", {}) or {},
         )
         frozen_cases.append(frozen)
 
-        # Include prompt and reference in content hash
-        hasher.update(case.id.encode("utf-8"))
-        hasher.update(case.prompt.encode("utf-8"))
-        if case.expected_output:
-            hasher.update(case.expected_output.encode("utf-8"))
+        # Include prompt and reference in content hash safely
+        hasher.update(case_id.encode("utf-8"))
+        hasher.update(prompt_str.encode("utf-8"))
+        if expected_str:
+            hasher.update(expected_str.encode("utf-8"))
 
     snapshot_hash = hasher.hexdigest()
 

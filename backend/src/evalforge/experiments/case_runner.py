@@ -61,6 +61,19 @@ class CaseRunner:
 
     async def execute_case(self, case: FrozenTestCase, evaluation_id: str) -> CaseResult:
         """Run candidate model on test case and calculate all metric scores."""
+        if not case.prompt or not case.prompt.strip():
+            logger.warning("Skipping inference for case '%s': prompt is empty", case.id)
+            return CaseResult(
+                evaluation_id=evaluation_id,
+                case_id=case.id,
+                prompt=case.prompt or "",
+                expected_output=case.expected_output,
+                actual_output="",
+                passed=False,
+                latency_ms=0.0,
+                error_message="Malformed test case: empty prompt string.",
+            )
+
         inference_req = InferenceRequest(
             model=self.model_id,
             prompt=case.prompt,

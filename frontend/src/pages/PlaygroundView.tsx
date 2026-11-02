@@ -339,33 +339,49 @@ export const PlaygroundView: React.FC = () => {
       return;
     }
 
-    // Step 2: Check Ollama provider status
-    await checkOllamaStatus();
-    // Re-check after async update
-    let ollamaOk = false;
-    try {
-      const healthRes = await fetch('http://localhost:8000/api/ollama/status');
-      if (healthRes.ok) {
-        const healthData = await healthRes.json();
-        ollamaOk = healthData.is_healthy === true;
-      }
-    } catch {
-      ollamaOk = false;
-    }
+    // Check if models in canvas require local Ollama provider
+    const modelNodes = nodes.filter((n) => n.type === 'model');
+    const requiresOllama = modelNodes.some((n) => {
+      const modelId = String(n.data?.model_identifier || n.data?.id || '');
+      return !modelId.startsWith('mock-');
+    });
 
-    if (!ollamaOk) {
-      setOllamaStatus((prev) => ({
-        ...prev,
-        reachable: false,
-        error: 'Ollama is offline. Start it with: ollama serve',
-      }));
-      setLogs([
-        '❌ Provider check failed: Ollama is not reachable at http://localhost:11434',
-        'Start Ollama: ollama serve',
-        'Check models: ollama list',
-        'Pull a model: ollama pull qwen2.5:1.5b',
-      ]);
-      return;
+    if (requiresOllama) {
+      // Step 2: Check Ollama provider status
+      await checkOllamaStatus();
+      let ollamaOk = false;
+      try {
+        const healthRes = await fetch('/api/providers/ollama/health').catch(() =>
+          fetch('http://localhost:8000/api/ollama/status')
+        );
+        if (healthRes.ok) {
+          const healthData = await healthRes.json();
+          ollamaOk = healthData.reachable === true || healthData.is_healthy === true;
+        }
+      } catch {
+        ollamaOk = false;
+      }
+
+      if (!ollamaOk) {
+        setOllamaStatus((prev) => ({
+          ...prev,
+          reachable: false,
+          error: 'The local Ollama service could not be reached at http://localhost:11434. Start Ollama to evaluate.',
+        }));
+        setValidationStatus({
+          isValid: false,
+          message: 'Ollama is offline. Start the service with "ollama serve" to run evaluation.',
+        });
+        setLogs([
+          '❌ Provider check failed: Ollama is not reachable at http://localhost:11434',
+          '1. Start the service: ollama serve',
+          '2. Verify installed models: ollama list',
+          '3. Pull a model if needed: ollama pull qwen2.5:1.5b',
+          '4. Verify API response: curl http://localhost:11434/api/tags',
+          'Click "Retry Connection" in the banner once Ollama is running.',
+        ]);
+        return;
+      }
     }
 
     // Step 3: Submit evaluation

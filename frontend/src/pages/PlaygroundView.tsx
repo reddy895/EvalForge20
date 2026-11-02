@@ -16,6 +16,7 @@ import { NodeConfigPanel } from '../components/canvas/NodeConfigPanel';
 import { TopToolbar } from '../components/canvas/TopToolbar';
 import { ResultsPanel } from '../components/results/ResultsPanel';
 import { OllamaBanner } from '../components/canvas/OllamaBanner';
+import { serializeEvaluationGraph } from '../utils/graphSerialization';
 
 const INITIAL_NODES: Node[] = [
   {
@@ -300,26 +301,13 @@ export const PlaygroundView: React.FC = () => {
 
   const handleSave = async () => {
     try {
+      const serialized = serializeEvaluationGraph(nodes, edges, workflowName);
       await fetch('http://localhost:8000/api/workflows', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: workflowName,
-          graph: {
-            nodes: nodes.map((n) => ({
-              id: n.id,
-              type: n.type,
-              name: (n.data.name as string) || n.id,
-              category: (n.data.category as string) || '',
-              data: n.data,
-              position: n.position,
-            })),
-            edges: edges.map((e) => ({
-              id: e.id,
-              source: e.source,
-              target: e.target,
-            })),
-          },
+          graph: serialized.workflow_graph,
         }),
       });
       alert('Workflow saved successfully!');
@@ -390,28 +378,13 @@ export const PlaygroundView: React.FC = () => {
     setCases([]);
     setValidationStatus(null);
 
+    const serialized = serializeEvaluationGraph(nodes, edges, `${workflowName} Run`);
+
     try {
       const execRes = await fetch('http://localhost:8000/api/executions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: `${workflowName} Run`,
-          workflow_graph: {
-            nodes: nodes.map((n) => ({
-              id: n.id,
-              type: n.type,
-              name: (n.data.name as string) || n.id,
-              category: (n.data.category as string) || '',
-              data: n.data,
-              position: n.position,
-            })),
-            edges: edges.map((e) => ({
-              id: e.id,
-              source: e.source,
-              target: e.target,
-            })),
-          },
-        }),
+        body: JSON.stringify(serialized),
       });
 
       if (!execRes.ok) {

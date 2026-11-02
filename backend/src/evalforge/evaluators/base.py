@@ -46,8 +46,10 @@ class BaseEvaluator(ABC):
             self.name = name
         if evaluator_id:
             self.evaluator_id = evaluator_id
+        elif self.name and self.name != "base":
+            self.evaluator_id = self.name
         else:
-            self.evaluator_id = getattr(self, "evaluator_id", self.name)
+            self.evaluator_id = getattr(type(self), "evaluator_id", "base")
         self.description = description or ""
         self.version = version
         self.is_deterministic = is_deterministic
@@ -140,8 +142,32 @@ _metric_registry: MetricRegistry | None = None
 
 
 def get_metric_registry() -> MetricRegistry:
-    """Return shared metric registry instance."""
+    """Return shared metric registry instance populated with native deterministic metrics."""
     global _metric_registry
     if _metric_registry is None:
-        _metric_registry = MetricRegistry()
+        reg = MetricRegistry()
+        try:
+            from src.evalforge.evaluators.deterministic.exact_match import (
+                ExactMatchEvaluator,
+                NormalizedExactMatchEvaluator,
+            )
+            from src.evalforge.evaluators.deterministic.token_f1 import TokenF1Evaluator
+            from src.evalforge.evaluators.deterministic.keywords import KeywordEvaluator
+            from src.evalforge.evaluators.deterministic.json_schema import JsonSchemaEvaluator
+            from src.evalforge.evaluators.deterministic.code_execution import CodeExecutionEvaluator
+            from src.evalforge.evaluators.deterministic.numeric_tolerance import NumericToleranceEvaluator
+            from src.evalforge.evaluators.semantic import SemanticSimilarityEvaluator
+
+            reg.register(ExactMatchEvaluator())
+            reg.register(NormalizedExactMatchEvaluator())
+            reg.register(TokenF1Evaluator())
+            reg.register(KeywordEvaluator())
+            reg.register(JsonSchemaEvaluator())
+            reg.register(CodeExecutionEvaluator())
+            reg.register(NumericToleranceEvaluator())
+            reg.register(SemanticSimilarityEvaluator())
+        except Exception:
+            pass
+        _metric_registry = reg
     return _metric_registry
+

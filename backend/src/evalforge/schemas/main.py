@@ -87,6 +87,18 @@ class WorkflowGraph(BaseModel):
     nodes: list[WorkflowNode] = Field(default_factory=list)
     edges: list[WorkflowEdge] = Field(default_factory=list)
 
+    def validate_structure(self) -> list[str]:
+        """Validate that the graph contains required node types and connections."""
+        errors: list[str] = []
+        node_types = {n.type for n in self.nodes}
+        if "model" not in node_types:
+            errors.append("At least one Model node is required on the canvas.")
+        if "dataset" not in node_types and "benchmark" not in node_types:
+            errors.append("At least one Dataset or Benchmark node is required on the canvas.")
+        if "evaluator" not in node_types:
+            errors.append("At least one Evaluator node is required on the canvas.")
+        return errors
+
 
 class WorkflowCreateRequest(BaseModel):
     name: str

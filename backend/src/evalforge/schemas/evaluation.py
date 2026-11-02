@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class EvaluationConfig(BaseModel):
@@ -25,7 +25,7 @@ class EvaluationConfig(BaseModel):
 
 
 class EvaluationCreateRequest(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
 
     name: str | None = Field(None, max_length=120, description="Optional custom name for this evaluation run")
     model_id: str = Field(
@@ -35,8 +35,28 @@ class EvaluationCreateRequest(BaseModel):
         default="ollama", min_length=1, max_length=64, description="Inference provider name ('ollama' or 'mock')"
     )
     dataset_id: str = Field(..., min_length=1, max_length=100, description="ID or slug of the dataset to evaluate")
+    benchmark_id: str | None = Field(None, max_length=100, description="Alias for dataset_id")
     max_cases: int | None = Field(None, ge=1, le=10000, description="Optional cap on test cases to evaluate")
     config: EvaluationConfig | None = Field(default_factory=EvaluationConfig)
+    models: list[str] | None = Field(default=None, description="Optional list of additional models for comparison")
+    evaluators: list[str] | None = Field(default=None, description="Optional list of evaluator metric names")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_payload(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            # Accept benchmark_id as alias for dataset_id if dataset_id is missing
+            if not data.get("dataset_id") and data.get("benchmark_id"):
+                data["dataset_id"] = data["benchmark_id"]
+            # If metrics or evaluators are passed at root, feed into config
+            metrics = data.get("metrics") or data.get("evaluators")
+            if metrics:
+                cfg = data.get("config")
+                if cfg is None:
+                    data["config"] = {"metrics": metrics}
+                elif isinstance(cfg, dict):
+                    cfg["metrics"] = metrics
+        return data
 
     @field_validator("model_id", "dataset_id", "provider")
     @classmethod
@@ -45,6 +65,23 @@ class EvaluationCreateRequest(BaseModel):
         if not s:
             raise ValueError("Field cannot be empty or solely whitespace.")
         return s
+
+
+class EvaluationCancelResponse(BaseModel):
+    id: str
+    status: str = "CANCELLED"
+    message: str = "Evaluation run cancelled successfully."
+
+
+class EvaluationProgressResponse(BaseModel):
+    id: str
+    status: str
+    completed_cases: int
+    total_cases: int
+    progress_percentage: float
+    current_model: str | None = None
+    current_evaluator: str | None = None
+
 
 
 class CaseResultResponse(BaseModel):

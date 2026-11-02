@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  Play,
-  Save,
-  CheckCircle,
-  AlertCircle,
-} from 'lucide-react';
+import { Play, Save, CheckCircle, AlertCircle, Square, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '../ui/Primitives';
 
 interface TopToolbarProps {
@@ -13,9 +8,11 @@ interface TopToolbarProps {
   onSave: () => void;
   onValidate: () => void;
   onEvaluate: () => void;
+  onCancel?: () => void;
   isEvaluating: boolean;
   isValidating: boolean;
   validationStatus: { isValid: boolean; message?: string } | null;
+  ollamaReachable?: boolean;
 }
 
 export const TopToolbar: React.FC<TopToolbarProps> = ({
@@ -24,9 +21,11 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   onSave,
   onValidate,
   onEvaluate,
+  onCancel,
   isEvaluating,
   isValidating,
   validationStatus,
+  ollamaReachable,
 }) => {
   return (
     <div className="h-12 bg-white border-b border-[#E2E8F0] px-4 flex items-center justify-between shrink-0 select-none z-10">
@@ -38,6 +37,25 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
           className="text-xs font-semibold text-[#111827] bg-transparent hover:bg-[#F8FAFC] focus:bg-white px-2 py-1 rounded border border-transparent hover:border-[#E2E8F0] focus:border-[#2563EB] focus:outline-none w-56 truncate"
           title="Click to edit workflow name"
         />
+
+        {/* Ollama provider status dot */}
+        {ollamaReachable !== undefined && (
+          <div
+            title={ollamaReachable ? 'Ollama connected' : 'Ollama offline'}
+            className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded border ${
+              ollamaReachable
+                ? 'bg-[#F0FDF4] text-[#16A34A] border-[#BBF7D0]'
+                : 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]'
+            }`}
+          >
+            {ollamaReachable ? (
+              <Wifi className="w-3 h-3" />
+            ) : (
+              <WifiOff className="w-3 h-3" />
+            )}
+            <span>{ollamaReachable ? 'Ollama' : 'Ollama Offline'}</span>
+          </div>
+        )}
 
         {validationStatus && (
           <div
@@ -77,6 +95,19 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
         >
           {isValidating ? 'Validating...' : 'Validate'}
         </Button>
+
+        {isEvaluating && onCancel ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+            icon={<Square className="w-3.5 h-3.5 text-[#DC2626]" />}
+            className="border-[#FECACA] text-[#DC2626] hover:bg-[#FEF2F2]"
+          >
+            Cancel
+          </Button>
+        ) : null}
+
         <Button
           variant="primary"
           size="sm"

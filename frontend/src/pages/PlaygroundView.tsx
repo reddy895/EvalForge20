@@ -15,6 +15,7 @@ import { CanvasWorkspace } from '../components/canvas/CanvasWorkspace';
 import { NodeConfigPanel } from '../components/canvas/NodeConfigPanel';
 import { TopToolbar } from '../components/canvas/TopToolbar';
 import { ResultsPanel } from '../components/results/ResultsPanel';
+import { OllamaBanner } from '../components/canvas/OllamaBanner';
 
 const INITIAL_NODES: Node[] = [
   {
@@ -22,10 +23,10 @@ const INITIAL_NODES: Node[] = [
     type: 'benchmark',
     position: { x: 50, y: 150 },
     data: {
-      id: 'math_gsm8k_mini',
-      name: 'GSM8K Reasoning Mini',
-      category: 'Mathematics',
-      sample_count: 5,
+      id: 'general-knowledge-mini',
+      name: 'General Knowledge Mini',
+      category: 'General Knowledge',
+      sample_count: 4,
     },
   },
   {
@@ -71,6 +72,37 @@ const INITIAL_EDGES: Edge[] = [
   },
 ];
 
+/** Validate the canvas graph client-side before submitting. Returns null if valid or an error message. */
+function validateGraph(nodes: Node[], edges: Edge[]): string | null {
+  const models = nodes.filter((n) => n.type === 'model');
+  const datasets = nodes.filter((n) => n.type === 'dataset' || n.type === 'benchmark');
+  const evaluators = nodes.filter((n) => n.type === 'evaluator');
+
+  if (models.length === 0) return 'Add at least one Model node to the canvas.';
+  if (datasets.length === 0) return 'Add at least one Dataset or Benchmark node.';
+  if (evaluators.length === 0) return 'Add at least one Evaluator node.';
+
+  // Check that each model has a dataset incoming and an evaluator outgoing
+  for (const m of models) {
+    const hasDataset = edges.some(
+      (e) => e.target === m.id && datasets.some((d) => d.id === e.source)
+    );
+    const hasEvaluator = edges.some(
+      (e) => e.source === m.id && evaluators.some((ev) => ev.id === e.target)
+    );
+    if (!hasDataset) {
+      const name = (m.data.name as string) || m.id;
+      return `Model "${name}" is not connected to a Dataset or Benchmark.`;
+    }
+    if (!hasEvaluator) {
+      const name = (m.data.name as string) || m.id;
+      return `Model "${name}" is not connected to an Evaluator.`;
+    }
+  }
+
+  return null;
+}
+
 export const PlaygroundView: React.FC = () => {
   const [nodes, setNodes] = useState<Node[]>(INITIAL_NODES);
   const [edges, setEdges] = useState<Edge[]>(INITIAL_EDGES);
@@ -82,18 +114,60 @@ export const PlaygroundView: React.FC = () => {
   const [benchmarkSuites, setBenchmarkSuites] = useState<any[]>([]);
   const [evaluatorsList, setEvaluatorsList] = useState<any[]>([]);
 
+  // Ollama provider status
+  const [ollamaStatus, setOllamaStatus] = useState<{
+    reachable: boolean;
+    checked: boolean;
+    models: string[];
+    error?: string;
+  }>({ reachable: false, checked: false, models: [] });
+
   // Execution states
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
+  const [activeExecutionId, setActiveExecutionId] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState<boolean>(false);
-  const [validationStatus, setValidationStatus] = useState<{ isValid: boolean; message?: string } | null>(null);
+  const [validationStatus, setValidationStatus] = useState<{
+    isValid: boolean;
+    message?: string;
+  } | null>(null);
   const [progressPercentage, setProgressPercentage] = useState<number>(0);
   const [completedSteps, setCompletedSteps] = useState<number>(0);
   const [totalSteps, setTotalSteps] = useState<number>(0);
   const [logs, setLogs] = useState<string[]>([]);
   const [cases, setCases] = useState<any[]>([]);
 
+  /** Check Ollama health and retrieve installed models. */
+  const checkOllamaStatus = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/ollama/status');
+      if (!res.ok) {
+        setOllamaStatus({ reachable: false, checked: true, models: [], error: `HTTP ${res.status}` });
+        return;
+      }
+      const data = await res.json();
+      setOllamaStatus({
+        reachable: data.is_healthy === true,
+        checked: true,
+        models: (data.models || []).map((m: any) => m.name || m.model_identifier || m.id || ''),
+        error: data.is_healthy ? undefined : 'Ollama is not reachable at localhost:11434',
+      });
+      if (data.models && data.models.length > 0) {
+        setInstalledModels(data.models);
+      }
+    } catch {
+      setOllamaStatus({
+        reachable: false,
+        checked: true,
+        models: [],
+        error: 'Could not reach the backend health endpoint.',
+      });
+    }
+  }, []);
+
   // Fetch models, benchmarks, evaluators from backend API
   useEffect(() => {
+    checkOllamaStatus();
+
     fetch('http://localhost:8000/api/models')
       .then((r) => r.json())
       .then((data) => {
@@ -114,7 +188,7 @@ export const PlaygroundView: React.FC = () => {
         if (data && data.evaluators) setEvaluatorsList(data.evaluators);
       })
       .catch(() => {});
-  }, []);
+  }, [checkOllamaStatus]);
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -179,6 +253,15 @@ export const PlaygroundView: React.FC = () => {
   const handleValidate = async () => {
     setIsValidating(true);
     setValidationStatus(null);
+
+    // Client-side validation first
+    const clientError = validateGraph(nodes, edges);
+    if (clientError) {
+      setValidationStatus({ isValid: false, message: clientError });
+      setIsValidating(false);
+      return;
+    }
+
     try {
       const res = await fetch('http://localhost:8000/api/workflows/validate', {
         method: 'POST',
@@ -187,13 +270,14 @@ export const PlaygroundView: React.FC = () => {
           nodes: nodes.map((n) => ({
             id: n.id,
             type: n.type,
-            name: n.data.name || n.id,
+            name: (n.data.name as string) || n.id,
+            category: (n.data.category as string) || '',
             config: n.data,
           })),
           edges: edges.map((e) => ({
             id: e.id,
-            source_id: e.source,
-            target_id: e.target,
+            source: e.source,
+            target: e.target,
           })),
         }),
       });
@@ -201,8 +285,8 @@ export const PlaygroundView: React.FC = () => {
       setValidationStatus({
         isValid: data.is_valid,
         message: data.is_valid
-          ? `Valid workflow: ${data.execution_plan?.models?.length || 1} model(s), ${data.execution_plan?.evaluators?.length || 1} metric(s)`
-          : (data.errors && data.errors[0]) || 'Validation failed',
+          ? `Valid workflow: ${data.executable_models?.length || 1} model(s), ${data.executable_evaluators?.length || 1} metric(s)`
+          : (data.errors && data.errors[0]?.message) || 'Validation failed',
       });
     } catch {
       setValidationStatus({
@@ -221,18 +305,21 @@ export const PlaygroundView: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: workflowName,
-          nodes: nodes.map((n) => ({
-            id: n.id,
-            type: n.type,
-            name: n.data.name || n.id,
-            config: n.data,
-            position: n.position,
-          })),
-          edges: edges.map((e) => ({
-            id: e.id,
-            source_id: e.source,
-            target_id: e.target,
-          })),
+          graph: {
+            nodes: nodes.map((n) => ({
+              id: n.id,
+              type: n.type,
+              name: (n.data.name as string) || n.id,
+              category: (n.data.category as string) || '',
+              data: n.data,
+              position: n.position,
+            })),
+            edges: edges.map((e) => ({
+              id: e.id,
+              source: e.source,
+              target: e.target,
+            })),
+          },
         }),
       });
       alert('Workflow saved successfully!');
@@ -241,11 +328,67 @@ export const PlaygroundView: React.FC = () => {
     }
   };
 
+  const handleCancelEvaluation = async () => {
+    if (!activeExecutionId) return;
+    try {
+      await fetch(`http://localhost:8000/api/executions/${activeExecutionId}/cancel`, {
+        method: 'POST',
+      });
+      setLogs((prev) => [...prev, 'Cancellation requested.']);
+    } catch {
+      setLogs((prev) => [...prev, 'Could not send cancellation request.']);
+    }
+  };
+
   const handleEvaluate = async () => {
+    // Prevent duplicate submission
+    if (isEvaluating) return;
+
+    // Step 1: Client-side graph validation
+    const graphError = validateGraph(nodes, edges);
+    if (graphError) {
+      setValidationStatus({ isValid: false, message: graphError });
+      return;
+    }
+
+    // Step 2: Check Ollama provider status
+    await checkOllamaStatus();
+    // Re-check after async update
+    let ollamaOk = false;
+    try {
+      const healthRes = await fetch('http://localhost:8000/api/ollama/status');
+      if (healthRes.ok) {
+        const healthData = await healthRes.json();
+        ollamaOk = healthData.is_healthy === true;
+      }
+    } catch {
+      ollamaOk = false;
+    }
+
+    if (!ollamaOk) {
+      setOllamaStatus((prev) => ({
+        ...prev,
+        reachable: false,
+        error: 'Ollama is offline. Start it with: ollama serve',
+      }));
+      setLogs([
+        '❌ Provider check failed: Ollama is not reachable at http://localhost:11434',
+        'Start Ollama: ollama serve',
+        'Check models: ollama list',
+        'Pull a model: ollama pull qwen2.5:1.5b',
+      ]);
+      return;
+    }
+
+    // Step 3: Submit evaluation
     setIsEvaluating(true);
+    setActiveExecutionId(null);
     setProgressPercentage(0);
-    setLogs(['Initiating local evaluation run through Ollama engine...']);
+    setCompletedSteps(0);
+    setTotalSteps(0);
+    setLogs(['Initiating evaluation run through Ollama engine...']);
     setCases([]);
+    setValidationStatus(null);
 
     try {
       const execRes = await fetch('http://localhost:8000/api/executions', {
@@ -257,13 +400,15 @@ export const PlaygroundView: React.FC = () => {
             nodes: nodes.map((n) => ({
               id: n.id,
               type: n.type,
-              name: n.data.name || n.id,
-              config: n.data,
+              name: (n.data.name as string) || n.id,
+              category: (n.data.category as string) || '',
+              data: n.data,
+              position: n.position,
             })),
             edges: edges.map((e) => ({
               id: e.id,
-              source_id: e.source,
-              target_id: e.target,
+              source: e.source,
+              target: e.target,
             })),
           },
         }),
@@ -271,14 +416,16 @@ export const PlaygroundView: React.FC = () => {
 
       if (!execRes.ok) {
         const err = await execRes.json();
-        throw new Error(err.detail || 'Failed to start execution');
+        throw new Error(err.detail || `Server returned ${execRes.status}`);
       }
 
       const execData = await execRes.json();
-      const executionId = execData.execution_id;
-      setLogs((prev) => [...prev, `Execution dispatched: ${executionId}`]);
+      const executionId: string = execData.execution_id;
+      setActiveExecutionId(executionId);
+      setLogs((prev) => [...prev, `Execution started: ${executionId}`]);
 
-      // Connect to SSE stream
+      // Step 4: Connect to SSE stream
+      // Backend broadcasts: started, step_progress, completed, failed, cancelled
       const eventSource = new EventSource(
         `http://localhost:8000/api/executions/${executionId}/events`
       );
@@ -286,23 +433,43 @@ export const PlaygroundView: React.FC = () => {
       eventSource.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data);
-          if (payload.type === 'log') {
-            setLogs((prev) => [...prev, payload.message]);
-          } else if (payload.type === 'progress') {
+          const evType: string = payload.event_type || payload.type || '';
+
+          if (evType === 'started') {
+            setTotalSteps(payload.total_steps || 0);
+            setLogs((prev) => [...prev, payload.message || 'Evaluation started.']);
+          } else if (evType === 'step_progress') {
+            // Backend step_progress carries data.case with individual test case result
             setProgressPercentage(payload.progress_percentage || 0);
             setCompletedSteps(payload.completed_steps || 0);
             setTotalSteps(payload.total_steps || 0);
-          } else if (payload.type === 'case_result') {
-            setCases((prev) => [...prev, payload.case]);
-          } else if (payload.type === 'finished' || payload.type === 'failed') {
+            if (payload.data && payload.data.case) {
+              setCases((prev) => [...prev, payload.data.case]);
+            }
+            if (payload.message) {
+              setLogs((prev) => [...prev, payload.message]);
+            }
+          } else if (evType === 'log') {
+            setLogs((prev) => [...prev, payload.message]);
+          } else if (evType === 'completed') {
+            setIsEvaluating(false);
+            setProgressPercentage(100);
+            eventSource.close();
+            setLogs((prev) => [
+              ...prev,
+              'Evaluation completed successfully. Results persisted to database.',
+            ]);
+          } else if (evType === 'failed') {
             setIsEvaluating(false);
             eventSource.close();
             setLogs((prev) => [
               ...prev,
-              payload.type === 'finished'
-                ? 'Evaluation finished successfully. Results persisted to database.'
-                : `Evaluation error: ${payload.error || 'Failed'}`,
+              `Evaluation failed: ${payload.message || payload.error || 'Unknown error'}`,
             ]);
+          } else if (evType === 'cancelled') {
+            setIsEvaluating(false);
+            eventSource.close();
+            setLogs((prev) => [...prev, 'Evaluation was cancelled.']);
           }
         } catch (e) {
           console.error('SSE parse error', e);
@@ -310,7 +477,11 @@ export const PlaygroundView: React.FC = () => {
       };
 
       eventSource.onerror = () => {
-        setIsEvaluating(false);
+        // SSE closed after terminal event — this is expected behaviour
+        if (isEvaluating) {
+          setIsEvaluating(false);
+          setLogs((prev) => [...prev, 'Connection to execution stream closed.']);
+        }
         eventSource.close();
       };
     } catch (err: any) {
@@ -320,7 +491,8 @@ export const PlaygroundView: React.FC = () => {
   };
 
   const handleExportJson = () => {
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(cases, null, 2));
+    const dataStr =
+      'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(cases, null, 2));
     const dl = document.createElement('a');
     dl.setAttribute('href', dataStr);
     dl.setAttribute('download', `evalforge-cases-${Date.now()}.json`);
@@ -340,7 +512,8 @@ export const PlaygroundView: React.FC = () => {
         c.latency_ms,
       ].join(',')
     );
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+    const csvContent =
+      'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
     const dl = document.createElement('a');
     dl.setAttribute('href', encodeURI(csvContent));
     dl.setAttribute('download', `evalforge-cases-${Date.now()}.csv`);
@@ -349,6 +522,14 @@ export const PlaygroundView: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#F8FAFC]">
+      {/* OLLAMA OFFLINE BANNER */}
+      {ollamaStatus.checked && !ollamaStatus.reachable && (
+        <OllamaBanner
+          error={ollamaStatus.error}
+          onRetry={checkOllamaStatus}
+        />
+      )}
+
       {/* TOP TOOLBAR */}
       <TopToolbar
         workflowName={workflowName}
@@ -356,9 +537,11 @@ export const PlaygroundView: React.FC = () => {
         onSave={handleSave}
         onValidate={handleValidate}
         onEvaluate={handleEvaluate}
+        onCancel={handleCancelEvaluation}
         isEvaluating={isEvaluating}
         isValidating={isValidating}
         validationStatus={validationStatus}
+        ollamaReachable={ollamaStatus.reachable}
       />
 
       {/* MAIN CANVAS BODY: SIDEBAR + WORKSPACE + CONFIG */}

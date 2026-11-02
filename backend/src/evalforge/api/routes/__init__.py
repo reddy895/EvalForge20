@@ -10,11 +10,13 @@ from src.evalforge.api.routes.experiments import router as experiments_router
 from src.evalforge.api.routes.health import router as health_router
 from src.evalforge.api.routes.leaderboard import router as leaderboard_router
 from src.evalforge.api.routes.models import router as models_router
+from src.evalforge.api.routes.providers import router as providers_router
 from src.evalforge.api.routes.workflows import router as workflows_router
 
 api_router = APIRouter()
 
 api_router.include_router(health_router)
+api_router.include_router(providers_router)
 api_router.include_router(models_router)
 api_router.include_router(workflows_router)
 api_router.include_router(datasets_router)

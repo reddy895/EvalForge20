@@ -78,37 +78,37 @@ export function serializeEvaluationGraph(
  * Extract typed semantic components from canvas graph (models, dataset, evaluators)
  * to facilitate both client-side inspection and targeted API execution.
  */
-export function extractExecutionConfig(nodes: Node[], edges: Edge[]): ExtractedExecutionConfig {
+export function extractExecutionConfig(nodes: Node[], _edges: Edge[] = []): ExtractedExecutionConfig {
   const models: ExtractedExecutionConfig['models'] = [];
   let dataset: ExtractedExecutionConfig['dataset'] | undefined = undefined;
   const evaluators: ExtractedExecutionConfig['evaluators'] = [];
 
   for (const node of nodes) {
     const nodeType = (node.type || '').toLowerCase();
-    const d = node.data || {};
+    const d = (node.data || {}) as Record<string, unknown>;
 
     if (nodeType === 'model') {
       models.push({
         id: node.id,
-        name: d.name || d.label || 'Model',
-        model_identifier: d.model_identifier || d.identifier || d.id || 'qwen2.5:1.5b',
-        provider: d.provider || 'ollama',
+        name: String(d.name || d.label || 'Model'),
+        model_identifier: String(d.model_identifier || d.identifier || d.id || 'qwen2.5:1.5b'),
+        provider: String(d.provider || 'ollama'),
       });
     } else if (nodeType === 'dataset' || nodeType === 'benchmark') {
       if (!dataset) {
         dataset = {
           id: node.id,
-          name: d.name || d.label || 'Dataset',
-          dataset_id: d.dataset_id || d.id || 'coding_basics',
-          category: d.category,
+          name: String(d.name || d.label || 'Dataset'),
+          dataset_id: String(d.dataset_id || d.id || 'coding_basics'),
+          category: typeof d.category === 'string' ? d.category : undefined,
         };
       }
     } else if (nodeType === 'evaluator') {
       evaluators.push({
         id: node.id,
-        name: d.name || d.label || 'Evaluator',
-        evaluator_id: d.evaluator_id || d.id || 'exact_match',
-        metric_type: d.metric_type || d.type,
+        name: String(d.name || d.label || 'Evaluator'),
+        evaluator_id: String(d.evaluator_id || d.id || 'exact_match'),
+        metric_type: typeof d.metric_type === 'string' ? d.metric_type : (typeof d.type === 'string' ? d.type : undefined),
       });
     }
   }

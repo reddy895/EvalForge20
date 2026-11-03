@@ -6,3 +6,4 @@ export * from './DatasetsView';
 export * from './LeaderboardView';
 export * from './SettingsView';
 export * from './AnalyticsView';
+export * from './EvaluationResultsWorkspace';

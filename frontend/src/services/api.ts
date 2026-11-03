@@ -10,6 +10,7 @@ import {
   CommitAnalytics,
   EvaluationRun,
   DatasetItem,
+  EvaluationResultsData,
 } from '../types';
 import { SAMPLE_MODELS } from '../data/models';
 
@@ -278,6 +279,51 @@ class ApiService {
   async getEvaluationDetails(id: string): Promise<any> {
     // Call /results to retrieve case-level results and detailed metrics
     return this.request(`/evaluations/${id}/results`);
+  }
+
+  /**
+   * Retrieve full graphical analytics, multi-model summaries, and case results
+   * for an evaluation or execution run.
+   */
+  async getExecutionResults(id: string): Promise<EvaluationResultsData> {
+    try {
+      return await this.request<EvaluationResultsData>(`/executions/${id}/results`);
+    } catch {
+      return await this.request<EvaluationResultsData>(`/evaluations/${id}/results`);
+    }
+  }
+
+  /**
+   * Check status of an execution.
+   */
+  async getExecutionStatus(id: string): Promise<{
+    id: string;
+    status: string;
+    completed_steps: number;
+    total_steps: number;
+    error_message?: string | null;
+  }> {
+    return this.request(`/executions/${id}`);
+  }
+
+  /**
+   * Cancel an in-flight execution run.
+   */
+  async cancelExecution(id: string): Promise<any> {
+    try {
+      return await this.request(`/executions/${id}/cancel`, { method: 'POST' });
+    } catch {
+      return await this.request(`/evaluations/${id}/cancel`, { method: 'POST' });
+    }
+  }
+
+  /**
+   * Create an SSE EventSource stream for live execution events.
+   */
+  createExecutionEventSource(id: string): EventSource {
+    const isAbsolute = window.location.port === '5173' && !window.location.host.includes(':8000');
+    const base = isAbsolute ? 'http://localhost:8000/api' : '/api';
+    return new EventSource(`${base}/executions/${id}/events`);
   }
 
   async pollEvaluation(

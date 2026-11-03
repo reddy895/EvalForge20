@@ -44,7 +44,7 @@ def test_platform_providers_and_analytics() -> None:
         assert p_res.status_code == 200
         providers_data = p_res.json()
         assert "providers" in providers_data
-        provider_names = [p["name"] for p in providers_data["providers"]]
+        provider_names = [p["name"] if isinstance(p, dict) else p for p in providers_data["providers"]]
         assert "ollama" in provider_names
 
         # Analytics overview

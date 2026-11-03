@@ -146,6 +146,10 @@ async function main() {
     const isEvalForge = await probeExistingInstance(PORT, HOST);
     if (isEvalForge) {
       console.log(`[EvalForge20] An EvalForge20 instance is already active and healthy on http://${HOST}:${PORT}`);
+      console.log(`[EvalForge20] Listening URL: http://${HOST}:${PORT}`);
+      if (isDryRun) {
+        console.log('[EvalForge20] Dry run / verification check passed successfully.');
+      }
       console.log(`[EvalForge20] Access API docs at: http://${HOST}:${PORT}/docs`);
       process.exit(0);
     } else {

@@ -35,6 +35,22 @@ async def trigger_execution(
     if not graph:
         raise HTTPException(status_code=400, detail="Must provide either 'graph' or valid 'workflow_id'.")
 
+    # Ensure ExecutionRecord is recorded in DB for persistence
+    try:
+        async with get_db_context() as session:
+            rec = ExecutionRecord(
+                id=exec_id,
+                workflow_id=payload.workflow_id,
+                status="RUNNING",
+                total_steps=0,
+                completed_steps=0,
+                logs_json=json.dumps([f"Triggered workflow execution '{payload.execution_name or 'Evaluation Workflow'}'."]),
+            )
+            session.add(rec)
+            await session.commit()
+    except Exception:
+        pass
+
     # Launch execution as an async background task
     async def _run_job():
         await executor.execute_workflow(
@@ -77,6 +93,17 @@ async def get_execution_status(execution_id: str) -> dict[str, Any]:
             status = "CANCELLED"
         else:
             status = "RUNNING"
+    else:
+        try:
+            async with get_db_context() as session:
+                rec = await session.get(ExecutionRecord, execution_id)
+                if rec:
+                    status = rec.status
+                    completed = rec.completed_steps
+                    total = rec.total_steps
+                    err = rec.error_message
+        except Exception:
+            pass
 
     return {
         "id": execution_id,
@@ -115,5 +142,16 @@ async def cancel_execution(execution_id: str) -> dict[str, Any]:
         event_type="cancelled",
         message="Workflow execution cancelled by user request.",
     )
+
+    try:
+        from datetime import UTC, datetime
+        async with get_db_context() as session:
+            rec = await session.get(ExecutionRecord, execution_id)
+            if rec:
+                rec.status = "CANCELLED"
+                rec.completed_at = datetime.now(UTC)
+                await session.commit()
+    except Exception:
+        pass
 
     return {"success": True, "execution_id": execution_id, "status": "CANCELLED"}

@@ -66,6 +66,26 @@ class WorkflowExecutor:
         total_steps = sum(len(t.dataset_records) for t in targets)
         completed_steps = 0
 
+        try:
+            async with get_db_context() as session:
+                rec = await session.get(ExecutionRecord, exec_id)
+                if rec:
+                    rec.status = "RUNNING"
+                    rec.total_steps = total_steps
+                    await session.commit()
+                else:
+                    rec = ExecutionRecord(
+                        id=exec_id,
+                        workflow_id=workflow_id,
+                        status="RUNNING",
+                        total_steps=total_steps,
+                        completed_steps=0,
+                    )
+                    session.add(rec)
+                    await session.commit()
+        except Exception:
+            pass
+
         await self.broadcaster.broadcast(
             execution_id=exec_id,
             event_type="started",
@@ -196,6 +216,18 @@ class WorkflowExecutor:
                 experiment_records.append(exp_record)
 
             final_status = "CANCELLED" if cancel_token.is_set() else "COMPLETED"
+            try:
+                from datetime import UTC, datetime
+                async with get_db_context() as session:
+                    rec = await session.get(ExecutionRecord, exec_id)
+                    if rec:
+                        rec.status = final_status
+                        rec.completed_steps = completed_steps
+                        rec.completed_at = datetime.now(UTC)
+                        await session.commit()
+            except Exception:
+                pass
+
             await self.broadcaster.broadcast(
                 execution_id=exec_id,
                 event_type="completed" if final_status == "COMPLETED" else "cancelled",

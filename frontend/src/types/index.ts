@@ -246,3 +246,5 @@ export interface LatencyDistribution {
   raw_samples: number[];
 }
 
+export * from './evaluationResults';
+

@@ -103,31 +103,38 @@ async def list_evaluations(
 
 @evaluations_router.get(
     "/{evaluation_id}",
-    response_model=EvaluationResponse,
     summary="Get evaluation status and summary",
 )
 async def get_evaluation(
     evaluation_id: str,
     db: AsyncSession = Depends(get_db),
-) -> EvaluationResponse:
-    """Fetch current execution status and aggregated metrics scorecard."""
+) -> Any:
+    """Fetch current execution status and aggregated metrics scorecard with fallback to execution runs."""
     service = EvaluationService(db)
-    run = await service.get_evaluation(evaluation_id)
-    return _map_run_response(run)
+    try:
+        run = await service.get_evaluation(evaluation_id)
+        return _map_run_response(run)
+    except Exception:
+        from src.evalforge.api.routes.executions import get_execution_results
+        return await get_execution_results(execution_id=evaluation_id)
 
 
 @evaluations_router.get(
     "/{evaluation_id}/results",
-    response_model=EvaluationDetailResponse,
     summary="Get evaluation with individual case results",
 )
 async def get_evaluation_results(
     evaluation_id: str,
     db: AsyncSession = Depends(get_db),
-) -> EvaluationDetailResponse:
-    """Retrieve full audit evidence and individual test case outcomes."""
+) -> Any:
+    """Retrieve full audit evidence and individual test case outcomes with fallback to execution runs."""
     service = EvaluationService(db)
-    run = await service.get_evaluation_with_results(evaluation_id)
+    try:
+        run = await service.get_evaluation_with_results(evaluation_id)
+    except Exception:
+        from src.evalforge.api.routes.executions import get_execution_results
+        return await get_execution_results(execution_id=evaluation_id)
+
     base_resp = _map_run_response(run)
 
     case_items = []

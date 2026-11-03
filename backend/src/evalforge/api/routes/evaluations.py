@@ -28,6 +28,20 @@ async def list_evaluations(
     return {"total": total, "items": runs}
 
 
+@router.get("/{evaluation_id}")
+async def get_evaluation_modular(evaluation_id: str):
+    """Retrieve evaluation summary with unified fallback across runs and executions."""
+    from src.evalforge.api.routes.executions import get_execution_results
+    return await get_execution_results(execution_id=evaluation_id)
+
+
+@router.get("/{evaluation_id}/results")
+async def get_evaluation_results_modular(evaluation_id: str):
+    """Retrieve full evaluation details and test cases with unified fallback."""
+    from src.evalforge.api.routes.executions import get_execution_results
+    return await get_execution_results(execution_id=evaluation_id)
+
+
 @router.get("/{evaluation_id}/export")
 async def export_evaluation_modular(
     evaluation_id: str,

@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   XCircle,
   Download,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '../ui/Primitives';
 
@@ -27,6 +28,7 @@ interface ResultsPanelProps {
   }>;
   onExportJson?: () => void;
   onExportCsv?: () => void;
+  onOpenWorkspace?: () => void;
 }
 
 export const ResultsPanel: React.FC<ResultsPanelProps> = ({
@@ -38,6 +40,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
   cases,
   onExportJson,
   onExportCsv,
+  onOpenWorkspace,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [activeTab, setActiveTab] = useState<'cases' | 'logs'>('cases');
@@ -145,6 +148,11 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
             {onExportJson && (
               <Button variant="outline" size="sm" onClick={onExportJson} icon={<Download className="w-3 h-3" />}>
                 JSON
+              </Button>
+            )}
+            {onOpenWorkspace && (
+              <Button variant="primary" size="sm" onClick={onOpenWorkspace} icon={<BarChart3 className="w-3 h-3" />}>
+                Open Analytics
               </Button>
             )}
           </div>

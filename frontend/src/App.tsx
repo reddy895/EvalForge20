@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Header } from './components/layout/Header';
-import { NavigationSidebar, NavigationTab } from './components/layout/NavigationSidebar';
+import { NavigationSidebar } from './components/layout/NavigationSidebar';
+import { useAppNavigation } from './hooks/useAppNavigation';
 import {
   PlaygroundView,
+  EvaluationResultsWorkspace,
   ExperimentsView,
   ModelsView,
   BenchmarksView,
@@ -12,7 +14,7 @@ import {
 } from './pages';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<NavigationTab>('playground');
+  const { activeTab, activeRunId, navigateTo } = useAppNavigation();
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#F8FAFC] text-[#111827] overflow-hidden font-sans">
@@ -21,10 +23,23 @@ export const App: React.FC = () => {
 
       {/* MAIN CONTAINER: SIDEBAR + CONTENT VIEW */}
       <div className="flex-1 flex overflow-hidden">
-        <NavigationSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <NavigationSidebar
+          activeTab={activeTab}
+          onTabChange={(tab) => navigateTo(tab)}
+        />
 
         <main className="flex-1 flex flex-col overflow-auto bg-[#F8FAFC]">
-          {activeTab === 'playground' && <PlaygroundView />}
+          {activeTab === 'playground' && (
+            <PlaygroundView
+              onNavigateToResults={(runId) => navigateTo('results', runId)}
+            />
+          )}
+          {activeTab === 'results' && (
+            <EvaluationResultsWorkspace
+              runId={activeRunId}
+              onBackToPlayground={() => navigateTo('playground')}
+            />
+          )}
           {activeTab === 'experiments' && <ExperimentsView />}
           {activeTab === 'models' && <ModelsView />}
           {activeTab === 'benchmarks' && <BenchmarksView />}

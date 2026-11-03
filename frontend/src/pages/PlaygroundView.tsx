@@ -104,7 +104,13 @@ function validateGraph(nodes: Node[], edges: Edge[]): string | null {
   return null;
 }
 
-export const PlaygroundView: React.FC = () => {
+export interface PlaygroundViewProps {
+  onNavigateToResults?: (runId: string) => void;
+}
+
+export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
+  onNavigateToResults,
+}) => {
   const [nodes, setNodes] = useState<Node[]>(INITIAL_NODES);
   const [edges, setEdges] = useState<Edge[]>(INITIAL_EDGES);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -413,6 +419,11 @@ export const PlaygroundView: React.FC = () => {
       setActiveExecutionId(executionId);
       setLogs((prev) => [...prev, `Execution started: ${executionId}`]);
 
+      // Navigate to dedicated results page
+      if (onNavigateToResults) {
+        onNavigateToResults(executionId);
+      }
+
       // Step 4: Connect to SSE stream
       // Backend broadcasts: started, step_progress, completed, failed, cancelled
       const eventSource = new EventSource(
@@ -571,6 +582,11 @@ export const PlaygroundView: React.FC = () => {
         cases={cases}
         onExportJson={handleExportJson}
         onExportCsv={handleExportCsv}
+        onOpenWorkspace={
+          activeExecutionId && onNavigateToResults
+            ? () => onNavigateToResults(activeExecutionId)
+            : undefined
+        }
       />
     </div>
   );

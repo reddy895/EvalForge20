@@ -7,10 +7,12 @@ import {
   Database,
   Trophy,
   Settings as SettingsIcon,
+  BarChart3,
 } from 'lucide-react';
 
 export type NavigationTab =
   | 'playground'
+  | 'results'
   | 'experiments'
   | 'models'
   | 'benchmarks'
@@ -31,6 +33,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'playground', label: 'Playground', icon: PlaySquare },
+  { id: 'results', label: 'Evaluation Results', icon: BarChart3 },
   { id: 'experiments', label: 'Experiments', icon: FlaskConical },
   { id: 'models', label: 'Models', icon: Cpu },
   { id: 'benchmarks', label: 'Benchmarks', icon: BookmarkCheck },

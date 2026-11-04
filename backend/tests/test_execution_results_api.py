@@ -75,3 +75,25 @@ def test_evaluation_modular_fallback_to_execution() -> None:
         res_eval = client.get(f"/api/evaluations/{exec_id}/results")
         assert res_eval.status_code == 200
         assert res_eval.json()["id"] == exec_id
+
+
+def test_execution_results_duration_and_latency_aggregation() -> None:
+    """Verify that execution results compute total_duration_ms and maintain latency integrity."""
+    with TestClient(app) as client:
+        res = client.get("/api/evaluations?limit=1")
+        assert res.status_code == 200
+        items = res.json().get("items", [])
+        if not items:
+            pytest.skip("No evaluation runs to verify duration.")
+
+        eval_id = items[0]["id"]
+        results_res = client.get(f"/api/executions/{eval_id}/results")
+        assert results_res.status_code == 200
+        data = results_res.json()
+
+        # If evaluation run has duration_seconds or timestamps, duration_ms should be numeric
+        if items[0].get("duration_seconds") is not None:
+            assert data.get("total_duration_ms") is not None
+            assert data["total_duration_ms"] > 0
+
+

@@ -169,3 +169,20 @@ class TestJsonSchemaEvaluator:
         )
         assert res.passed is False
         assert res.score == 0.0
+
+    @pytest.mark.asyncio
+    async def test_boolean_rejected_for_number_type(self) -> None:
+        ev = JsonSchemaEvaluator()
+        schema = {
+            "type": "object",
+            "properties": {"score": {"type": "number"}},
+            "required": ["score"],
+        }
+        res = await ev.evaluate(
+            prediction='{"score": true}',
+            reference="",
+            json_schema=schema,
+        )
+        assert res.passed is False
+        assert any("expected number, got bool" in err for err in res.details["type_errors"])
+

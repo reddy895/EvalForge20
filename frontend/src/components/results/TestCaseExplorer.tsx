@@ -34,7 +34,7 @@ export const TestCaseExplorer: React.FC<TestCaseExplorerProps> = ({
     return cases.filter((c) => {
       // Status filter
       if (statusFilter === 'passed' && !c.passed) return false;
-      if (statusFilter === 'failed' && (c.passed || c.error_message)) return false;
+      if (statusFilter === 'failed' && c.passed) return false;
       if (statusFilter === 'skipped' && !c.error_message) return false;
 
       // Model filter
@@ -62,8 +62,8 @@ export const TestCaseExplorer: React.FC<TestCaseExplorerProps> = ({
   }, [cases, statusFilter, modelFilter, evaluatorFilter, searchQuery]);
 
   const passedCount = cases.filter((c) => c.passed).length;
-  const failedCount = cases.filter((c) => !c.passed && !c.error_message).length;
-  const skippedCount = cases.filter((c) => Boolean(c.error_message)).length;
+  const failedCount = cases.filter((c) => !c.passed).length;
+  const errorCount = cases.filter((c) => Boolean(c.error_message)).length;
 
   const handleExportJson = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(filteredCases, null, 2));
@@ -172,7 +172,7 @@ export const TestCaseExplorer: React.FC<TestCaseExplorerProps> = ({
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Errors ({skippedCount})
+            Errors ({errorCount})
           </button>
         </div>
 

@@ -49,3 +49,17 @@ async def test_numeric_tolerance_missing_reference() -> None:
     assert res.passed is False
     assert res.score == 0.0
     assert "error" in res.details
+
+
+@pytest.mark.asyncio
+async def test_numeric_tolerance_thousands_separators_and_currency() -> None:
+    evaluator = NumericToleranceEvaluator(atol=1e-3, rtol=1e-3)
+    res = await evaluator.evaluate(
+        prediction="The total estimated value is $1,250,000.50.",
+        reference="1250000.50",
+    )
+    assert res.passed is True
+    assert res.score == 1.0
+    assert res.details["expected"] == 1250000.50
+    assert res.details["closest_extracted"] == 1250000.50
+

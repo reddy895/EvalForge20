@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
 
+from src.evalforge.core.logging import get_logger
 from src.evalforge.database.models import ExecutionRecord, ExperimentRecord, WorkflowRecord
 from src.evalforge.database.session import get_db_context
 from src.evalforge.engine.events import get_event_broadcaster
@@ -14,6 +15,8 @@ from src.evalforge.engine.executor import get_workflow_executor
 from src.evalforge.engine.scheduler import get_workflow_scheduler
 from src.evalforge.schemas.main import ExecutionTriggerRequest, WorkflowGraph
 from src.evalforge.storage.models.evaluation import EvaluationRun
+
+logger = get_logger("evalforge.api.routes.executions")
 
 router = APIRouter(prefix="/executions", tags=["executions"])
 
@@ -49,8 +52,8 @@ async def trigger_execution(
             )
             session.add(rec)
             await session.commit()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Could not persist initial ExecutionRecord: %s", exc)
 
     # Launch execution as an async background task
     async def _run_job():
@@ -199,6 +202,9 @@ async def get_execution_results(execution_id: str) -> dict[str, Any]:
         passed_cases_count = sum(s["passed_cases"] for s in model_summaries)
         failed_cases_count = sum(s["failed_cases"] for s in model_summaries)
 
+        valid_lats = [s["avg_latency_ms"] for s in model_summaries if s["avg_latency_ms"] is not None]
+        overall_live_lat = round(sum(valid_lats) / len(valid_lats), 2) if valid_lats else None
+
         return {
             "id": execution_id,
             "execution_id": execution_id,
@@ -212,7 +218,7 @@ async def get_execution_results(execution_id: str) -> dict[str, Any]:
             "passed_cases": passed_cases_count,
             "failed_cases": failed_cases_count,
             "pass_rate": round((passed_cases_count / total_cases_count) * 100, 2) if total_cases_count > 0 else 0.0,
-            "avg_latency_ms": round(sum(s["avg_latency_ms"] for s in model_summaries if s["avg_latency_ms"] is not None) / len(model_summaries), 2) if model_summaries else None,
+            "avg_latency_ms": overall_live_lat,
             "total_duration_ms": None,
             "created_at": exec_rec.started_at.isoformat() if exec_rec and exec_rec.started_at else None,
             "completed_at": exec_rec.completed_at.isoformat() if exec_rec and exec_rec.completed_at else None,
@@ -282,6 +288,12 @@ async def get_execution_results(execution_id: str) -> dict[str, Any]:
                         },
                     }
 
+                    dur_ms = None
+                    if getattr(full_run, "duration_seconds", None) is not None:
+                        dur_ms = round(float(full_run.duration_seconds) * 1000, 2)
+                    elif getattr(full_run, "created_at", None) and getattr(full_run, "completed_at", None):
+                        dur_ms = round((full_run.completed_at - full_run.created_at).total_seconds() * 1000, 2)
+
                     return {
                         "id": full_run.id,
                         "execution_id": full_run.id,
@@ -299,7 +311,7 @@ async def get_execution_results(execution_id: str) -> dict[str, Any]:
                         "median_latency_ms": summary_metrics.get("p50_latency_ms"),
                         "p95_latency_ms": summary_metrics.get("p95_latency_ms"),
                         "tokens_per_second": tps_overall,
-                        "total_duration_ms": None,
+                        "total_duration_ms": dur_ms,
                         "created_at": full_run.created_at.isoformat() if hasattr(full_run.created_at, "isoformat") else str(full_run.created_at or ""),
                         "completed_at": full_run.completed_at.isoformat() if full_run.completed_at and hasattr(full_run.completed_at, "isoformat") else (str(full_run.completed_at) if full_run.completed_at else None),
                         "model_summaries": [model_summary],

@@ -120,3 +120,4 @@ export const AccuracyComparisonChart: React.FC<AccuracyComparisonChartProps> = (
     </div>
   );
 };
+

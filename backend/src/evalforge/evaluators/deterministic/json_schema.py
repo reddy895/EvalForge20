@@ -86,7 +86,9 @@ class JsonSchemaEvaluator(BaseEvaluator):
                             type_errors.append(
                                 f"Property '{prop_name}' expected int, got {type(val).__name__}"
                             )
-                        elif expected_type == "number" and not isinstance(val, (int, float)):
+                        elif expected_type == "number" and (
+                            not isinstance(val, (int, float)) or isinstance(val, bool)
+                        ):
                             type_errors.append(
                                 f"Property '{prop_name}' expected number, got {type(val).__name__}"
                             )

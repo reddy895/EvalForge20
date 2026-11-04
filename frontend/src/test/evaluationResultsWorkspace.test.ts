@@ -187,10 +187,15 @@ describe('Dedicated Evaluation Results Workspace & Analytics', () => {
     const passedOnly = cases.filter((c) => c.passed);
     expect(passedOnly).toHaveLength(3);
 
-    // Filter failed
+    // Filter failed (includes any case where passed is false)
     const failedOnly = cases.filter((c) => !c.passed);
     expect(failedOnly).toHaveLength(1);
     expect(failedOnly[0].model_id).toBe('qwen2.5:1.5b');
+    expect(failedOnly[0].error_message).toBe('Output string mismatch');
+
+    // Filter errors/skipped
+    const errorCases = cases.filter((c) => Boolean(c.error_message));
+    expect(errorCases).toHaveLength(1);
 
     // Filter by model
     const qwen15Only = cases.filter((c) => c.model_id === 'qwen2.5:1.5b');

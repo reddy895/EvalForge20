@@ -104,3 +104,28 @@ async def test_ollama_diagnostics_reachable_general() -> None:
         assert rep.reachable is True
         assert rep.connectivity_state == "reachable"
         assert rep.installed_models_count == 1
+
+
+@pytest.mark.asyncio
+async def test_ollama_diagnostics_read_timeout_classified_as_timeout() -> None:
+    # ReadTimeout during model load/warmup must be classified as timeout
+    with patch("httpx.AsyncClient.get", side_effect=httpx.ReadTimeout("Read timed out after 3.0s")):
+        report = await run_ollama_diagnostics("http://localhost:11434", timeout=3.0)
+        assert report.reachable is False
+        assert report.connectivity_state == "timeout"
+        assert "timed out" in (report.error_message or "").lower()
+
+
+@pytest.mark.asyncio
+async def test_ollama_diagnostics_prefix_normalization() -> None:
+    # Requested models with ollama: or library/ prefixes match accurately
+    mock_resp = httpx.Response(200, json={"models": [{"name": "qwen2.5:1.5b"}]}, request=httpx.Request("GET", "http://test"))
+    with patch("httpx.AsyncClient.get", return_value=mock_resp):
+        rep1 = await run_ollama_diagnostics("http://localhost:11434", requested_model="ollama:qwen2.5:1.5b")
+        assert rep1.model_ready is True
+        assert rep1.connectivity_state == "ready"
+
+        rep2 = await run_ollama_diagnostics("http://localhost:11434", requested_model="library/qwen2.5:1.5b:latest")
+        assert rep2.model_ready is True
+        assert rep2.connectivity_state == "ready"
+

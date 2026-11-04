@@ -181,3 +181,4 @@ export const GroupedMetricComparisonChart: React.FC<GroupedMetricComparisonChart
     </div>
   );
 };
+

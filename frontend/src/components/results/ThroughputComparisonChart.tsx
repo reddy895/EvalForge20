@@ -153,3 +153,4 @@ export const ThroughputComparisonChart: React.FC<ThroughputComparisonChartProps>
     </div>
   );
 };
+

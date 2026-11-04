@@ -106,7 +106,7 @@ export const LatencyComparisonChart: React.FC<LatencyComparisonChartProps> = ({
                       <div className="flex items-center justify-between gap-4 text-slate-300">
                         <span>Mean Latency:</span>
                         <span className="font-bold text-indigo-400">
-                          {d.avg_latency_ms !== null ? `${d.avg_latency_ms} ms` : 'N/A'}
+                          {d.avg_latency_ms !== null ? `${d.avg_latency_ms} ms` : 'N/A (Missing telemetry)'}
                         </span>
                       </div>
                       {d.median_latency_ms !== null && (
@@ -141,3 +141,4 @@ export const LatencyComparisonChart: React.FC<LatencyComparisonChartProps> = ({
     </div>
   );
 };
+

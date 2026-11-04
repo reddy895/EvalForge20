@@ -19,9 +19,11 @@ class NumericToleranceEvaluator(BaseEvaluator):
 
     @staticmethod
     def _extract_numbers(text: str) -> list[float]:
-        """Extract all float numbers from text."""
-        # Find all integer or float numbers (including negatives)
-        tokens = re.findall(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", text)
+        """Extract all float numbers from text, normalizing thousands separators."""
+        # Normalize comma thousands separators between digits (e.g. 1,250 -> 1250)
+        cleaned_text = re.sub(r"(?<=\d),(?=\d)", "", text)
+        # Find all integer or float numbers (including negatives and scientific notation)
+        tokens = re.findall(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", cleaned_text)
         numbers = []
         for t in tokens:
             try:

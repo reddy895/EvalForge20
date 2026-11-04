@@ -26,8 +26,12 @@ class OllamaDiagnosticReport:
 
 
 def _normalize_model_name(name: str) -> str:
-    """Strip tags and leading/trailing whitespace for robust model matching."""
+    """Strip tags, provider prefix, and leading/trailing whitespace for robust model matching."""
     clean = name.strip().lower()
+    if clean.startswith("ollama:"):
+        clean = clean[7:].strip()
+    if clean.startswith("library/"):
+        clean = clean[8:].strip()
     return clean[:-7] if clean.endswith(":latest") else clean
 
 
@@ -58,8 +62,8 @@ async def run_ollama_diagnostics(
         async with httpx.AsyncClient(timeout=timeout) as client:
             try:
                 resp = await client.get(f"{clean_url}/api/tags")
-            except httpx.ConnectTimeout as exc:
-                # State 4: Connection timeout
+            except httpx.TimeoutException as exc:
+                # State 4: Connection or read timeout
                 return OllamaDiagnosticReport(
                     reachable=False,
                     connectivity_state="timeout",

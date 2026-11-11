@@ -46,7 +46,7 @@ async def list_experiments(
 ) -> EvaluationListResponse:
     """Retrieve historical experiment runs filtered by model, status, or dataset."""
     service = EvaluationService(db)
-    runs = await service.list_evaluations(
+    runs, total = await service.list_evaluations(
         status=status_filter,
         model_id=model_id,
         dataset_id=dataset_id,
@@ -54,7 +54,7 @@ async def list_experiments(
         limit=limit,
     )
     return EvaluationListResponse(
-        total=len(runs),
+        total=total,
         items=[_map_run_response(r) for r in runs],
     )
 

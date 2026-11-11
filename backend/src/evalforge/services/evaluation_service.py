@@ -135,6 +135,10 @@ class EvaluationService:
         )
         run.config = run_config
         await self.eval_repo.add(run)
+        if self.session is not None:
+            # Persist the run before the background task starts so it can always
+            # observe the record it is responsible for updating.
+            await self.session.commit()
 
         # Launch execution as background task
         asyncio.create_task(
@@ -160,6 +164,10 @@ class EvaluationService:
 
         async with session_factory() as session:
             repo = EvaluationRepository(session)
+            existing = await repo.get(evaluation_id)
+            if existing is not None and existing.status == "cancelled":
+                coordinator.unregister_run(evaluation_id)
+                return
             await repo.update_status(evaluation_id, "running")
             await session.commit()
 
@@ -206,6 +214,19 @@ class EvaluationService:
                     repo = EvaluationRepository(session)
                     run = await repo.get(evaluation_id)
                     if not run:
+                        return
+                    if run.status == "cancelled":
+                        # Cancellation was requested while the final batch was
+                        # completing; never upgrade a cancelled run to completed.
+                        run.completed_cases = scorecard.completed_cases
+                        run.passed_cases = scorecard.passed_cases
+                        run.failed_cases = scorecard.failed_cases
+                        run.completed_at = datetime.now(UTC)
+                        await repo.add_case_results(evaluation_id, case_results)
+                        logger.info(
+                            "Evaluation '%s' honoured cancellation requested during completion.",
+                            evaluation_id,
+                        )
                         return
                     if scorecard.total_cases == 0:
                         run.status = "completed"

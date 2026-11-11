@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.evalforge.core.errors import NotFoundError
 from src.evalforge.schemas.evaluation import (
     CaseResultResponse,
     EvaluationCreateRequest,
@@ -114,7 +115,9 @@ async def get_evaluation(
     try:
         run = await service.get_evaluation(evaluation_id)
         return _map_run_response(run)
-    except Exception:
+    except NotFoundError:
+        # Evaluations created through the visual workflow engine are stored as
+        # execution runs; fall back only for a genuine 404, never for internal errors.
         from src.evalforge.api.routes.executions import get_execution_results
         return await get_execution_results(execution_id=evaluation_id)
 
@@ -131,7 +134,7 @@ async def get_evaluation_results(
     service = EvaluationService(db)
     try:
         run = await service.get_evaluation_with_results(evaluation_id)
-    except Exception:
+    except NotFoundError:
         from src.evalforge.api.routes.executions import get_execution_results
         return await get_execution_results(execution_id=evaluation_id)
 

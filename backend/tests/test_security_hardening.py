@@ -120,3 +120,36 @@ def test_log_redaction_hides_credentials() -> None:
     assert cleaned["headers"]["authorization"] == REDACTED
     assert cleaned["items"][0]["access_token"] == REDACTED
     assert cleaned["message"] == "ok"
+
+
+def test_validate_path_safety_rejects_sibling_prefix_escape(tmp_path) -> None:
+    from src.evalforge.core.errors import SecurityViolationError
+    from src.evalforge.core.security import validate_path_safety
+
+    base = tmp_path / "data"
+    base.mkdir()
+    evil = tmp_path / "data_evil"
+    evil.mkdir()
+
+    with pytest.raises(SecurityViolationError):
+        validate_path_safety(str(evil / "file.txt"), base_dir=str(base))
+
+
+def test_validate_path_safety_accepts_nested_file(tmp_path) -> None:
+    from src.evalforge.core.security import validate_path_safety
+
+    base = tmp_path / "data"
+    nested = base / "sub"
+    nested.mkdir(parents=True)
+    target = nested / "file.txt"
+    target.write_text("ok")
+
+    assert validate_path_safety(str(target), base_dir=str(base)) == str(target)
+
+
+def test_validate_path_safety_rejects_base_directory_itself(tmp_path) -> None:
+    from src.evalforge.core.errors import SecurityViolationError
+    from src.evalforge.core.security import validate_path_safety
+
+    with pytest.raises(SecurityViolationError):
+        validate_path_safety(str(tmp_path), base_dir=str(tmp_path))

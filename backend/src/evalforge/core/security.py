@@ -29,7 +29,11 @@ def validate_path_safety(target_path: str, base_dir: str | None = None) -> str:
     norm_path = os.path.abspath(target_path)
     if base_dir:
         norm_base = os.path.abspath(base_dir)
-        if not norm_path.startswith(norm_base):
+        try:
+            inside_base = os.path.commonpath([norm_path, norm_base]) == norm_base
+        except ValueError:
+            inside_base = False
+        if not inside_base or norm_path == norm_base:
             raise SecurityViolationError(
                 f"Path traversal detected: '{target_path}' attempts to escape boundary '{base_dir}'."
             )

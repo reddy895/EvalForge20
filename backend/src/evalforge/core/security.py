@@ -195,14 +195,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     Multi-worker deployments should also enforce limits at the reverse proxy.
     """
 
-    def __init__(self, app: object, requests_per_minute: int = 240):
+    def __init__(
+        self,
+        app: object,
+        requests_per_minute: int = 240,
+        trust_proxy_headers: bool = False,
+    ):
         super().__init__(app)  # type: ignore[arg-type]
         self.limit = max(1, requests_per_minute)
         self.window_seconds = 60.0
+        self.trust_proxy_headers = trust_proxy_headers
         self._buckets: dict[str, tuple[float, int]] = {}
 
     def _client_key(self, request: Request) -> str:
-        forwarded = request.headers.get("x-forwarded-for")
+        forwarded = request.headers.get("x-forwarded-for") if self.trust_proxy_headers else None
         client = (
             forwarded.split(",")[0].strip()
             if forwarded

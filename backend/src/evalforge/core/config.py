@@ -90,6 +90,8 @@ class Settings(BaseSettings):
     MAX_REQUEST_BODY_BYTES: int = 20 * 1024 * 1024  # 20MB hard ceiling
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_REQUESTS_PER_MINUTE: int = 240
+    # Only trust X-Forwarded-For when a trusted reverse proxy overwrites it.
+    TRUST_PROXY_HEADERS: bool = False
 
     # Optional shared-secret authentication for single-user / self-hosted deployments.
     # When AUTH_TOKEN is set, every /api route except health probes requires

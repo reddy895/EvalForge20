@@ -153,3 +153,25 @@ def test_validate_path_safety_rejects_base_directory_itself(tmp_path) -> None:
 
     with pytest.raises(SecurityViolationError):
         validate_path_safety(str(tmp_path), base_dir=str(tmp_path))
+
+
+@pytest.mark.security
+def test_rate_limit_ignores_spoofed_forwarded_for_by_default() -> None:
+    app = _build_app_with_middleware(RateLimitMiddleware, requests_per_minute=1)
+    with TestClient(app) as client:
+        assert client.get("/api/value", headers={"X-Forwarded-For": "1.1.1.1"}).status_code == 200
+        spoofed = client.get("/api/value", headers={"X-Forwarded-For": "2.2.2.2"})
+        assert spoofed.status_code == 429
+
+
+@pytest.mark.security
+def test_rate_limit_honours_forwarded_for_when_proxy_is_trusted() -> None:
+    app = _build_app_with_middleware(
+        RateLimitMiddleware,
+        requests_per_minute=1,
+        trust_proxy_headers=True,
+    )
+    with TestClient(app) as client:
+        assert client.get("/api/value", headers={"X-Forwarded-For": "1.1.1.1"}).status_code == 200
+        assert client.get("/api/value", headers={"X-Forwarded-For": "2.2.2.2"}).status_code == 200
+        assert client.get("/api/value", headers={"X-Forwarded-For": "1.1.1.1"}).status_code == 429

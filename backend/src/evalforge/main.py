@@ -120,6 +120,7 @@ def create_app() -> FastAPI:
         application.add_middleware(
             RateLimitMiddleware,
             requests_per_minute=settings.RATE_LIMIT_REQUESTS_PER_MINUTE,
+            trust_proxy_headers=settings.TRUST_PROXY_HEADERS,
         )
 
     # Request ID and latency tracking middleware

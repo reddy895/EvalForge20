@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from src.evalforge.core.config import get_settings
+from src.evalforge.database.health import check_database_health
 from src.evalforge.providers.ollama.client import get_ollama_client
 
 health_router = APIRouter(tags=["Health"])
@@ -40,6 +41,7 @@ async def check_health() -> HealthResponse:
     import asyncio
     settings = get_settings()
     client = get_ollama_client()
+    db_health = await check_database_health()
     reachable = False
     version = None
     model_count = 0
@@ -60,13 +62,13 @@ async def check_health() -> HealthResponse:
         reachable = False
 
     return HealthResponse(
-        status="healthy",
+        status="healthy" if db_health.get("connected") else "degraded",
         app=settings.APP_NAME,
         version=settings.APP_VERSION,
         environment=settings.ENVIRONMENT,
         timestamp=datetime.now(UTC).isoformat(),
         api_ready=True,
-        database_connected=True,
+        database_connected=bool(db_health.get("connected")),
         ollama_base_url=settings.OLLAMA_BASE_URL,
         ollama_reachable=reachable,
         ollama_version=version,
@@ -78,10 +80,11 @@ async def check_health() -> HealthResponse:
 async def check_backend_only_health() -> dict[str, Any]:
     """Pure backend health check completely decoupled from provider availability."""
     settings = get_settings()
+    db_health = await check_database_health()
     return {
-        "status": "healthy",
+        "status": "healthy" if db_health.get("connected") else "degraded",
         "api_ready": True,
-        "database_connected": True,
+        "database_connected": bool(db_health.get("connected")),
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "timestamp": datetime.now(UTC).isoformat(),
@@ -93,12 +96,16 @@ async def check_backend_only_health() -> dict[str, Any]:
 async def check_readiness() -> ReadinessResponse:
     """Report API server readiness separately from external model-provider availability."""
     client = get_ollama_client()
-    ollama_online = await client.check_health()
+    try:
+        ollama_online = await client.check_health()
+    except Exception:
+        ollama_online = False
+    db_health = await check_database_health()
 
     return ReadinessResponse(
-        status="ready",
+        status="ready" if db_health.get("connected") else "not_ready",
         api_ready=True,
-        database_connected=True,
+        database_connected=bool(db_health.get("connected")),
         timestamp=datetime.now(UTC).isoformat(),
         providers_online={"ollama": ollama_online, "mock": True},
     )

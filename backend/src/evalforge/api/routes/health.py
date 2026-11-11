@@ -6,7 +6,6 @@ from fastapi import APIRouter
 
 from src.evalforge.core.config import get_settings
 from src.evalforge.database.health import check_database_health
-from src.evalforge.hardware.monitor import get_hardware_monitor
 from src.evalforge.providers.ollama import get_ollama_provider
 
 router = APIRouter(tags=["health"])
@@ -17,7 +16,6 @@ async def health_probe() -> dict[str, Any]:
     import asyncio
     settings = get_settings()
     db_health = await check_database_health()
-    hw_specs = get_hardware_monitor().get_system_specs()
     ollama_provider = get_ollama_provider()
     try:
         ollama_ok = await asyncio.wait_for(ollama_provider.health_check(), timeout=1.5)
@@ -29,13 +27,14 @@ async def health_probe() -> dict[str, Any]:
         "api_ready": True,
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
-        "database": db_health,
+        "database": {
+            "connected": bool(db_health.get("connected")),
+            "status": db_health.get("status"),
+        },
         "ollama": {
             "status": "connected" if ollama_ok else "unreachable",
-            "base_url": settings.OLLAMA_BASE_URL,
             "reachable": ollama_ok,
         },
-        "hardware": hw_specs,
     }
 
 

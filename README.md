@@ -1,708 +1,299 @@
 # EvalForge20
 
-### Visual AI Model Benchmarking & Evaluation Platform
+**Local-first LLM and AI-agent evaluation platform.**
 
-**Build. Connect. Evaluate. Compare.**
+EvalForge20 lets you move from a dataset and a model to reproducible, inspectable evaluation results: **Dataset → Model → Evaluators → Run → Results → Comparison → Export**.
 
-EvalForge20 is an open-source, local-first AI model evaluation platform designed to benchmark Large Language Models (LLMs) through an interactive visual playground.
-
-Drag models, datasets and evaluation metrics onto a node-based canvas, connect them, configure your benchmark and execute evaluations using locally available models through Ollama.
-
-Instead of writing evaluation scripts for every experiment, EvalForge20 provides a visual environment for designing, executing, inspecting and comparing AI model evaluations.
+It runs as a FastAPI backend plus a React/Vite single-page frontend, with **Ollama** as the first-class local inference provider. No cloud account is required for local evaluation.
 
 <p align="center">
-  <img src="assets/evalforge-playground.png" alt="EvalForge20 visual evaluation playground showing GSM8K and Python benchmark datasets connected to Qwen 2.5 1.5B Instruct and accuracy evaluators" width="100%">
-</p>
-
-<p align="center">
-  <strong>Visual evaluation workflows. Local model execution. Measurable results.</strong>
+  <img src="assets/evalforge-playground.png" alt="EvalForge20 visual evaluation playground" width="100%">
 </p>
 
 ---
 
-## Overview
+## Project status
 
-Evaluating AI models involves more than checking whether a response looks correct.
+EvalForge20 is functional software, not a finished commercial product. This README distinguishes verified capabilities from partial or planned work.
 
-Developers need to understand model accuracy, reasoning capabilities, execution speed, resource consumption, reliability and consistency across different tasks.
+### Verified, implemented capabilities
 
-EvalForge20 aims to bring these capabilities together in one visual evaluation environment.
+| Area | Status | Notes |
+|---|---|---|
+| Dataset CRUD, duplication, deletion | Implemented | API + rebuilt dataset workspace |
+| JSONL / CSV import | Implemented | UTF-8 validation, row-level errors, duplicate detection |
+| Dataset preview and pagination | Implemented | Bounded queries, no full-table dumps |
+| Dataset integrity fingerprint | Implemented | SHA-256 over canonical cases |
+| Dataset version counter | Implemented | Incremented on metadata/case changes; not full historical snapshots |
+| Ollama model discovery and inference | Implemented | Connection diagnostics, model readiness checks |
+| OpenAI-compatible / cloud adapter scaffolding | Partial | Adapter interfaces exist; only Ollama and the deterministic mock are exercised in this repo's test suite |
+| Deterministic evaluators | Implemented | Exact/normalized match, token F1, keywords, JSON schema, numeric tolerance, code execution |
+| Semantic similarity | Partial | Deterministic token-based similarity, not embedding-based |
+| LLM-as-a-judge | Implemented | Rubric, prompt version, judge metadata, prompt-injection guard; scores are explicitly marked estimates |
+| RAG metrics | Partial | Faithfulness / relevance / context precision / recall implementations with LLM assistance |
+| Safety evaluation | Partial | Keyword/heuristic safety checks; not a moderation service |
+| Evaluation runs, bounded concurrency, cancellation | Implemented | Per-case isolation and error capture |
+| Run persistence and interruption recovery | Implemented | Runs left active by a restart are marked `interrupted` |
+| Results, per-case inspection, comparison charts | Implemented | Data originates from persisted case results |
+| JSON / CSV exports | Implemented | Per-run evaluation export, dataset export |
+| Request IDs, structured logging, redaction | Implemented | Secret-looking keys are redacted |
+| Authentication | Optional | Single shared bearer token (`AUTH_TOKEN`); no user accounts or RBAC |
+| Docker / Compose deployment | Implemented | Non-root image, healthcheck, optional PostgreSQL profile |
+| Database backup / restore scripts | Implemented | SQLite and PostgreSQL |
 
-Users can select a model, choose benchmark datasets, connect evaluation parameters and execute experiments without manually building evaluation pipelines.
+### Not implemented (be honest about it)
 
-### How it works
+- Multi-tenant user accounts, teams, SSO, and role-based access control.
+- Full dataset version history / immutable snapshots beyond the version counter.
+- PDF report export.
+- A durable external job queue (runs execute in-process; use a single API worker).
+- Embedding-based semantic similarity.
+- Verified end-to-end tests against every cloud provider.
+- Built-in moderation or compliance certification.
 
-1. Select an available model from the model library.
-2. Drag a benchmark dataset into the playground.
-3. Drag the evaluation metrics you want to measure.
-4. Connect the components using the visual canvas.
-5. Configure the evaluation.
-6. Execute the workflow.
-7. Inspect actual model outputs and calculated evaluation results.
-8. Compare different models using equivalent benchmarks.
-
-The platform is designed around one principle:
-
-**Evaluate only what matters to you.**
-
-For example, connecting a model to an Accuracy evaluator should run an accuracy evaluation, not an unnecessary collection of unrelated benchmarks.
-
----
-
-## Key Capabilities
-
-### 1. Visual Evaluation Playground
-
-An interactive, node-based workspace inspired by visual workflow editors such as n8n.
-
-- Drag-and-drop model nodes.
-- Connect datasets to models.
-- Connect models to evaluation metrics.
-- Configure individual nodes.
-- Build single-model evaluation workflows.
-- Build multi-model comparison workflows.
-- Validate workflows before execution.
-- Monitor execution progress.
-- Inspect evaluation results.
-
-### 2. Local Model Evaluation
-
-EvalForge20 uses Ollama as its local model inference provider.
-
-The intended local-first workflow includes:
-
-- Discovering locally installed models.
-- Selecting models from the available inventory.
-- Executing inference locally.
-- Collecting model responses.
-- Measuring inference performance.
-- Running benchmark datasets.
-- Comparing models under equivalent conditions.
-
-Example model families that can be evaluated when supported by the local Ollama installation:
-
-- Llama
-- Qwen
-- DeepSeek
-- Gemma
-- Mistral
-- Phi
-
-Model availability depends on the installed Ollama models, hardware and supported model formats.
-
-### 3. Modular Evaluation Metrics
-
-EvalForge20 is designed around independently selectable evaluators.
-
-| Category | Evaluation parameters |
-|---|---|
-| Accuracy | Exact Match, Normalized Accuracy, Classification Accuracy |
-| Quality | Correctness, Relevance, Coherence, Completeness |
-| Reasoning | Mathematical Accuracy, Logical Reasoning, Constraint Satisfaction |
-| Coding | Unit Test Pass Rate, Code Execution Success |
-| Performance | Latency, P95 Latency, Time to First Token, Tokens/sec |
-| Efficiency | Token Usage, RAM, VRAM, CPU and GPU Utilization |
-| Reliability | Success Rate, Failure Rate, Response Consistency |
-| Safety | Toxicity, Harmful Output, Bias, Prompt Injection Resistance |
-| RAG | Faithfulness, Context Precision, Context Recall |
-| Agents | Task Completion, Tool Selection Accuracy, Tool-call Success |
-
-Evaluator availability depends on the implementation, required input data and evaluation configuration.
-
-### 4. Dataset-Based Benchmarking
-
-Support for structured benchmark datasets enables reproducible model testing.
-
-Planned dataset capabilities include:
-
-- CSV uploads.
-- JSON uploads.
-- JSONL uploads.
-- Custom test cases.
-- Reference answers.
-- Dataset validation.
-- Dataset previews.
-- Benchmark dataset management.
-- Dataset version tracking.
-
-Example dataset:
-
-```json
-{
-  "input": "What is machine learning?",
-  "expected_output": "Machine learning is a field of AI that enables systems to learn from data."
-}
-```
-
-Datasets can contain additional fields such as context, expected labels and metadata.
-
-### 5. Multi-Model Comparison
-
-Compare multiple models against the same dataset and evaluation criteria.
-
-Example:
-
-```text
-                  Benchmark Dataset
-                         |
-             +-----------+-----------+
-             |                       |
-          Model A                 Model B
-             |                       |
-             +-----------+-----------+
-                         |
-                Shared Evaluators
-                         |
-                Comparison Results
-```
-
-Compare models using:
-
-- Accuracy.
-- Latency.
-- Tokens per second.
-- Reliability.
-- Resource utilization.
-- Task-specific benchmark performance.
-
-Comparisons should use equivalent datasets, prompts, generation settings and evaluator configurations.
-
-### 6. Evaluation Results
-
-The results experience is designed to provide:
-
-- Metric scorecards.
-- Model comparison charts.
-- Individual test-case results.
-- Expected versus generated outputs.
-- Failed test cases.
-- Execution metadata.
-- Benchmark history.
-- Exportable evaluation reports.
-
-All displayed benchmark values should be derived from actual execution or clearly identified as estimates.
+See [docs/architecture.md](docs/architecture.md), [docs/providers.md](docs/providers.md), and [docs/faq.md](docs/faq.md).
 
 ---
 
 ## Architecture
 
-EvalForge20 follows a modular architecture that separates model inference, evaluation, workflow execution, storage and visualization.
-
-### High-Level Architecture
-
-```mermaid
-flowchart TB
-    U["User"] --> UI["EvalForge20 Frontend"]
-    UI --> CANVAS["Visual Playground"]
-
-    CANVAS --> WF["Workflow Definition"]
-    WF --> API["FastAPI Backend"]
-
-    API --> VALIDATOR["Workflow Validator"]
-    VALIDATOR --> ENGINE["Native Evaluation Engine"]
-
-    ENGINE --> DATA["Dataset Manager"]
-    ENGINE --> PROVIDER["Model Provider Layer"]
-    ENGINE --> EVALUATORS["Evaluator Registry"]
-
-    PROVIDER --> OLLAMA["Ollama Local API"]
-    OLLAMA --> MODELS["Installed Local Models"]
-
-    DATA --> ENGINE
-    ENGINE --> EVALUATORS
-
-    EVALUATORS --> RESULTS["Metric Aggregation"]
-    RESULTS --> DB["SQLite / PostgreSQL"]
-    RESULTS --> STREAM["Execution Progress"]
-
-    STREAM --> UI
-    DB --> UI
+```text
+React + TypeScript + Vite (frontend/)
+        │  REST / SSE
+        ▼
+FastAPI + Pydantic + SQLAlchemy async (backend/src/evalforge/)
+        ├── Dataset service        → import, validate, fingerprint, export
+        ├── Evaluation service     → snapshot, bounded execution, persistence
+        ├── Evaluator registry     → deterministic metrics + LLM judge
+        ├── Provider registry      → Ollama, mock, OpenAI-compatible, cloud adapters
+        └── SQLite (default) / PostgreSQL (optional)
 ```
 
-### Evaluation Execution Flow
-
-```mermaid
-flowchart TD
-    A["Build Evaluation Workflow"] --> B["Validate Connections"]
-    B --> C{"Workflow Valid?"}
-
-    C -->|No| D["Display Validation Errors"]
-    D --> A
-
-    C -->|Yes| E["Create Experiment"]
-    E --> F["Load Dataset"]
-    F --> G["Resolve Model Provider"]
-    G --> H["Execute Model Inference"]
-
-    H --> I["Collect Model Responses"]
-    I --> J["Run Selected Evaluators"]
-
-    J --> K["Calculate Metrics"]
-    K --> L["Persist Results"]
-    L --> M["Stream Results to Frontend"]
-    M --> N["Display Charts and Test Cases"]
-```
-
-### Multi-Model Comparison Flow
-
-```mermaid
-flowchart TB
-    DATA["Shared Benchmark Dataset"]
-
-    DATA --> A["Model A"]
-    DATA --> B["Model B"]
-    DATA --> C["Model C"]
-
-    A --> EA["Selected Evaluators"]
-    B --> EB["Selected Evaluators"]
-    C --> EC["Selected Evaluators"]
-
-    EA --> R["Comparison Engine"]
-    EB --> R
-    EC --> R
-
-    R --> OUT["Side-by-Side Results"]
-    OUT --> CHART["Comparison Charts"]
-```
-
----
-
-## Technology Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js |
-| Programming Language | TypeScript |
-| UI Styling | Tailwind CSS |
-| Visual Workflow Editor | React Flow / XYFlow |
-| Charts | Recharts |
-| Backend | Python |
-| API Framework | FastAPI |
-| Data Validation | Pydantic |
-| ORM | SQLAlchemy |
-| Database | SQLite / PostgreSQL |
-| Local Model Inference | Ollama |
-| Execution Updates | Server-Sent Events |
-| Version Control | Git |
-
-### Why Ollama?
-
-Ollama provides a convenient way to run supported open-weight models locally.
-
-Using Ollama allows EvalForge20 to:
-
-- Discover installed models.
-- Run inference locally.
-- Reduce dependence on paid inference APIs.
-- Benchmark models on available hardware.
-- Keep model execution within the local environment.
-
-The core evaluation engine is independent of Ollama, allowing additional model providers to be introduced through adapters in the future.
-
----
-
-## Evaluation Methodology
-
-Reliable benchmarking requires transparent and reproducible evaluation methods.
-
-EvalForge20 is designed to distinguish between deterministic metrics, model-judged metrics and estimated measurements.
-
-### Exact Match Accuracy
-
-Measures the proportion of predictions matching their expected answers under a defined normalization rule.
-
-\[
-Accuracy = \frac{Correct\ Predictions}{Total\ Valid\ Predictions}
-\]
-
-### Precision
-
-\[
-Precision = \frac{TP}{TP+FP}
-\]
-
-### Recall
-
-\[
-Recall = \frac{TP}{TP+FN}
-\]
-
-### F1 Score
-
-\[
-F1 = 2 \times \frac{Precision \times Recall}{Precision + Recall}
-\]
-
-### Average Latency
-
-\[
-Average\ Latency = \frac{\sum Request\ Durations}{Completed\ Requests}
-\]
-
-### Tokens Per Second
-
-\[
-Tokens/sec = \frac{Output\ Tokens}{Generation\ Duration}
-\]
-
-### Important Benchmarking Principles
-
-- Use identical benchmark datasets when comparing models.
-- Record model identifiers and versions.
-- Record generation parameters.
-- Record dataset versions.
-- Distinguish cold-start and warm inference.
-- Use repeated runs where appropriate.
-- Document evaluator versions.
-- Identify unavailable measurements.
-- Never replace missing metrics with fabricated zero values.
-
-A model's accuracy is benchmark-dependent. EvalForge20 does not treat one benchmark score as a universal measure of intelligence.
-
----
-
-## Project Structure
-
-The intended modular project structure:
+Key directories:
 
 ```text
-EvalForge20/
-│
-├── frontend/
-│   ├── app/
-│   │   ├── playground/
-│   │   ├── experiments/
-│   │   ├── models/
-│   │   ├── datasets/
-│   │   ├── benchmarks/
-│   │   └── leaderboard/
-│   │
-│   ├── components/
-│   │   ├── canvas/
-│   │   │   ├── nodes/
-│   │   │   ├── edges/
-│   │   │   ├── sidebar/
-│   │   │   ├── toolbar/
-│   │   │   └── config/
-│   │   ├── results/
-│   │   ├── charts/
-│   │   └── ui/
-│   │
-│   ├── features/
-│   ├── hooks/
-│   ├── lib/
-│   └── types/
-│
-├── backend/
-│   ├── src/
-│   │   └── evalforge/
-│   │       ├── api/
-│   │       │   └── routes/
-│   │       ├── core/
-│   │       ├── providers/
-│   │       ├── engine/
-│   │       ├── evaluators/
-│   │       ├── datasets/
-│   │       ├── hardware/
-│   │       ├── experiments/
-│   │       ├── database/
-│   │       └── schemas/
-│   │
-│   ├── tests/
-│   └── requirements.txt
-│
-├── docs/
-│   └── assets/
-│       └── evalforge-playground.png
-│
-├── scripts/
-├── .env.example
-├── .gitignore
-└── README.md
+backend/src/evalforge/
+  api/            versioned REST routers (/api and /api/v1)
+  core/           settings, errors, logging, security middleware
+  datasets/       importers, validator, exporter, seeder
+  engine/         visual workflow validation and scheduling
+  evaluation/     runner and metric helpers
+  evaluators/     deterministic, semantic, RAG, safety, judge evaluators
+  experiments/    case runner, bounded concurrency, lifecycle, recovery
+  providers/      provider abstraction, Ollama client, cloud adapters
+  services/       application services
+  storage/        SQLAlchemy models, repositories, database lifecycle
+  tests/          backend unit and integration tests
+frontend/src/     React pages, hooks, charts, API client, tests
+docs/             architecture, metrics, providers, deployment, security
 ```
+
+Long-running evaluations execute in the API process using bounded async concurrency. If the process exits mid-run, the next startup marks the run `interrupted`; it is never reported as successful.
 
 ---
 
-## Getting Started
+## Quick start
 
 ### Prerequisites
 
-Install the following:
+- Python 3.11+
+- Node.js 20+
+- Ollama (for real local inference; optional if you only use the mock provider)
 
-- Node.js.
-- Python 3.11 or a compatible supported version.
-- Ollama.
-- Git.
-
-A compatible Ollama model must be installed before performing local inference.
-
-### 1. Clone the repository
+### 1. Backend
 
 ```bash
-git clone YOUR_REPOSITORY_URL
-cd EvalForge20
-```
-
-Replace `YOUR_REPOSITORY_URL` with the actual repository URL.
-
-### 2. Install Ollama
-
-Download Ollama:
-
-https://ollama.com/
-
-Start the Ollama service and download a model.
-
-Example:
-
-```bash
-ollama pull qwen2.5:1.5b
-```
-
-Check installed models:
-
-```bash
-ollama list
-```
-
-Check the local API:
-
-```bash
-curl http://localhost:11434/api/tags
-```
-
-### 3. Set up the backend
-
-```bash
-cd backend
-
 python -m venv .venv
-
-source .venv/bin/activate
-
-pip install -r requirements.txt
+source .venv/bin/activate            # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+cp .env.example .env                 # review and edit
+uvicorn src.evalforge.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-On Windows, activate the virtual environment using:
+The backend listens on `http://127.0.0.1:8000`. API docs: `http://127.0.0.1:8000/docs`.
 
-```powershell
-.venv\Scripts\activate
-```
-
-Configure the environment using the provided `.env.example`.
-
-### 4. Start the backend
-
-Use the repository's configured development launcher:
-
-```bash
-npm run dev
-```
-
-Alternatively, when using Uvicorn directly:
-
-```bash
-uvicorn evalforge.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-The actual Python module path should match the backend entry point.
-
-API documentation:
-
-```text
-http://localhost:8000/docs
-```
-
-### 5. Set up the frontend
-
-Open another terminal:
+### 2. Frontend
 
 ```bash
 cd frontend
-
-npm install
-
+npm ci
 npm run dev
 ```
 
-Open:
+Open `http://localhost:5173`. Vite proxies `/api` to `http://127.0.0.1:8000`.
 
-```text
-http://localhost:3000
+### 3. Ollama (for real local models)
+
+```bash
+ollama serve
+ollama pull qwen2.5:1.5b
+curl http://localhost:11434/api/tags
 ```
+
+Then refresh models in the UI or call `POST /api/v1/models/refresh`.
 
 ---
 
-## Local Model Configuration
+## Configuration
 
-Default Ollama endpoint:
+All settings are environment variables; see [`.env.example`](.env.example) for the full reference.
 
-```text
-http://localhost:11434
-```
+Critical settings:
 
-Example model:
+| Variable | Default | Purpose |
+|---|---|---|
+| `DATABASE_URL` | `sqlite+aiosqlite:///./evalforge.db` | SQLite locally; use `postgresql+asyncpg://...` for multi-user deployments |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Local inference endpoint |
+| `HOST` / `PORT` | `127.0.0.1` / `8000` | Bind address |
+| `AUTH_TOKEN` | empty | Optional shared bearer token for `/api` routes |
+| `CORS_ORIGINS` | localhost dev origins | Comma-separated allowed origins |
+| `RATE_LIMIT_ENABLED` | `true` | Per-client, per-endpoint-group fixed window |
+| `MAX_REQUEST_BODY_BYTES` | 20 MB | Hard request body ceiling |
+| `MAX_DATASET_FILE_SIZE_BYTES` | 10 MB | Dataset upload ceiling |
+| `MAX_CASES_PER_DATASET` | `2000` | Dataset size ceiling |
+| `ENVIRONMENT` | `development` | In `production`, startup rejects debug mode, wildcard CORS, and exposed binds without `AUTH_TOKEN` |
 
-```text
-qwen2.5:1.5b
-```
-
-EvalForge20 should discover models dynamically rather than depending on a fixed model list.
-
-The application should display:
-
-- Installed models.
-- Model availability.
-- Model identifier.
-- Model metadata where available.
-- Ollama connection status.
-
-The platform should not assume that every model can run on every machine.
+Cloud provider API keys are optional and read from the environment. They are never returned by API responses and are redacted from structured logs.
 
 ---
 
-## API Overview
+## Evaluation workflow
 
-The backend is organized around REST APIs.
+1. Import or create a dataset (JSONL/CSV) and preview it.
+2. Check dataset integrity (empty prompts, duplicates, fingerprint).
+3. Choose a local Ollama model (or the deterministic `mock` provider).
+4. Choose evaluators (e.g. exact match, JSON schema, LLM judge with a rubric).
+5. Start a run; monitor progress and cancel if needed.
+6. Inspect per-case prompts, expected/actual outputs, metrics, and errors.
+7. Compare compatible runs or export results as JSON/CSV.
+
+### Example JSONL dataset
+
+```jsonl
+{"prompt": "What is 2+2?", "expected_output": "4"}
+{"prompt": "Reverse the string abc", "expected_output": "cba"}
+```
+
+Invalid rows are reported with line numbers; they are never silently discarded. Duplicate prompt/reference/context rows are skipped and reported explicitly.
+
+### Metrics
+
+Deterministic metrics are ground-truth comparisons. LLM-judge metrics are **model-generated estimates** and are labelled as such, including judge model, provider, prompt version, rubric hash, and execution configuration. See [docs/evaluation_metrics_guide.md](docs/evaluation_metrics_guide.md).
+
+---
+
+## Security posture
+
+- Default bind is loopback only.
+- Optional shared-secret bearer authentication (`AUTH_TOKEN`) for self-hosted exposure behind a trusted proxy.
+- Server-side input validation, parameterized ORM queries, upload size limits, filename sanitization, and rate limiting.
+- SSRF validation for provider endpoints resolves DNS and rejects loopback/private/link-local/metadata targets unless private endpoints are explicitly enabled.
+- Structured logs redact API keys, tokens, passwords, and authorization headers.
+- No secrets are committed; `.env` is ignored and `.env.example` contains placeholders only.
+
+**Not a multi-user SaaS security model.** There are no accounts, per-user ownership checks, or RBAC. For a public multi-tenant deployment, put EvalForge behind an authenticating proxy or add an identity layer, and use PostgreSQL with backups.
+
+Report vulnerabilities privately — see [SECURITY.md](SECURITY.md).
+
+---
+
+## Testing
+
+```bash
+# Backend (from repo root, with venv active)
+ruff check backend/src tests backend/tests
+pytest -v
+
+# Frontend
+cd frontend
+npx tsc -b
+npm test
+npm run build
+```
+
+The repository's backend suite covers dataset import/validation, evaluators, metric aggregation, provider failure modes, API parity, security middleware, evaluation lifecycle, and persistence. Frontend tests cover rendering, navigation, results workspaces, analytics, and dataset workspace states.
+
+Tests use the deterministic `mock` provider for repeatable evaluation; they do not prove that any cloud provider or a specific Ollama model works on your machine.
+
+---
+
+## Production deployment
+
+A production image is provided in `backend/Dockerfile` (multi-stage, non-root, healthchecked).
+
+```bash
+cd backend
+docker compose up -d --build
+```
+
+For PostgreSQL:
+
+```bash
+export POSTGRES_PASSWORD='<strong-password>'
+export DATABASE_URL='postgresql+asyncpg://evalforge:<strong-password>@db:5432/evalforge'
+docker compose --profile postgres up -d --build
+```
+
+Backups:
+
+```bash
+DATABASE_URL=sqlite+aiosqlite:///./evalforge.db scripts/backup_db.sh ./backups
+DATABASE_URL=sqlite+aiosqlite:///./evalforge.db scripts/restore_db.sh ./backups/evalforge-<stamp>.db
+```
+
+See [docs/deployment.md](docs/deployment.md) for HTTPS, reverse proxy, environment, migration, backup, and operational guidance.
+
+> Ollama inference runs on the host's CPU/GPU, not inside the API container by default. A free hosting tier cannot run large local models. Hosted application infrastructure and local model compute are separate concerns.
+
+---
+
+## API overview
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/health` | Backend health |
-| `GET /api/ollama/status` | Ollama connection status |
-| `GET /api/models` | Discover available models |
-| `POST /api/models/refresh` | Refresh model inventory |
-| `GET /api/datasets` | List datasets |
-| `POST /api/datasets` | Upload datasets |
-| `GET /api/evaluators` | List available evaluators |
-| `GET /api/benchmarks` | List benchmark suites |
-| `GET /api/workflows` | List saved workflows |
-| `POST /api/workflows` | Create workflow |
-| `POST /api/workflows/validate` | Validate workflow |
-| `POST /api/executions` | Execute evaluation |
-| `GET /api/executions/{id}` | Execution details |
-| `GET /api/executions/{id}/events` | Live execution events |
-| `GET /api/experiments` | Experiment history |
-| `GET /api/leaderboard` | Benchmark leaderboard |
+| `GET /api/health`, `/api/health/live`, `/api/health/ready` | Liveness/readiness |
+| `GET /api/v1/datasets` | List datasets |
+| `POST /api/v1/datasets/import` | Import JSONL/CSV |
+| `GET /api/v1/datasets/{id}/preview` | Preview cases |
+| `GET /api/v1/datasets/{id}/integrity` | Fingerprint and data-quality report |
+| `POST /api/v1/evaluations` | Create and start a run |
+| `GET /api/v1/evaluations/{id}/results` | Per-case results |
+| `POST /api/v1/evaluations/{id}/cancel` | Cooperative cancellation |
+| `GET /api/v1/evaluations/{id}/export?format=json\|csv` | Export a run |
+| `GET /api/v1/providers` | Provider status |
+| `GET /api/v1/models` | Model catalog |
 
-Endpoint availability depends on the current implementation.
+OpenAPI is available at `/docs` and `/openapi.json`.
 
 ---
 
-## Development Roadmap
+## Documentation
 
-EvalForge20 is being developed incrementally, with evaluation correctness taking priority over feature quantity.
-
-- [ ] Complete visual playground.
-- [ ] Drag-and-drop model nodes.
-- [ ] Dataset nodes and connections.
-- [ ] Independent evaluator nodes.
-- [ ] Ollama model discovery.
-- [ ] Native model execution engine.
-- [ ] Exact-match accuracy evaluator.
-- [ ] Normalized accuracy evaluator.
-- [ ] Latency benchmarking.
-- [ ] Multi-model comparison.
-- [ ] Experiment persistence.
-- [ ] Results dashboard.
-- [ ] Coding benchmarks.
-- [ ] Reasoning benchmarks.
-- [ ] Hardware monitoring.
-- [ ] Local LLM-as-a-judge.
-- [ ] RAG evaluation.
-- [ ] Agent evaluation.
-- [ ] Model leaderboards.
-- [ ] CSV and JSON exports.
-
-Feature completion should be reflected in the repository as functionality is implemented and verified.
-
----
-
-## Design Principles
-
-EvalForge20 follows these engineering principles:
-
-**Local-first**
-
-Core evaluation should run locally without requiring an external evaluation platform.
-
-**Modular**
-
-Models, datasets and evaluators should be independently extensible.
-
-**Reproducible**
-
-Every experiment should retain its configuration, dataset version and evaluation methodology.
-
-**Transparent**
-
-Every metric should have a documented calculation method.
-
-**Fair**
-
-Models should be compared under equivalent benchmark conditions.
-
-**Reliable**
-
-Failed evaluations and unavailable measurements should be reported honestly.
-
-**Developer-focused**
-
-The interface should simplify benchmarking without hiding the underlying technical details.
-
----
-
-## Contributing
-
-Contributions are welcome.
-
-Areas where contributions can make an impact:
-
-- New model provider adapters.
-- New evaluation metrics.
-- Benchmark dataset integrations.
-- Performance measurement improvements.
-- Hardware monitoring.
-- Visual playground enhancements.
-- Experiment management.
-- Documentation and testing.
-
-Suggested contribution process:
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Make a focused change.
-4. Add or update tests.
-5. Verify the implementation.
-6. Submit a pull request with a clear explanation.
-
-Please ensure new evaluators include documented inputs, scoring methodology and tests.
+- [Architecture](docs/architecture.md)
+- [Metrics reference](docs/metrics_reference.md)
+- [Evaluation metrics guide](docs/evaluation_metrics_guide.md)
+- [Providers and Ollama setup](docs/providers.md)
+- [Local-first Ollama notes](docs/local_first_ollama.md)
+- [Deployment](docs/deployment.md)
+- [Metric definitions and limitations](docs/evaluation_metrics_guide.md)
+- [FAQ](docs/faq.md)
+- [Security policy](SECURITY.md)
+- [Privacy](PRIVACY.md)
+- [Contributing](CONTRIBUTING.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
+- [Changelog](CHANGELOG.md)
 
 ---
 
 ## License
 
-This project is intended to be open source.
+EvalForge20 is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0-only)**. See [LICENSE](LICENSE).
 
-Add the repository's selected license and corresponding `LICENSE` file before publishing or distributing the project.
-
----
-
-## Acknowledgements
-
-EvalForge20 builds on the open-source ecosystem surrounding:
-
-- Ollama — Local model inference.
-- React Flow / XYFlow — Visual node-based interfaces.
-- FastAPI — Python API development.
-- Next.js — Frontend application development.
-- Recharts — Data visualization.
+If you run a modified version as a network service, the AGPL requires you to offer the corresponding source to users of that service.
 
 ---
 
 <p align="center">
-  <strong>EvalForge20</strong>
-  <br>
-  Visualize. Benchmark. Understand AI.
-  <br><br>
-  <sub>Built for developers who want to measure AI models, not just run them.</sub>
+  <strong>EvalForge20</strong><br>
+  Measure AI models. Do not guess.
 </p>

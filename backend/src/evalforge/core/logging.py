@@ -12,6 +12,45 @@ request_id_ctx: ContextVar[str | None] = ContextVar("request_id_ctx", default=No
 evaluation_id_ctx: ContextVar[str | None] = ContextVar("evaluation_id_ctx", default=None)
 
 
+SENSITIVE_KEY_FRAGMENTS = (
+    "api_key",
+    "apikey",
+    "secret",
+    "token",
+    "password",
+    "passwd",
+    "authorization",
+    "cookie",
+    "private_key",
+    "access_key",
+    "credential",
+)
+
+REDACTED = "[REDACTED]"
+
+
+def redact_sensitive(value: Any) -> Any:
+    """Recursively redact secret-looking keys and bearer credentials from log payloads."""
+    if isinstance(value, dict):
+        redacted: dict[str, Any] = {}
+        for key, item in value.items():
+            key_lower = str(key).lower()
+            if any(fragment in key_lower for fragment in SENSITIVE_KEY_FRAGMENTS):
+                redacted[str(key)] = REDACTED
+            else:
+                redacted[str(key)] = redact_sensitive(item)
+        return redacted
+    if isinstance(value, list):
+        return [redact_sensitive(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(redact_sensitive(item) for item in value)
+    if isinstance(value, str):
+        lowered = value.lower()
+        if lowered.startswith("bearer ") or lowered.startswith("sk-") or "api_key=" in lowered:
+            return REDACTED
+    return value
+
+
 def set_request_id(request_id: str | None) -> None:
     request_id_ctx.set(request_id)
 
@@ -76,7 +115,7 @@ class StructuredJsonFormatter(logging.Formatter):
                 "thread",
                 "threadName",
             }:
-                log_payload[key] = value
+                log_payload[key] = redact_sensitive(value)
 
         return json.dumps(log_payload, default=str)
 
@@ -140,4 +179,8 @@ def get_logger(name: str) -> logging.Logger:
 def log_telemetry_event(event_type: str, payload: dict[str, Any]) -> None:
     """Log an execution telemetry event with structured payload."""
     logger = get_logger("evalforge.telemetry")
-    logger.info(f"telemetry_event:{event_type}", extra={"telemetry_event": event_type, "payload": payload})
+    logger.info(
+        "telemetry_event:%s",
+        event_type,
+        extra={"telemetry_event": event_type, "payload": redact_sensitive(payload)},
+    )

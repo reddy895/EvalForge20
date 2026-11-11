@@ -101,3 +101,22 @@ def test_optional_bearer_auth_protects_api_but_not_health() -> None:
             client.get("/api/value", headers={"Authorization": "Bearer secret-token"}).status_code
             == 200
         )
+
+
+def test_log_redaction_hides_credentials() -> None:
+    from src.evalforge.core.logging import REDACTED, redact_sensitive
+
+    payload = {
+        "api_key": "sk-live-secret",
+        "nested": {"password": "hunter2", "safe": 7},
+        "headers": {"authorization": "Bearer abc"},
+        "items": [{"access_token": "xyz"}],
+        "message": "ok",
+    }
+    cleaned = redact_sensitive(payload)
+    assert cleaned["api_key"] == REDACTED
+    assert cleaned["nested"]["password"] == REDACTED
+    assert cleaned["nested"]["safe"] == 7
+    assert cleaned["headers"]["authorization"] == REDACTED
+    assert cleaned["items"][0]["access_token"] == REDACTED
+    assert cleaned["message"] == "ok"

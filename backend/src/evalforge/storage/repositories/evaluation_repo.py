@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import desc, func, select, update
+from sqlalchemy import asc, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -56,8 +56,20 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
         query: str | None = None,
         offset: int = 0,
         limit: int = 50,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[EvaluationRun], int]:
-        """Filter evaluations with pagination, search, descending timestamp order, and total matching count."""
+        """Filter evaluations with validated sorting, pagination, and total matching count."""
+        sortable = {
+            "created_at": EvaluationRun.created_at,
+            "name": EvaluationRun.name,
+            "status": EvaluationRun.status,
+            "model_id": EvaluationRun.model_id,
+            "pass_rate": EvaluationRun.pass_rate,
+            "avg_latency_ms": EvaluationRun.avg_latency_ms,
+        }
+        sort_column = sortable.get(sort_by, EvaluationRun.created_at)
+        direction = asc if sort_order.lower() == "asc" else desc
         count_stmt = select(func.count(EvaluationRun.id))
         stmt = select(EvaluationRun)
         if status:
@@ -81,7 +93,7 @@ class EvaluationRepository(BaseRepository[EvaluationRun]):
         total_res = await self.session.execute(count_stmt)
         total = total_res.scalar() or 0
 
-        stmt = stmt.order_by(desc(EvaluationRun.created_at)).offset(offset).limit(limit)
+        stmt = stmt.order_by(direction(sort_column), desc(EvaluationRun.created_at)).offset(offset).limit(limit)
         result = await self.session.execute(stmt)
         return list(result.scalars().all()), total
 

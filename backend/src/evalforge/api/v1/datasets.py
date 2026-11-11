@@ -75,11 +75,18 @@ async def create_dataset(
 async def list_datasets(
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
+    sort_by: str = Query("created_at", pattern="^(created_at|name|version)$"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
 ) -> DatasetListResponse:
-    """List paginated datasets with their case count."""
+    """List paginated datasets with their case count and stable sorting."""
     service = DatasetService(db)
-    total, items = await service.list_datasets(offset=offset, limit=limit)
+    total, items = await service.list_datasets(
+        offset=offset,
+        limit=limit,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
 
     return DatasetListResponse(
         total=total,

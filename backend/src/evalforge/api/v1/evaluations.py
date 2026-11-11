@@ -85,9 +85,14 @@ async def list_evaluations(
     query: str | None = Query(None),
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
+    sort_by: str = Query(
+        "created_at",
+        pattern="^(created_at|name|status|model_id|pass_rate|avg_latency_ms)$",
+    ),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db),
 ) -> EvaluationListResponse:
-    """List evaluations filtered by status, target model, source dataset, or search query."""
+    """List evaluations filtered by status, model, dataset, or query with stable sorting."""
     service = EvaluationService(db)
     runs, total = await service.list_evaluations(
         status=status_filter,
@@ -96,6 +101,8 @@ async def list_evaluations(
         query=query,
         offset=offset,
         limit=limit,
+        sort_by=sort_by,
+        sort_order=sort_order,
     )
     return EvaluationListResponse(
         total=total,

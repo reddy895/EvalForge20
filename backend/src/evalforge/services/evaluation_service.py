@@ -327,6 +327,8 @@ class EvaluationService:
         query: str | None = None,
         offset: int = 0,
         limit: int = 50,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[list[EvaluationRun], int]:
         """List evaluations filtered by status, model, dataset, or query, returning matching runs and total count."""
         return await self.eval_repo.list_evaluations(
@@ -336,6 +338,8 @@ class EvaluationService:
             query=query,
             offset=offset,
             limit=limit,
+            sort_by=sort_by,
+            sort_order=sort_order,
         )
 
     async def cancel_evaluation(self, evaluation_id: str) -> EvaluationRun:

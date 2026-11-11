@@ -1,6 +1,6 @@
 """Dataset and TestCase specialized repository."""
 
-from sqlalchemy import func, select
+from sqlalchemy import asc, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -89,13 +89,26 @@ class DatasetRepository(BaseRepository[Dataset]):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def list_with_counts(self, offset: int = 0, limit: int = 50) -> list[tuple[Dataset, int]]:
-        """List datasets paired with their computed test case count."""
+    async def list_with_counts(
+        self,
+        offset: int = 0,
+        limit: int = 50,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
+    ) -> list[tuple[Dataset, int]]:
+        """List datasets paired with their computed test case count and validated sorting."""
+        sortable = {
+            "created_at": Dataset.created_at,
+            "name": Dataset.name,
+            "version": Dataset.version,
+        }
+        sort_column = sortable.get(sort_by, Dataset.created_at)
+        direction = asc if sort_order.lower() == "asc" else desc
         stmt = (
             select(Dataset, func.count(TestCase.id).label("case_count"))
             .outerjoin(TestCase, TestCase.dataset_id == Dataset.id)
             .group_by(Dataset.id)
-            .order_by(Dataset.created_at.desc())
+            .order_by(direction(sort_column), Dataset.id)
             .offset(offset)
             .limit(limit)
         )

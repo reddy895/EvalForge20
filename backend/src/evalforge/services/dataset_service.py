@@ -79,11 +79,20 @@ class DatasetService:
         return dataset
 
     async def list_datasets(
-        self, offset: int = 0, limit: int = 50
+        self,
+        offset: int = 0,
+        limit: int = 50,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
     ) -> tuple[int, list[tuple[Dataset, int]]]:
         """Return total count and paginated datasets with their case count."""
         total = await self.repo.count()
-        items = await self.repo.list_with_counts(offset=offset, limit=limit)
+        items = await self.repo.list_with_counts(
+            offset=offset,
+            limit=limit,
+            sort_by=sort_by,
+            sort_order=sort_order,
+        )
         return total, items
 
     async def update_dataset(self, dataset_id: str, data: DatasetUpdate) -> Dataset:

@@ -1,6 +1,13 @@
 #!/bin/sh
 set -e
-echo "==> Running Alembic migrations..."
+
+echo "==> Applying database migrations (alembic upgrade head)..."
 alembic upgrade head
-echo "==> Starting Uvicorn server..."
-exec uvicorn src.evalforge.main:app --host 0.0.0.0 --port 8000
+
+echo "==> Starting EvalForge20 API server..."
+exec uvicorn src.evalforge.main:app \
+  --host "${HOST:-0.0.0.0}" \
+  --port "${PORT:-8000}" \
+  --proxy-headers \
+  --forwarded-allow-ips="${FORWARDED_ALLOW_IPS:-127.0.0.1}" \
+  --no-server-header

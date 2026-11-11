@@ -9,6 +9,7 @@ from src.evalforge.core.errors import (
     NotFoundError,
     PayloadTooLargeError,
 )
+from src.evalforge.datasets.fingerprint import compute_dataset_fingerprint
 from src.evalforge.datasets.importers.csv_importer import parse_csv_content
 from src.evalforge.datasets.importers.jsonl import parse_jsonl_content
 from src.evalforge.schemas.dataset import (
@@ -140,6 +141,94 @@ class DatasetService:
         await self.repo.flush()
         return inserted
 
+    async def list_cases(
+        self, dataset_id: str, offset: int = 0, limit: int = 100
+    ) -> tuple[int, list[TestCase]]:
+        """Return a paginated page of cases without loading the whole dataset."""
+        await self.get_dataset(dataset_id)
+        return await self.repo.list_cases(dataset_id, offset=offset, limit=limit)
+
+    async def duplicate_dataset(self, dataset_id: str, new_name: str | None = None) -> Dataset:
+        """Deep-copy a dataset and all of its test cases under a new name."""
+        source = await self.get_dataset_with_cases(dataset_id)
+        target_name = (new_name or f"{source.name} (copy)").strip()
+        existing = await self.repo.get_by_name(target_name)
+        if existing:
+            raise EntityConflictError(f"A dataset with name '{target_name}' already exists.")
+        if len(source.test_cases) > self.settings.MAX_CASES_PER_DATASET:
+            raise PayloadTooLargeError(
+                "Source dataset exceeds the maximum case limit for duplication.",
+                max_bytes=self.settings.MAX_CASES_PER_DATASET,
+            )
+
+        clone = Dataset(
+            name=target_name,
+            description=source.description,
+            version=source.version,
+        )
+        clone.tags = list(source.tags)
+        await self.repo.add(clone)
+
+        orm_cases = []
+        for case in source.test_cases:
+            tc = TestCase(
+                dataset_id=clone.id,
+                prompt=case.prompt,
+                expected_output=case.expected_output,
+                context=case.context,
+            )
+            tc.tags = list(case.tags)
+            tc.metadata_dict = dict(case.metadata_dict)
+            tc.evaluator_config = dict(case.evaluator_config)
+            orm_cases.append(tc)
+        if orm_cases:
+            await self.repo.add_cases(clone.id, orm_cases)
+        return clone
+
+    async def check_integrity(self, dataset_id: str) -> dict[str, object]:
+        """Compute a content fingerprint and surface data-quality issues."""
+        dataset = await self.get_dataset_with_cases(dataset_id)
+        records = [
+            {
+                "id": case.id,
+                "prompt": case.prompt,
+                "expected_output": case.expected_output,
+            }
+            for case in dataset.test_cases
+        ]
+        fingerprint = compute_dataset_fingerprint(records)
+
+        empty_prompts = 0
+        seen: dict[tuple[str, str], int] = {}
+        issues: list[str] = []
+        for case in dataset.test_cases:
+            prompt = (case.prompt or "").strip()
+            if not prompt:
+                empty_prompts += 1
+                issues.append(f"Case {case.id}: empty prompt.")
+            key = (prompt, (case.expected_output or "").strip())
+            seen[key] = seen.get(key, 0) + 1
+            if not (case.expected_output or "").strip():
+                issues.append(f"Case {case.id}: missing expected_output (only subjective metrics apply).")
+
+        duplicate_prompts = sum(count - 1 for count in seen.values() if count > 1)
+        if duplicate_prompts:
+            issues.append(f"{duplicate_prompts} duplicate prompt/expected-output pair(s) detected.")
+        if not dataset.test_cases:
+            issues.append("Dataset contains no test cases.")
+
+        return {
+            "dataset_id": dataset.id,
+            "name": dataset.name,
+            "version": dataset.version,
+            "case_count": len(dataset.test_cases),
+            "fingerprint": fingerprint,
+            "is_valid": empty_prompts == 0 and bool(dataset.test_cases),
+            "empty_prompts": empty_prompts,
+            "duplicate_prompts": duplicate_prompts,
+            "issues": issues[:50],
+        }
+
     async def import_content(
         self,
         name: str,
@@ -170,6 +259,33 @@ class DatasetService:
                 details={"errors": [e.model_dump() for e in errors]},
             )
 
+        # Deduplicate identical prompt/reference/context triples while retaining
+        # every rejected row in the error report (nothing is silently discarded).
+        unique_cases: list[TestCaseCreate] = []
+        seen_keys: set[tuple[str, str, str]] = set()
+        duplicates_skipped = 0
+        warnings: list[str] = []
+        for idx, case in enumerate(cases, start=1):
+            key = (
+                case.prompt.strip(),
+                (case.expected_output or "").strip(),
+                (case.context or "").strip(),
+            )
+            if key in seen_keys:
+                duplicates_skipped += 1
+                warnings.append(f"Row {idx}: duplicate prompt/reference/context triple skipped.")
+                continue
+            seen_keys.add(key)
+            unique_cases.append(case)
+        cases = unique_cases
+
+        if len(cases) > self.settings.MAX_CASES_PER_DATASET:
+            raise PayloadTooLargeError(
+                f"Dataset has {len(cases)} unique cases, exceeding the maximum of "
+                f"{self.settings.MAX_CASES_PER_DATASET}.",
+                max_bytes=self.settings.MAX_CASES_PER_DATASET,
+            )
+
         # Create dataset
         dataset = await self.create_dataset(
             DatasetCreate(
@@ -185,6 +301,8 @@ class DatasetService:
             name=dataset.name,
             imported_cases=len(cases),
             failed_rows=len(errors),
+            duplicates_skipped=duplicates_skipped,
+            warnings=warnings[:50],
             errors=errors,
         )
 

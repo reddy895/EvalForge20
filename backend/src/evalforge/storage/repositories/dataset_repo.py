@@ -102,6 +102,22 @@ class DatasetRepository(BaseRepository[Dataset]):
         result = await self.session.execute(stmt)
         return [(row[0], row[1]) for row in result.all()]
 
+    async def list_cases(
+        self, dataset_id: str, offset: int = 0, limit: int = 100
+    ) -> tuple[int, list[TestCase]]:
+        """Return total and a page of test cases ordered by creation time."""
+        count_stmt = select(func.count(TestCase.id)).where(TestCase.dataset_id == dataset_id)
+        total = (await self.session.execute(count_stmt)).scalar() or 0
+        stmt = (
+            select(TestCase)
+            .where(TestCase.dataset_id == dataset_id)
+            .order_by(TestCase.created_at)
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await self.session.execute(stmt)
+        return total, list(result.scalars().all())
+
     async def get_case(self, case_id: str) -> TestCase | None:
         """Retrieve individual test case."""
         return await self.session.get(TestCase, case_id)

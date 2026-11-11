@@ -99,4 +99,33 @@ class DatasetImportResponse(BaseModel):
     name: str
     imported_cases: int
     failed_rows: int
+    duplicates_skipped: int = 0
+    warnings: list[str] = Field(default_factory=list)
     errors: list[RowImportError] = Field(default_factory=list)
+
+
+class DatasetCaseListResponse(BaseModel):
+    total: int
+    offset: int
+    limit: int
+    items: list[TestCaseResponse]
+
+
+class DatasetPreviewResponse(BaseModel):
+    dataset_id: str
+    name: str
+    version: int
+    total_cases: int
+    items: list[TestCaseResponse]
+
+
+class DatasetIntegrityResponse(BaseModel):
+    dataset_id: str
+    name: str
+    version: int
+    case_count: int
+    fingerprint: str
+    is_valid: bool
+    empty_prompts: int
+    duplicate_prompts: int
+    issues: list[str] = Field(default_factory=list)

@@ -4,7 +4,7 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.evalforge.storage.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -12,6 +12,11 @@ from src.evalforge.storage.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 class EvaluationRun(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "evaluation_runs"
+    __table_args__ = (
+        Index("ix_evaluation_runs_status_created_at", "status", "created_at"),
+        Index("ix_evaluation_runs_dataset_created_at", "dataset_id", "created_at"),
+        Index("ix_evaluation_runs_model_created_at", "model_id", "created_at"),
+    )
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     model_id: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
@@ -77,6 +82,9 @@ class EvaluationRun(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
 class CaseResult(Base, UUIDPrimaryKeyMixin):
     __tablename__ = "case_results"
+    __table_args__ = (
+        Index("ix_case_results_evaluation_passed", "evaluation_id", "passed"),
+    )
 
     evaluation_id: Mapped[str] = mapped_column(
         String(36),

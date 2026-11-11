@@ -139,17 +139,24 @@ class EvaluationService:
         # Capture a deterministic fingerprint of every input that affects the
         # result. Runs with different fingerprints must not be treated as
         # directly comparable without explanation.
-        fingerprint_payload = {
+        comparison_config = {
+            key: value
+            for key, value in config.model_dump().items()
+            if key not in {"concurrency", "timeout_seconds"}
+        }
+        config_payload = {
             "dataset_snapshot_hash": snapshot.snapshot_hash,
             "dataset_version": snapshot.version,
+            "config": comparison_config,
+            "evaluators": sorted(run_config["evaluators"]),
+        }
+        run_config["config_fingerprint"] = hashlib.sha256(
+            json.dumps(config_payload, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()
+        fingerprint_payload = {
+            **config_payload,
             "model_id": request.model_id,
             "provider": provider_name,
-            "config": {
-                key: value
-                for key, value in config.model_dump().items()
-                if key not in {"concurrency", "timeout_seconds"}
-            },
-            "evaluators": sorted(run_config["evaluators"]),
         }
         run_config["run_fingerprint"] = hashlib.sha256(
             json.dumps(fingerprint_payload, sort_keys=True, default=str).encode("utf-8")

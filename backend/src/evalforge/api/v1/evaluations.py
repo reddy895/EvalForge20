@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.evalforge.core.errors import NotFoundError
+from src.evalforge.core.errors import DataValidationError, NotFoundError
 from src.evalforge.schemas.evaluation import (
     CaseResultResponse,
     EvaluationCreateRequest,
@@ -101,6 +101,87 @@ async def list_evaluations(
         total=total,
         items=[_map_run_response(r) for r in runs],
     )
+
+
+@evaluations_router.get(
+    "/compare",
+    summary="Compare runs and report reproducibility compatibility",
+)
+async def compare_evaluations(
+    ids: list[str] = Query(..., min_length=2, description="Evaluation run IDs to compare"),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Return side-by-side metrics plus an explicit compatibility assessment.
+
+    Runs are only directly comparable when they share the same dataset snapshot,
+    evaluator set, and configuration fingerprint. Differences are reported rather
+    than silently averaged.
+    """
+    if len(ids) > 10:
+        raise DataValidationError("At most 10 evaluation runs can be compared at once.")
+
+    service = EvaluationService(db)
+    runs = []
+    for evaluation_id in ids:
+        run = await service.get_evaluation(evaluation_id)
+        runs.append(run)
+
+    snapshots = [getattr(run, "config", {}) or {} for run in runs]
+    reference = snapshots[0]
+    reference_dataset = reference.get("dataset", {})
+    reference_evaluators = sorted(reference.get("evaluators") or [])
+    reference_fingerprint = reference.get("config_fingerprint")
+
+    compatibility = []
+    for run, snapshot in zip(runs, snapshots, strict=True):
+        reasons = []
+        dataset = snapshot.get("dataset", {})
+        if dataset.get("snapshot_hash") != reference_dataset.get("snapshot_hash"):
+            reasons.append("dataset_snapshot_differs")
+        if sorted(snapshot.get("evaluators") or []) != reference_evaluators:
+            reasons.append("evaluator_set_differs")
+        if snapshot.get("config_fingerprint") != reference_fingerprint:
+            reasons.append("configuration_differs")
+        compatibility.append(
+            {
+                "id": run.id,
+                "model_id": run.model_id,
+                "provider": run.provider,
+                "run_fingerprint": snapshot.get("run_fingerprint"),
+                "config_fingerprint": snapshot.get("config_fingerprint"),
+                "dataset_snapshot_hash": dataset.get("snapshot_hash"),
+                "dataset_version": dataset.get("version"),
+                "compatible_with_reference": not reasons,
+                "differences": reasons,
+            }
+        )
+
+    metric_names = ["pass_rate", "error_rate", "avg_latency_ms", "median_latency_ms", "p95_latency_ms"]
+    metric_comparison = {
+        metric: {
+            run.id: getattr(run, metric, None)
+            for run in runs
+        }
+        for metric in metric_names
+    }
+    deltas = {}
+    baseline_id, baseline_run = runs[0].id, runs[0]
+    for run in runs[1:]:
+        deltas[run.id] = {}
+        for metric in ("pass_rate", "avg_latency_ms"):
+            base_value = getattr(baseline_run, metric, None)
+            value = getattr(run, metric, None)
+            if base_value is not None and value is not None:
+                deltas[run.id][f"{metric}_delta"] = float(value) - float(base_value)
+
+    return {
+        "runs": [_map_run_response(run).model_dump() for run in runs],
+        "compatibility": compatibility,
+        "all_compatible": all(item["compatible_with_reference"] for item in compatibility),
+        "metric_comparison": metric_comparison,
+        "deltas_from": baseline_id,
+        "deltas": deltas,
+    }
 
 
 @evaluations_router.get(

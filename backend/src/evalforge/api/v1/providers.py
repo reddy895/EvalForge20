@@ -3,6 +3,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
 
 from src.evalforge.core.config import Settings, get_settings
 from src.evalforge.providers.registry import get_provider_registry
@@ -17,6 +18,11 @@ from src.evalforge.schemas.providers import (
 )
 
 providers_router = APIRouter(prefix="/providers", tags=["Providers"])
+
+
+class ProviderConnectionTestRequest(BaseModel):
+    model_id: str = Field(..., min_length=1, max_length=150)
+    prompt: str = Field(default="Reply with the single word OK.", max_length=2000)
 
 
 @providers_router.get("", response_model=ProvidersListResponse)
@@ -117,3 +123,47 @@ async def test_ollama_model(
         usage=result.usage,
         raw_metadata=result.raw_metadata,
     )
+
+
+@providers_router.post(
+    "/{provider_name}/test",
+    summary="Test a provider connection with a real inference request",
+)
+async def test_provider_connection(
+    provider_name: str,
+    request: ProviderConnectionTestRequest,
+) -> dict[str, Any]:
+    """Run a small real request against the provider and report the normalized outcome.
+
+    The result is diagnostic only: it does not prove that every model or feature
+    works, and missing credentials are reported rather than bypassed.
+    """
+    registry = get_provider_registry()
+    provider = registry.get(provider_name)
+
+    try:
+        if not provider.is_configured:
+            return {
+                "provider": provider.name,
+                "model_identifier": request.model_id,
+                "status": "not_configured",
+                "configured": False,
+                "error_message": provider.setup_instructions,
+            }
+        result = await provider.test_connection(
+            model_id=request.model_id,
+            prompt=request.prompt,
+        )
+        return {
+            "provider": provider.name,
+            "configured": True,
+            **result,
+        }
+    except Exception as exc:
+        return {
+            "provider": provider.name,
+            "model_identifier": request.model_id,
+            "status": "error",
+            "configured": provider.is_configured,
+            "error_message": str(exc),
+        }

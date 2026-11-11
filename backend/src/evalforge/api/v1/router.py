@@ -23,3 +23,15 @@ api_v1_router.include_router(agents_router)
 api_v1_router.include_router(agents_alias_router)
 api_v1_router.include_router(analytics_router)
 api_v1_router.include_router(rag_router)
+
+
+# The legacy modular router serves /api/experiments for workflow experiment history.
+# Keep the versioned experiment alias available under /api/v1 only, and expose the
+# remaining v1 resources under /api without shadowing that legacy route.
+api_v1_alias_router = APIRouter()
+api_v1_alias_router.include_router(datasets_router)
+api_v1_alias_router.include_router(evaluations_router)
+api_v1_alias_router.include_router(agents_router)
+api_v1_alias_router.include_router(agents_alias_router)
+api_v1_alias_router.include_router(analytics_router)
+api_v1_alias_router.include_router(rag_router)

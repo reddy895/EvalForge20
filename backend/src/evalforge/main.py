@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.evalforge.api.health import health_router
-from src.evalforge.api.v1.router import api_v1_router
+from src.evalforge.api.v1.router import api_v1_alias_router, api_v1_router
 from src.evalforge.core.config import get_settings
 from src.evalforge.core.errors import register_exception_handlers
 from src.evalforge.core.logging import (
@@ -147,7 +147,7 @@ def create_app() -> FastAPI:
     application.include_router(health_router)
     application.include_router(health_router, prefix="/api")
     application.include_router(health_router, prefix="/api/v1")
-    application.include_router(api_v1_router, prefix="/api")
+    application.include_router(api_v1_alias_router, prefix="/api")
     application.include_router(api_v1_router, prefix="/api/v1")
 
     return application

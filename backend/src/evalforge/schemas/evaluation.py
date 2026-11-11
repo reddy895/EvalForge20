@@ -125,6 +125,7 @@ class EvaluationResponse(BaseModel):
     tokens_per_second: float | None = None
     load_duration_ms: float | None = None
     summary_metrics: dict[str, Any] = Field(default_factory=dict)
+    config_snapshot: dict[str, Any] = Field(default_factory=dict)
     error_message: str | None = None
     created_at: str
     completed_at: str | None = None

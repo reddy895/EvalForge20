@@ -42,6 +42,7 @@ def _map_run_response(run: object) -> EvaluationResponse:
         tokens_per_second=summary.get("avg_tokens_per_second") or summary.get("avg_throughput_tok_s"),
         load_duration_ms=summary.get("avg_load_duration_ms"),
         summary_metrics=summary,
+        config_snapshot=getattr(run, "config", {}) or {},
         error_message=run.error_message,  # type: ignore[attr-defined]
         created_at=(
             run.created_at.isoformat()  # type: ignore[attr-defined]

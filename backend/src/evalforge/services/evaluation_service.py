@@ -1,6 +1,8 @@
 """Evaluation application service orchestrating runs, execution, and cancellation."""
 
 import asyncio
+import hashlib
+import json
 from datetime import UTC, datetime
 from typing import Any
 
@@ -119,10 +121,39 @@ class EvaluationService:
         run_config = config.model_dump()
         run_config["lifecycle_stage"] = "queued"
         run_config["created_at_iso"] = datetime.now(UTC).isoformat()
+        run_config["requested_model_id"] = request.model_id
+        run_config["dataset"] = {
+            "id": str(dataset.id),
+            "name": dataset.name,
+            "version": snapshot.version,
+            "snapshot_hash": snapshot.snapshot_hash,
+            "total_cases": snapshot.total_cases,
+        }
         if request.models:
             run_config["comparison_models"] = request.models
         if request.evaluators:
             run_config["evaluators"] = request.evaluators
+        else:
+            run_config["evaluators"] = list(config.metrics)
+
+        # Capture a deterministic fingerprint of every input that affects the
+        # result. Runs with different fingerprints must not be treated as
+        # directly comparable without explanation.
+        fingerprint_payload = {
+            "dataset_snapshot_hash": snapshot.snapshot_hash,
+            "dataset_version": snapshot.version,
+            "model_id": request.model_id,
+            "provider": provider_name,
+            "config": {
+                key: value
+                for key, value in config.model_dump().items()
+                if key not in {"concurrency", "timeout_seconds"}
+            },
+            "evaluators": sorted(run_config["evaluators"]),
+        }
+        run_config["run_fingerprint"] = hashlib.sha256(
+            json.dumps(fingerprint_payload, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()
 
         run = EvaluationRun(
             name=run_name,

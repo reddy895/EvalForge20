@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BookmarkCheck, RefreshCw, Shield, Code, Calculator, Brain, FileCheck } from 'lucide-react';
 import { Badge, EmptyState } from '../components/ui/Primitives';
+import { apiFetch } from '../services/http';
 
 export const BenchmarksView: React.FC = () => {
   const [benchmarks, setBenchmarks] = useState<any[]>([]);
@@ -9,7 +10,7 @@ export const BenchmarksView: React.FC = () => {
   const fetchBenchmarks = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/benchmarks');
+      const res = await apiFetch('/benchmarks');
       if (res.ok) {
         const data = await res.json();
         setBenchmarks(data.benchmarks || []);

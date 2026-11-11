@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { apiFetch } from '../../services/http';
 import { Cpu, RefreshCw, Server, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface HeaderProps {
@@ -26,7 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const checkStatus = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/health');
+      const res = await apiFetch('/health');
       if (res.ok) {
         const data = await res.json();
         setBackendHealthy(data.status === 'healthy');

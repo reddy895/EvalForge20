@@ -13,8 +13,7 @@ import {
   EvaluationResultsData,
 } from '../types';
 import { SAMPLE_MODELS } from '../data/models';
-
-const API_BASE = '/api';
+import { API_BASE, authHeaders, createEventSource } from './http';
 
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -23,6 +22,7 @@ class ApiService {
     const headers: Record<string, string> = {
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...((options?.headers as Record<string, string>) || {}),
+      ...authHeaders(),
     };
 
     try {
@@ -384,9 +384,7 @@ class ApiService {
    * Create an SSE EventSource stream for live execution events.
    */
   createExecutionEventSource(id: string): EventSource {
-    const isAbsolute = window.location.port === '5173' && !window.location.host.includes(':8000');
-    const base = isAbsolute ? 'http://localhost:8000/api' : '/api';
-    return new EventSource(`${base}/executions/${id}/events`);
+    return createEventSource(`/executions/${id}/events`);
   }
 
   async pollEvaluation(

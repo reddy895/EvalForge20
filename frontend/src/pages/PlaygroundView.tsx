@@ -17,6 +17,7 @@ import { TopToolbar } from '../components/canvas/TopToolbar';
 import { ResultsPanel } from '../components/results/ResultsPanel';
 import { OllamaBanner } from '../components/canvas/OllamaBanner';
 import { serializeEvaluationGraph } from '../utils/graphSerialization';
+import { apiFetch, createEventSource } from '../services/http';
 
 const INITIAL_NODES: Node[] = [
   {
@@ -146,7 +147,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   /** Check Ollama health and retrieve installed models. */
   const checkOllamaStatus = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/ollama/status');
+      const res = await apiFetch('/ollama/status');
       if (!res.ok) {
         setOllamaStatus({ reachable: false, checked: true, models: [], error: `HTTP ${res.status}` });
         return;
@@ -175,21 +176,21 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   useEffect(() => {
     checkOllamaStatus();
 
-    fetch('http://localhost:8000/api/models')
+    apiFetch('/models')
       .then((r) => r.json())
       .then((data) => {
         if (data && data.models) setInstalledModels(data.models);
       })
       .catch(() => {});
 
-    fetch('http://localhost:8000/api/benchmarks')
+    apiFetch('/benchmarks')
       .then((r) => r.json())
       .then((data) => {
         if (data && data.benchmarks) setBenchmarkSuites(data.benchmarks);
       })
       .catch(() => {});
 
-    fetch('http://localhost:8000/api/evaluators')
+    apiFetch('/evaluators')
       .then((r) => r.json())
       .then((data) => {
         if (data && data.evaluators) setEvaluatorsList(data.evaluators);
@@ -270,7 +271,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
     }
 
     try {
-      const res = await fetch('http://localhost:8000/api/workflows/validate', {
+      const res = await apiFetch('/workflows/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -308,7 +309,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   const handleSave = async () => {
     try {
       const serialized = serializeEvaluationGraph(nodes, edges, workflowName);
-      await fetch('http://localhost:8000/api/workflows', {
+      await apiFetch('/workflows', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -325,7 +326,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   const handleCancelEvaluation = async () => {
     if (!activeExecutionId) return;
     try {
-      await fetch(`http://localhost:8000/api/executions/${activeExecutionId}/cancel`, {
+      await apiFetch(`/executions/${activeExecutionId}/cancel`, {
         method: 'POST',
       });
       setLogs((prev) => [...prev, 'Cancellation requested.']);
@@ -358,7 +359,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
       let ollamaOk = false;
       try {
         const healthRes = await fetch('/api/providers/ollama/health').catch(() =>
-          fetch('http://localhost:8000/api/ollama/status')
+          apiFetch('/ollama/status')
         );
         if (healthRes.ok) {
           const healthData = await healthRes.json();
@@ -403,7 +404,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
     const serialized = serializeEvaluationGraph(nodes, edges, `${workflowName} Run`);
 
     try {
-      const execRes = await fetch('http://localhost:8000/api/executions', {
+      const execRes = await apiFetch('/executions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(serialized),
@@ -426,9 +427,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({
 
       // Step 4: Connect to SSE stream
       // Backend broadcasts: started, step_progress, completed, failed, cancelled
-      const eventSource = new EventSource(
-        `http://localhost:8000/api/executions/${executionId}/events`
-      );
+      const eventSource = createEventSource(`/executions/${executionId}/events`);
 
       eventSource.onmessage = (event) => {
         try {

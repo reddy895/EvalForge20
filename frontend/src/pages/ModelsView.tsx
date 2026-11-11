@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Cpu, RefreshCw, CheckCircle2, AlertCircle, Zap } from 'lucide-react';
 import { Badge, Button, EmptyState } from '../components/ui/Primitives';
+import { apiFetch } from '../services/http';
 
 export const ModelsView: React.FC = () => {
   const [models, setModels] = useState<any[]>([]);
@@ -11,7 +12,7 @@ export const ModelsView: React.FC = () => {
   const fetchModels = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/models');
+      const res = await apiFetch('/models');
       if (res.ok) {
         const data = await res.json();
         setModels(data.models || []);
@@ -26,7 +27,7 @@ export const ModelsView: React.FC = () => {
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/models/refresh', { method: 'POST' });
+      const res = await apiFetch('/models/refresh', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         setModels(data.models || []);
@@ -41,7 +42,7 @@ export const ModelsView: React.FC = () => {
   const handleTestConnection = async (modelId: string) => {
     setTestingModel(modelId);
     try {
-      const res = await fetch('http://localhost:8000/api/models/test-connection', {
+      const res = await apiFetch('/models/test-connection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model_identifier: modelId }),

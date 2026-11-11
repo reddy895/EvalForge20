@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Button, Card, Badge, EmptyState } from '../components/ui/Primitives';
 import { ComparisonCharts } from '../components/charts/ComparisonCharts';
+import { apiFetch, apiUrl } from '../services/http';
 
 export const ExperimentsView: React.FC = () => {
   const [experiments, setExperiments] = useState<any[]>([]);
@@ -18,7 +19,7 @@ export const ExperimentsView: React.FC = () => {
   const fetchExperiments = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/experiments');
+      const res = await apiFetch('/experiments');
       if (res.ok) {
         const data = await res.json();
         setExperiments(data.experiments || []);
@@ -54,7 +55,7 @@ export const ExperimentsView: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this experiment record?')) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/experiments/${id}`, {
+      const res = await apiFetch(`/experiments/${id}`, {
         method: 'DELETE',
       });
       if (res.ok) {
@@ -67,7 +68,7 @@ export const ExperimentsView: React.FC = () => {
   };
 
   const handleExport = (id: string, format: 'json' | 'csv') => {
-    window.open(`http://localhost:8000/api/experiments/${id}/export?format=${format}`, '_blank');
+    window.open(apiUrl(`/experiments/${id}/export?format=${format}`), '_blank');
   };
 
   return (

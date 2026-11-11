@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Trophy, RefreshCw, Cpu } from 'lucide-react';
 import { EmptyState } from '../components/ui/Primitives';
+import { apiFetch } from '../services/http';
 
 const CATEGORIES = [
   'Reasoning',
@@ -22,7 +23,7 @@ export const LeaderboardView: React.FC = () => {
   const fetchLeaderboard = async (cat: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/leaderboard?category=${encodeURIComponent(cat)}`);
+      const res = await apiFetch(`/leaderboard?category=${encodeURIComponent(cat)}`);
       if (res.ok) {
         const data = await res.json();
         setEntries(data.entries || []);

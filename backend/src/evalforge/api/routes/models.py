@@ -1,6 +1,8 @@
 """Modular API route for model dynamic discovery and technical catalog."""
 
+from datetime import UTC
 from typing import Any
+
 from fastapi import APIRouter
 
 from src.evalforge.services.model_service import get_model_service
@@ -33,13 +35,13 @@ async def get_model(model_id: str):
 
 @router.post("/refresh")
 async def refresh_models():
-    from datetime import datetime, timezone
+    from datetime import datetime
     service = get_model_service()
     models = await service.get_all_models(force_refresh=True)
     return {
         "success": True,
         "total_models": len(models),
-        "refreshed_at": datetime.now(timezone.utc).isoformat(),
+        "refreshed_at": datetime.now(UTC).isoformat(),
     }
 
 

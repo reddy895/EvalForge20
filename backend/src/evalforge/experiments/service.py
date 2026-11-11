@@ -3,7 +3,6 @@
 import json
 from typing import Any
 
-from src.evalforge.database.models import ExperimentRecord
 from src.evalforge.experiments.repository import ExperimentRepository
 
 

@@ -1,12 +1,13 @@
 """Modular API route for category-specific model leaderboards based on actual evaluated experiments."""
 
 from typing import Any
+
 from fastapi import APIRouter
 from sqlalchemy import select
 
 from src.evalforge.database.models import ExperimentRecord
 from src.evalforge.database.session import get_db_context
-from src.evalforge.schemas.main import LeaderboardEntry, LeaderboardResponse
+from src.evalforge.schemas.main import LeaderboardEntry
 
 router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 

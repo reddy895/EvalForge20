@@ -1,15 +1,20 @@
 """Exhaustive test suite covering all rebuilt evaluator components."""
 
-import pytest
 from unittest.mock import AsyncMock
 
+import pytest
+
 from src.evalforge.evaluators.accuracy import ExactMatchEvaluator, NormalizedAccuracyEvaluator
-from src.evalforge.evaluators.classification import ClassificationAccuracyEvaluator, TokenF1Evaluator
-from src.evalforge.evaluators.coding import FunctionalCorrectnessEvaluator
+from src.evalforge.evaluators.classification import (
+    ClassificationAccuracyEvaluator,
+    TokenF1Evaluator,
+)
 from src.evalforge.evaluators.judge import LocalJudgeEvaluator, compute_judge_confidence_interval
 from src.evalforge.evaluators.performance import LatencyEvaluator, TokensPerSecondEvaluator
-from src.evalforge.evaluators.rag import ContextPrecisionEvaluator, FaithfulnessEvaluator
-from src.evalforge.evaluators.reasoning import ConstraintSatisfactionEvaluator, MathCorrectnessEvaluator
+from src.evalforge.evaluators.reasoning import (
+    ConstraintSatisfactionEvaluator,
+    MathCorrectnessEvaluator,
+)
 from src.evalforge.evaluators.reliability import ReliabilityEvaluator
 from src.evalforge.evaluators.safety import (
     PromptInjectionResistanceEvaluator,

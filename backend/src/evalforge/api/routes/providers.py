@@ -1,6 +1,7 @@
 """Modular API route for multi-provider registry, diagnostics, and model discovery."""
 
 from typing import Any
+
 from fastapi import APIRouter, Query
 
 from src.evalforge.core.config import get_settings

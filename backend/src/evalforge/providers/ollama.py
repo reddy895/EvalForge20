@@ -1,6 +1,5 @@
 """Canonical local Ollama provider module for EvalForge20."""
 
-from typing import Any
 
 from src.evalforge.providers.ollama.client import OllamaClient, get_ollama_client
 from src.evalforge.providers.ollama.provider import OllamaProvider

@@ -2,8 +2,8 @@
 
 import asyncio
 import time
-from typing import Any
 import uuid
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -258,7 +258,6 @@ def test_multi_model_distinct_evaluations_via_api() -> None:
 @pytest.mark.asyncio
 async def test_evaluation_engine_marks_failed_status_when_all_cases_drop_connection() -> None:
     """When all cases encounter provider network failure, run status becomes 'failed' and pass_rate is null."""
-    from unittest.mock import AsyncMock, MagicMock
     from src.evalforge.providers.base import BaseProvider
     from src.evalforge.providers.registry import get_provider_registry
     from src.evalforge.services.evaluation_service import EvaluationService

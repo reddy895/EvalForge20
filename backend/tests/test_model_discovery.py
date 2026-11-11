@@ -117,6 +117,7 @@ def test_api_models_endpoint() -> None:
 async def test_dynamic_discovery_synchronizes_installed_flag_with_ollama_tags() -> None:
     """When Ollama lists models, matching catalog models are marked installed and direct tags are registered."""
     from unittest.mock import AsyncMock, MagicMock
+
     from src.evalforge.providers.registry import get_provider_registry
     from src.evalforge.providers.schemas import ModelInfo
     from src.evalforge.services.model_service import ModelService

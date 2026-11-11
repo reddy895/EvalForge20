@@ -3,9 +3,10 @@
 import asyncio
 from collections.abc import Callable
 from typing import Any, TypeVar
+
 import httpx
 
-from src.evalforge.core.errors import ModelNotFoundError, ProviderError
+from src.evalforge.core.errors import ModelNotFoundError
 
 T = TypeVar("T")
 

@@ -1,10 +1,11 @@
 """Tests for Ollama provider integration, discovery, and connection testing."""
 
-import pytest
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from src.evalforge.providers.ollama import OllamaProvider, get_ollama_provider
-from src.evalforge.providers.schemas import InferenceRequest, InferenceResponse, TokenUsage
+from src.evalforge.providers.schemas import InferenceResponse, TokenUsage
 
 
 @pytest.mark.asyncio

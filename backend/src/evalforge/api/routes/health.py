@@ -1,6 +1,7 @@
 """Modular API route for health and readiness probes, and Ollama status."""
 
 from typing import Any
+
 from fastapi import APIRouter
 
 from src.evalforge.core.config import get_settings

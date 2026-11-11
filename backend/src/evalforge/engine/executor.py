@@ -1,20 +1,18 @@
 """End-to-end visual workflow execution engine with fair benchmarking guarantees."""
 
-import asyncio
 import time
 import uuid
 from typing import Any
 
-from src.evalforge.database.models import CaseResultRecord, ExecutionRecord
+from src.evalforge.database.models import ExecutionRecord
 from src.evalforge.database.session import get_db_context
 from src.evalforge.engine.events import get_event_broadcaster
-from src.evalforge.engine.registry import EngineRegistry, ModelExecutionTarget
+from src.evalforge.engine.registry import EngineRegistry
 from src.evalforge.engine.scheduler import get_workflow_scheduler
 from src.evalforge.engine.validator import WorkflowValidator
 from src.evalforge.evaluators.base import MetricResult
 from src.evalforge.experiments.repository import ExperimentRepository
 from src.evalforge.hardware.monitor import get_hardware_monitor
-from src.evalforge.providers.base import BaseProvider
 from src.evalforge.providers.registry import get_provider_registry
 from src.evalforge.providers.schemas import InferenceRequest, InferenceResponse
 from src.evalforge.schemas.main import WorkflowGraph

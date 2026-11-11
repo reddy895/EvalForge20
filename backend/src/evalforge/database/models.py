@@ -1,18 +1,19 @@
 """SQLAlchemy database models for EvalForge20."""
 
-import json
 import uuid
 from datetime import UTC, datetime
-from typing import Any
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.evalforge.storage.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from src.evalforge.storage.base import Base, TimestampMixin
+
 # Import existing models for unified registry
 from src.evalforge.storage.models.benchmark import BenchmarkComparison as BenchmarkRecord
-from src.evalforge.storage.models.dataset import Dataset as DatasetRecord, TestCase as DatasetCaseRecord
-from src.evalforge.storage.models.evaluation import CaseResult as CaseResultRecord, EvaluationRun as EvaluationRunRecord
+from src.evalforge.storage.models.dataset import Dataset as DatasetRecord
+from src.evalforge.storage.models.dataset import TestCase as DatasetCaseRecord
+from src.evalforge.storage.models.evaluation import CaseResult as CaseResultRecord
+from src.evalforge.storage.models.evaluation import EvaluationRun as EvaluationRunRecord
 from src.evalforge.storage.models.provider import ProviderRecord, RegisteredModelRecord
 
 

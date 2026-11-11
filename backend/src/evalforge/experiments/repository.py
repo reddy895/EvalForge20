@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy import delete, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.evalforge.database.models import CaseResultRecord, EvaluationRunRecord, ExperimentRecord
+from src.evalforge.database.models import ExperimentRecord
 from src.evalforge.database.session import get_db_context
 
 

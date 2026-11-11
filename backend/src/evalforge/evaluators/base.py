@@ -147,15 +147,17 @@ def get_metric_registry() -> MetricRegistry:
     if _metric_registry is None:
         reg = MetricRegistry()
         try:
+            from src.evalforge.evaluators.deterministic.code_execution import CodeExecutionEvaluator
             from src.evalforge.evaluators.deterministic.exact_match import (
                 ExactMatchEvaluator,
                 NormalizedExactMatchEvaluator,
             )
-            from src.evalforge.evaluators.deterministic.token_f1 import TokenF1Evaluator
-            from src.evalforge.evaluators.deterministic.keywords import KeywordEvaluator
             from src.evalforge.evaluators.deterministic.json_schema import JsonSchemaEvaluator
-            from src.evalforge.evaluators.deterministic.code_execution import CodeExecutionEvaluator
-            from src.evalforge.evaluators.deterministic.numeric_tolerance import NumericToleranceEvaluator
+            from src.evalforge.evaluators.deterministic.keywords import KeywordEvaluator
+            from src.evalforge.evaluators.deterministic.numeric_tolerance import (
+                NumericToleranceEvaluator,
+            )
+            from src.evalforge.evaluators.deterministic.token_f1 import TokenF1Evaluator
             from src.evalforge.evaluators.semantic import SemanticSimilarityEvaluator
 
             reg.register(ExactMatchEvaluator())

@@ -1,6 +1,7 @@
 """Modular API route for benchmark suites and comparative matrices."""
 
 from typing import Any
+
 from fastapi import APIRouter
 
 from src.evalforge.datasets.registry import get_benchmark_registry

@@ -499,7 +499,7 @@ class AnalyticsService:
             avg_tps = round(sum(tps_values) / len(tps_values), 1) if tps_values else None
             avg_lat = round(sum(latencies) / len(latencies), 1) if latencies else None
             avg_dur = round(avg_lat / 1000.0, 2) if avg_lat else 0.0
-            
+
             # Efficiency score: ratio of throughput (tok/s) to latency penalty, or tok/s per sec
             efficiency_score = round(avg_tps / (avg_dur + 0.1), 2) if (avg_tps and avg_dur >= 0) else None
 

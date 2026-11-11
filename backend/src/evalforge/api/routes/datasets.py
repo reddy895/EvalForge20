@@ -1,7 +1,7 @@
 """Modular API route for dataset management, file uploads, and test-case creation."""
 
-import uuid
 from typing import Any
+
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import PlainTextResponse
 
@@ -9,7 +9,6 @@ from src.evalforge.datasets.exporter import export_dataset_to_csv, export_datase
 from src.evalforge.datasets.loader import DatasetLoader
 from src.evalforge.datasets.validator import validate_dataset_records
 from src.evalforge.services.dataset_service import get_dataset_service
-from src.evalforge.storage.models.dataset import Dataset, TestCase
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 

@@ -1,6 +1,5 @@
 """Ollama connectivity probe, 8-state diagnosis, and setup advisor."""
 
-import os
 import shutil
 from dataclasses import dataclass, field
 from datetime import UTC, datetime

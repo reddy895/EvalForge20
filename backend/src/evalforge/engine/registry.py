@@ -2,14 +2,16 @@
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any
 
 from src.evalforge.datasets.loader import ParsedDatasetRecord
 from src.evalforge.datasets.registry import get_benchmark_registry
 from src.evalforge.evaluators.accuracy import ExactMatchEvaluator, NormalizedAccuracyEvaluator
 from src.evalforge.evaluators.agent import AgentTaskCompletionEvaluator, AgentToolCallEvaluator
 from src.evalforge.evaluators.base import BaseEvaluator
-from src.evalforge.evaluators.classification import ClassificationAccuracyEvaluator, TokenF1Evaluator
+from src.evalforge.evaluators.classification import (
+    ClassificationAccuracyEvaluator,
+    TokenF1Evaluator,
+)
 from src.evalforge.evaluators.coding import FunctionalCorrectnessEvaluator
 from src.evalforge.evaluators.judge import LocalJudgeEvaluator
 from src.evalforge.evaluators.performance import LatencyEvaluator, TokensPerSecondEvaluator
@@ -19,7 +21,10 @@ from src.evalforge.evaluators.rag import (
     ContextRelevanceEvaluator,
     FaithfulnessEvaluator,
 )
-from src.evalforge.evaluators.reasoning import ConstraintSatisfactionEvaluator, MathCorrectnessEvaluator
+from src.evalforge.evaluators.reasoning import (
+    ConstraintSatisfactionEvaluator,
+    MathCorrectnessEvaluator,
+)
 from src.evalforge.evaluators.reliability import ReliabilityEvaluator
 from src.evalforge.evaluators.safety import (
     PromptInjectionResistanceEvaluator,

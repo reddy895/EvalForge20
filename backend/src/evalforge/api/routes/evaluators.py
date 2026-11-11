@@ -1,9 +1,8 @@
 """Modular API route for evaluator metadata and available metric plugins."""
 
 from typing import Any
-from fastapi import APIRouter
 
-from src.evalforge.engine.registry import EngineRegistry
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/evaluators", tags=["evaluators"])
 

@@ -44,7 +44,7 @@ async def test_genuine_zero_score_persistence_and_retrieval_after_simulated_relo
     """A genuine zero score (valid inferences that all failed assertions) persists 0.0 and retrieves accurately."""
     import uuid
     from datetime import UTC, datetime
-    import pytest
+
     from src.evalforge.evaluators.aggregator import aggregate_scorecard, is_genuine_zero_score
     from src.evalforge.storage.database import get_session_factory
     from src.evalforge.storage.models.evaluation import CaseResult, EvaluationRun

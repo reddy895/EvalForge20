@@ -1,9 +1,9 @@
 """Modular API routes for workflow execution triggers, SSE streaming, and cancellation."""
 
-import asyncio
 import json
 import uuid
 from typing import Any
+
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse
 
@@ -208,7 +208,7 @@ async def get_execution_results(execution_id: str) -> dict[str, Any]:
         return {
             "id": execution_id,
             "execution_id": execution_id,
-            "name": f"Live Workflow Execution",
+            "name": "Live Workflow Execution",
             "status": status,
             "dataset_name": "Active Canvas Workflow",
             "models": sorted(list(models_seen)),

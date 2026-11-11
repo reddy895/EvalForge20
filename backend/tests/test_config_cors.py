@@ -1,8 +1,8 @@
 """Unit tests verifying CORS_ORIGINS parsing in Settings."""
 
-import os
 import pytest
 from pydantic import ValidationError
+
 from src.evalforge.core.config import Settings
 
 

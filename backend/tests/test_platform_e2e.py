@@ -4,8 +4,8 @@ Validates backend startup health contract, decoupling of API readiness from prov
 and robust handling of evaluation endpoints under varied provider states.
 """
 
-import pytest
 from starlette.testclient import TestClient
+
 from src.evalforge.main import app
 
 

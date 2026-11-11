@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from src.evalforge.evaluators.aggregator import aggregate_scorecard
 from src.evalforge.experiments.case_runner import CaseRunner

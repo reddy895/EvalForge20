@@ -68,6 +68,7 @@ class TestEvaluationValidation:
     @pytest.mark.asyncio
     async def test_evaluation_service_validates_model_identifier(self) -> None:
         from unittest.mock import AsyncMock, MagicMock
+
         from src.evalforge.core.errors import DataValidationError
         from src.evalforge.services.evaluation_service import EvaluationService
 
@@ -90,6 +91,7 @@ class TestEvaluationValidation:
     async def test_duplicate_evaluation_request_throttling(self) -> None:
         """When an identical evaluation is requested within the debounce window, existing run is returned."""
         from unittest.mock import AsyncMock, MagicMock
+
         from src.evalforge.services.evaluation_service import EvaluationService
         from src.evalforge.storage.models.evaluation import EvaluationRun
 
@@ -124,6 +126,7 @@ class TestEvaluationValidation:
     async def test_uninstalled_ollama_model_rejected_with_remediation(self) -> None:
         """Reject uninstalled Ollama models with a descriptive remediation hint."""
         from unittest.mock import AsyncMock, MagicMock
+
         from src.evalforge.core.errors import DataValidationError
         from src.evalforge.services.evaluation_service import EvaluationService
 

@@ -20,6 +20,7 @@ def test_efficiency_percentiles_and_tps() -> None:
 
 def test_api_analytics_efficiency_contract_and_mock_filtering() -> None:
     from fastapi.testclient import TestClient
+
     from src.evalforge.main import app
 
     with TestClient(app) as client:

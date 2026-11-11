@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -86,6 +86,24 @@ class Settings(BaseSettings):
     MAX_DATASET_FILE_SIZE_BYTES: int = 10 * 1024 * 1024  # 10MB
     MAX_CASES_PER_DATASET: int = 2000
 
+    # HTTP request guardrails
+    MAX_REQUEST_BODY_BYTES: int = 20 * 1024 * 1024  # 20MB hard ceiling
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_REQUESTS_PER_MINUTE: int = 240
+
+    # Optional shared-secret authentication for single-user / self-hosted deployments.
+    # When AUTH_TOKEN is set, every /api route except health probes requires
+    # "Authorization: Bearer <token>". Leave empty for local-only usage.
+    AUTH_TOKEN: str | None = None
+
+    # Provider endpoint address policy. Local-first installs need private
+    # addresses (localhost / LAN Ollama); public deployments that only use
+    # cloud APIs should disable this to reduce SSRF exposure.
+    ALLOW_PRIVATE_PROVIDER_ENDPOINTS: bool = True
+
+    # Comma-separated hostnames permitted for provider endpoints (empty = allow all public hosts).
+    ALLOWED_PROVIDER_HOSTS: list[str] | str = []
+
     # CORS
     CORS_ORIGINS: list[str] | str = [
         "http://localhost:5173",
@@ -96,6 +114,35 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "json"  # "json" or "console"
+
+    @field_validator("ALLOWED_PROVIDER_HOSTS", mode="before")
+    @classmethod
+    def assemble_allowed_hosts(cls, v: object) -> list[str]:
+        if v is None or v == "":
+            return []
+        if isinstance(v, str):
+            return [item.strip().lower() for item in v.split(",") if item.strip()]
+        if isinstance(v, list):
+            return [str(item).strip().lower() for item in v if str(item).strip()]
+        raise ValueError(f"Unexpected type for ALLOWED_PROVIDER_HOSTS: {type(v)}")
+
+    @model_validator(mode="after")
+    def validate_security_posture(self) -> "Settings":
+        if self.ENVIRONMENT.lower() == "production":
+            if self.DEBUG:
+                raise ValueError("DEBUG must be disabled in production.")
+            if any(origin.strip() == "*" for origin in self.CORS_ORIGINS):
+                raise ValueError("Wildcard CORS origins are not allowed in production.")
+            if self.HOST not in ("127.0.0.1", "localhost", "::1") and not self.AUTH_TOKEN:
+                raise ValueError(
+                    "AUTH_TOKEN is required in production when binding to a non-loopback host. "
+                    "Set AUTH_TOKEN or keep HOST=127.0.0.1 behind a trusted reverse proxy."
+                )
+        if self.MAX_REQUEST_BODY_BYTES < 1024:
+            raise ValueError("MAX_REQUEST_BODY_BYTES must be at least 1024 bytes.")
+        if self.RATE_LIMIT_REQUESTS_PER_MINUTE < 1:
+            raise ValueError("RATE_LIMIT_REQUESTS_PER_MINUTE must be positive.")
+        return self
 
     @field_validator("DEBUG", mode="before")
     @classmethod

@@ -17,7 +17,13 @@ from src.evalforge.core.logging import (
     set_request_id,
     setup_logging,
 )
-from src.evalforge.core.security import SecurityHeadersMiddleware
+from src.evalforge.core.security import (
+    BearerAuthMiddleware,
+    RateLimitMiddleware,
+    RequestBodyLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
+from src.evalforge.experiments.recovery import recover_interrupted_runs
 from src.evalforge.storage.database import close_db, init_db
 
 logger = get_logger("evalforge.app")
@@ -38,6 +44,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Initialize database schemas
     await init_db()
+
+    # Reconcile runs that were active when the previous process exited.
+    try:
+        recovered = await recover_interrupted_runs()
+        if recovered:
+            logger.warning("Recovered %d interrupted evaluation run(s).", recovered)
+    except Exception as exc:
+        logger.error("Failed to reconcile interrupted evaluation runs: %s", exc)
 
     yield
 
@@ -89,6 +103,24 @@ def create_app() -> FastAPI:
 
     # Security defense headers middleware
     application.add_middleware(SecurityHeadersMiddleware)
+
+    # Hard request-body ceiling before any route-level parsing occurs.
+    application.add_middleware(
+        RequestBodyLimitMiddleware,
+        max_body_bytes=settings.MAX_REQUEST_BODY_BYTES,
+    )
+
+    # Optional bearer authentication for self-hosted multi-user access.
+    if settings.AUTH_TOKEN:
+        application.add_middleware(BearerAuthMiddleware, token=settings.AUTH_TOKEN)
+        logger.info("Bearer token authentication is enabled for /api routes.")
+
+    # Per-client fixed-window rate limiting (single-process deployments).
+    if settings.RATE_LIMIT_ENABLED:
+        application.add_middleware(
+            RateLimitMiddleware,
+            requests_per_minute=settings.RATE_LIMIT_REQUESTS_PER_MINUTE,
+        )
 
     # Request ID and latency tracking middleware
     @application.middleware("http")

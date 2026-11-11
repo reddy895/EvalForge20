@@ -4,12 +4,17 @@ from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile,
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.evalforge.core.errors import DataValidationError, NotFoundError
+from src.evalforge.core.security import sanitize_filename
 from src.evalforge.datasets.exporter import export_dataset_to_csv, export_dataset_to_jsonl
 from src.evalforge.schemas.dataset import (
+    DatasetCaseListResponse,
     DatasetCreate,
     DatasetDetailResponse,
     DatasetImportResponse,
+    DatasetIntegrityResponse,
     DatasetListResponse,
+    DatasetPreviewResponse,
     DatasetResponse,
     DatasetUpdate,
     TestCaseCreate,
@@ -108,10 +113,26 @@ async def import_dataset(
     db: AsyncSession = Depends(get_db),
 ) -> DatasetImportResponse:
     """Import test cases from an uploaded JSONL or CSV file with validation."""
-    content_bytes = await file.read()
-    content_str = content_bytes.decode("utf-8", errors="replace")
-
     service = DatasetService(db)
+    max_bytes = service.settings.MAX_DATASET_FILE_SIZE_BYTES
+    content_bytes = await file.read(max_bytes + 1)
+    if len(content_bytes) > max_bytes:
+        from src.evalforge.core.errors import PayloadTooLargeError
+
+        raise PayloadTooLargeError(
+            f"Uploaded file exceeds the {max_bytes} byte limit.",
+            max_bytes=max_bytes,
+        )
+    if not content_bytes:
+        raise DataValidationError("Uploaded file is empty.")
+    try:
+        content_str = content_bytes.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise DataValidationError(
+            "Uploaded file is not valid UTF-8. Re-encode the file as UTF-8 before importing.",
+            details={"byte_offset": exc.start},
+        ) from exc
+
     return await service.import_content(
         name=name,
         content=content_str,
@@ -135,7 +156,7 @@ async def export_dataset(
     dataset = await service.get_dataset_with_cases(dataset_id)
     if format == "csv":
         csv_text = export_dataset_to_csv(dataset)
-        filename = f"{dataset.name.lower().replace(' ', '_')}_export.csv"
+        filename = sanitize_filename(f"{dataset.name.lower().replace(' ', '_')}_export.csv")
         return Response(
             content=csv_text,
             media_type="text/csv",
@@ -143,12 +164,145 @@ async def export_dataset(
         )
 
     jsonl_text = export_dataset_to_jsonl(dataset)
-    filename = f"{dataset.name.lower().replace(' ', '_')}_export.jsonl"
+    filename = sanitize_filename(f"{dataset.name.lower().replace(' ', '_')}_export.jsonl")
     return Response(
         content=jsonl_text,
         media_type="application/x-ndjson",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@datasets_router.get(
+    "/{dataset_id}/cases",
+    response_model=DatasetCaseListResponse,
+    summary="List dataset test cases with pagination",
+)
+async def list_dataset_cases(
+    dataset_id: str,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=500),
+    db: AsyncSession = Depends(get_db),
+) -> DatasetCaseListResponse:
+    """Return a bounded page of test cases without loading the entire dataset."""
+    service = DatasetService(db)
+    total, cases = await service.list_cases(dataset_id, offset=offset, limit=limit)
+    return DatasetCaseListResponse(
+        total=total,
+        offset=offset,
+        limit=limit,
+        items=[
+            TestCaseResponse(
+                id=c.id,
+                dataset_id=c.dataset_id,
+                prompt=c.prompt,
+                expected_output=c.expected_output,
+                context=c.context,
+                tags=c.tags,
+                metadata=c.metadata_dict,
+                evaluator_config=c.evaluator_config,
+                created_at=c.created_at.isoformat(),
+                updated_at=c.updated_at.isoformat(),
+            )
+            for c in cases
+        ],
+    )
+
+
+@datasets_router.get(
+    "/{dataset_id}/preview",
+    response_model=DatasetPreviewResponse,
+    summary="Preview the first test cases in a dataset",
+)
+async def preview_dataset(
+    dataset_id: str,
+    limit: int = Query(10, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+) -> DatasetPreviewResponse:
+    """Return dataset metadata plus a small preview of cases for import verification."""
+    service = DatasetService(db)
+    dataset = await service.get_dataset(dataset_id)
+    total, cases = await service.list_cases(dataset_id, offset=0, limit=limit)
+    return DatasetPreviewResponse(
+        dataset_id=dataset.id,
+        name=dataset.name,
+        version=dataset.version,
+        total_cases=total,
+        items=[
+            TestCaseResponse(
+                id=c.id,
+                dataset_id=c.dataset_id,
+                prompt=c.prompt,
+                expected_output=c.expected_output,
+                context=c.context,
+                tags=c.tags,
+                metadata=c.metadata_dict,
+                evaluator_config=c.evaluator_config,
+                created_at=c.created_at.isoformat(),
+                updated_at=c.updated_at.isoformat(),
+            )
+            for c in cases
+        ],
+    )
+
+
+@datasets_router.get(
+    "/{dataset_id}/integrity",
+    response_model=DatasetIntegrityResponse,
+    summary="Validate dataset content and compute its fingerprint",
+)
+async def check_dataset_integrity(
+    dataset_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> DatasetIntegrityResponse:
+    """Report empty prompts, duplicates, and a stable content fingerprint."""
+    service = DatasetService(db)
+    report = await service.check_integrity(dataset_id)
+    return DatasetIntegrityResponse(**report)
+
+
+@datasets_router.post(
+    "/{dataset_id}/duplicate",
+    response_model=DatasetResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Duplicate a dataset with all test cases",
+)
+async def duplicate_dataset(
+    dataset_id: str,
+    new_name: str | None = Query(None, max_length=255),
+    db: AsyncSession = Depends(get_db),
+) -> DatasetResponse:
+    """Create an independent deep copy so edits never mutate the source."""
+    service = DatasetService(db)
+    clone = await service.duplicate_dataset(dataset_id, new_name=new_name)
+    return DatasetResponse(
+        id=clone.id,
+        name=clone.name,
+        description=clone.description,
+        version=clone.version,
+        tags=clone.tags,
+        case_count=0,
+        created_at=clone.created_at.isoformat(),
+        updated_at=clone.updated_at.isoformat(),
+    )
+
+
+@datasets_router.delete(
+    "/{dataset_id}/cases/{case_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete an individual test case",
+)
+async def delete_test_case(
+    dataset_id: str,
+    case_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Remove a single case, verifying it belongs to the named dataset."""
+    service = DatasetService(db)
+    dataset = await service.get_dataset(dataset_id)
+    case = await service.repo.get_case(case_id)
+    if case is None or case.dataset_id != dataset.id:
+        raise NotFoundError("TestCase", case_id)
+    await service.repo.delete_case(case_id)
 
 
 @datasets_router.get(

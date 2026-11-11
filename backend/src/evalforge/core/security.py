@@ -1,7 +1,9 @@
 """Security controls: path traversal validation, input sanitization, and security headers."""
 
+import ipaddress
 import os
 import re
+from urllib.parse import urlparse
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -42,10 +44,6 @@ def enforce_content_length(content_length: int | None, max_allowed_bytes: int) -
             f"Payload length ({content_length} bytes) exceeds maximum limit of {max_allowed_bytes} bytes.",
             max_bytes=max_allowed_bytes,
         )
-
-
-import ipaddress
-from urllib.parse import urlparse
 
 
 def validate_safe_url(url: str, allowed_hosts: list[str] | None = None) -> str:

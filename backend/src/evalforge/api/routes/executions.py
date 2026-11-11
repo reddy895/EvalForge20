@@ -211,7 +211,7 @@ async def get_execution_results(execution_id: str) -> dict[str, Any]:
             "name": "Live Workflow Execution",
             "status": status,
             "dataset_name": "Active Canvas Workflow",
-            "models": sorted(list(models_seen)),
+            "models": sorted(models_seen),
             "evaluators": [],
             "total_cases": total_cases_count,
             "completed_cases": total_cases_count,
@@ -454,8 +454,8 @@ async def get_execution_results(execution_id: str) -> dict[str, Any]:
 
         for p_text, m_results in prompt_map.items():
             if len(m_results) >= 2:
-                passed_states = set(res.get("passed") for res in m_results.values())
-                outputs = set(res.get("actual_output", "").strip() for res in m_results.values())
+                passed_states = {res.get("passed") for res in m_results.values()}
+                outputs = {res.get("actual_output", "").strip() for res in m_results.values()}
                 if len(passed_states) > 1 or len(outputs) > 1:
                     disagreements.append({
                         "prompt": p_text,
@@ -478,7 +478,7 @@ async def get_execution_results(execution_id: str) -> dict[str, Any]:
         "status": status_str,
         "dataset_name": experiments[0].dataset_id or "Workflow Evaluation Dataset",
         "models": model_names,
-        "evaluators": sorted(list(all_evaluators)),
+        "evaluators": sorted(all_evaluators),
         "total_cases": total_cases_count,
         "completed_cases": completed_cases_count,
         "passed_cases": passed_cases_count,

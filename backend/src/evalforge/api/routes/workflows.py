@@ -23,7 +23,7 @@ async def list_workflows(limit: int = 50, offset: int = 0) -> dict[str, Any]:
     async with get_db_context() as session:
         stmt = (
             select(WorkflowRecord)
-            .where(WorkflowRecord.is_active == True)
+            .where(WorkflowRecord.is_active)
             .order_by(desc(WorkflowRecord.updated_at))
             .offset(offset)
             .limit(limit)

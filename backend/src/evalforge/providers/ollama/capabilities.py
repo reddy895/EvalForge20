@@ -30,8 +30,6 @@ def parse_model_info(raw_tag: dict[str, Any]) -> ModelInfo:
     ctx_len = details.get("context_length") or 4096
     disk_gb = round(size_bytes / 1e9, 2) if size_bytes else 4.0
 
-    supports_thinking = "thinking" in caps
-    supports_vision = "vision" in caps
     supports_tools = "tools" in caps or family in TOOL_CAPABLE_FAMILIES or "qwen" in family or "llama" in family
 
     # Compute sensible RAM requirements based on parameter count

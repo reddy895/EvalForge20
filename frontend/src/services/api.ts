@@ -19,9 +19,10 @@ const API_BASE = '/api';
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(options?.headers || {}),
+    const isFormData = typeof FormData !== 'undefined' && options?.body instanceof FormData;
+    const headers: Record<string, string> = {
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...((options?.headers as Record<string, string>) || {}),
     };
 
     try {
@@ -196,26 +197,88 @@ class ApiService {
 
 
   // Datasets
-  async getDatasets(): Promise<DatasetItem[]> {
-    try {
-      const data = await this.request<{ items: DatasetItem[] }>('/datasets');
-      if (data.items && data.items.length > 0) {
-        return data.items;
-      }
-      return [
-        { id: 'coding_basics', name: 'Python Algorithmic Synthesis', description: 'Tests function generation, string reversal, and recursion.', version: 1, case_count: 3 },
-        { id: 'structured_json', name: 'Constrained JSON Schema Extraction', description: 'Verifies typed schema extraction.', version: 1, case_count: 3 },
-        { id: 'reasoning_math', name: 'Mathematical Word Logic', description: 'Multi-step algebraic word problems.', version: 1, case_count: 3 },
-        { id: 'rag_retrieval', name: 'Needle-in-a-Haystack Fact Recall', description: 'Evaluates precision factual retrieval inside dense documents.', version: 1, case_count: 2 },
-      ];
-    } catch {
-      return [
-        { id: 'coding_basics', name: 'Python Algorithmic Synthesis', description: 'Tests function generation, string reversal, and recursion.', version: 1, case_count: 3 },
-        { id: 'structured_json', name: 'Constrained JSON Schema Extraction', description: 'Verifies typed schema extraction.', version: 1, case_count: 3 },
-        { id: 'reasoning_math', name: 'Mathematical Word Logic', description: 'Multi-step algebraic word problems.', version: 1, case_count: 3 },
-        { id: 'rag_retrieval', name: 'Needle-in-a-Haystack Fact Recall', description: 'Evaluates precision factual retrieval inside dense documents.', version: 1, case_count: 2 },
-      ];
-    }
+  async getDatasets(params?: { offset?: number; limit?: number }): Promise<DatasetItem[]> {
+    const offset = params?.offset ?? 0;
+    const limit = params?.limit ?? 100;
+    const data = await this.request<{ total: number; items: DatasetItem[] }>(
+      `/datasets?offset=${offset}&limit=${limit}`
+    );
+    return data.items || [];
+  }
+
+  async getDatasetPreview(
+    datasetId: string,
+    limit = 20
+  ): Promise<{
+    dataset_id: string;
+    name: string;
+    version: number;
+    total_cases: number;
+    items: Array<{
+      id: string;
+      prompt: string;
+      expected_output?: string | null;
+      context?: string | null;
+      tags?: string[];
+    }>;
+  }> {
+    return this.request(`/datasets/${encodeURIComponent(datasetId)}/preview?limit=${limit}`);
+  }
+
+  async getDatasetIntegrity(datasetId: string): Promise<{
+    dataset_id: string;
+    name: string;
+    version: number;
+    case_count: number;
+    fingerprint: string;
+    is_valid: boolean;
+    empty_prompts: number;
+    duplicate_prompts: number;
+    issues: string[];
+  }> {
+    return this.request(`/datasets/${encodeURIComponent(datasetId)}/integrity`);
+  }
+
+  async createDataset(payload: {
+    name: string;
+    description?: string;
+    tags?: string[];
+    cases?: Array<{ prompt: string; expected_output?: string | null; context?: string | null }>;
+  }): Promise<DatasetItem> {
+    return this.request('/datasets', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async importDataset(payload: {
+    name: string;
+    format: 'jsonl' | 'csv';
+    description?: string;
+    file: File;
+  }): Promise<{
+    dataset_id: string;
+    name: string;
+    imported_cases: number;
+    failed_rows: number;
+    duplicates_skipped: number;
+    warnings: string[];
+    errors: Array<{ line: number; error: string }>;
+  }> {
+    const form = new FormData();
+    form.append('name', payload.name);
+    form.append('format', payload.format);
+    if (payload.description) form.append('description', payload.description);
+    form.append('file', payload.file);
+    return this.request('/datasets/import', { method: 'POST', body: form });
+  }
+
+  async deleteDataset(datasetId: string): Promise<void> {
+    await this.request(`/datasets/${encodeURIComponent(datasetId)}`, { method: 'DELETE' });
+  }
+
+  async duplicateDataset(datasetId: string, newName?: string): Promise<DatasetItem> {
+    const query = newName ? `?new_name=${encodeURIComponent(newName)}` : '';
+    return this.request(`/datasets/${encodeURIComponent(datasetId)}/duplicate${query}`, {
+      method: 'POST',
+    });
   }
 
   // Evaluation Runs
